@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
@@ -96,7 +96,7 @@ const quickActions = [
   },
 ];
 
-export default function DashboardPage() {
+function DashboardContent(){
     const searchParams = useSearchParams();
     const verifySent = searchParams.get("verify") === "sent";
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -588,5 +588,19 @@ export default function DashboardPage() {
         {productCopy.disclaimer}
       </p>
     </main>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-6xl px-6 py-12">
+          <p className="text-sm text-gray-600">Loading dashboard...</p>
+        </main>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }
