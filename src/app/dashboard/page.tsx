@@ -214,7 +214,7 @@ function DashboardContent(){
           </p>
 
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
-            Welcome back{user.name ? `, ${user.name}` : ""}.
+            Welcome {user.name ? `, ${user.name}` : ""}.
           </h1>
 
           <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600">
