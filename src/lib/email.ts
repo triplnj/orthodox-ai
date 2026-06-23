@@ -14,7 +14,9 @@ export async function sendPasswordResetEmail({
   resetUrl,
 }: SendPasswordResetEmailInput) {
   if (!resend) {
-    console.log("RESEND_API_KEY is missing. Password reset link:", resetUrl);
+  if (process.env.NODE_ENV !== "production") {
+  console.log("Password reset link:", resetUrl);
+}
     return;
   }
 
@@ -84,7 +86,9 @@ export async function sendEmailVerification({
   verifyUrl,
 }: SendEmailVerificationInput) {
   if (!resend) {
-    console.log("RESEND_API_KEY is missing. Email verification link:", verifyUrl);
+    if (process.env.NODE_ENV !== "production") {
+  console.log("Email verification link:", verifyUrl);
+}
     return;
   }
 

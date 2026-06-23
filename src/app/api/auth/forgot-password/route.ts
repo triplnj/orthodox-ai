@@ -55,7 +55,9 @@ export async function POST(req: Request) {
         process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
       }/reset-password?token=${rawToken}`;
 
-      console.log("PASSWORD_RESET_LINK:", resetUrl);
+      if (process.env.NODE_ENV !== "production") {
+     console.log("PASSWORD_RESET_LINK:", resetUrl);
+}
 
       await sendPasswordResetEmail({
         to: user.email,

@@ -76,7 +76,9 @@ const verifyUrl = `${
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 }/verify-email?token=${rawToken}`;
 
-console.log("EMAIL_VERIFICATION_LINK:", verifyUrl);
+if (process.env.NODE_ENV !== "production") {
+  console.log("EMAIL_VERIFICATION_LINK:", verifyUrl);
+}
 
 await sendEmailVerification({
   to: user.email,
