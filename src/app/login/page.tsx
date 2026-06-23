@@ -58,7 +58,7 @@ export default function LoginPage() {
         </p>
 
         <h1 className="mt-3 text-3xl font-bold text-gray-950">
-          Welcome back
+          Welcome
         </h1>
 
         <p className="mt-3 text-sm leading-6 text-gray-600">
