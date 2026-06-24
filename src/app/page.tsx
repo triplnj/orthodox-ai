@@ -165,7 +165,13 @@ export default function HomePage() {
             >
               View Pro plan
             </Link>
+            
+            <p className="mt-3 text-sm text-gray-500">
+            OrthodoxAI Pro — $7.99/month. Early access pricing. Cancel anytime.
+            </p>
           </div>
+
+
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900 p-6">
             <ul className="space-y-3 text-sm text-gray-200">

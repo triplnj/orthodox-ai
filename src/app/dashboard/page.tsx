@@ -285,6 +285,12 @@ function DashboardContent(){
               : `You have ${stats.remainingFreeQuestions} Free questions remaining today.`}
           </p>
 
+          {!isPro && (
+          <p className="mt-2 text-sm text-gray-500">
+            Pro plan: $7.99/month · Early access pricing · Cancel anytime.
+          </p>
+          )}
+
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             {isPro ? <CustomerPortalButton /> : <CheckoutButton />}
 

@@ -41,6 +41,13 @@ export default function PricingPage() {
           Christian guidance. The Free plan helps you start. Pro gives you
           unlimited access and deeper personal tools.
         </p>
+        <p className="mt-4 text-3xl font-bold text-gray-950">
+        $7.99<span className="text-base font-medium text-gray-500">/month</span>
+      </p>
+
+      <p className="mt-2 text-sm text-gray-500">
+        Early access pricing. Cancel anytime.
+      </p>
       </section>
 
       <section className="mt-12">
