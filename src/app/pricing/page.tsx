@@ -42,7 +42,7 @@ export default function PricingPage() {
           unlimited access and deeper personal tools.
         </p>
         <p className="mt-4 text-3xl font-bold text-gray-950">
-        $7.99<span className="text-base font-medium text-gray-500">/month</span>
+        <span className="text-base font-medium text-gray-500">$7.99/month</span>
       </p>
 
       <p className="mt-2 text-sm text-gray-500">
