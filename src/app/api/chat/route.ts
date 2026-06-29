@@ -38,6 +38,8 @@ export async function POST(req: Request) {
         {
           error: permission.reason,
           upgradeRequired: true,
+          remaining: 0,
+          plan: user.plan,
         },
         { status: 403 }
       );
@@ -54,19 +56,19 @@ export async function POST(req: Request) {
 
     const userProfileContext = await getUserProfileContext(user.id);
 
-const combinedExtraContext = `
+    const combinedExtraContext = `
 ${userProfileContext}
 
 Page or feature extra context:
 ${extraContext ?? "No additional page context provided."}
 `;
 
-const result = await generateOrthodoxAnswer({
-  userMessage: message.trim(),
-  contextKey: contextKey ?? "general",
-  extraContext: combinedExtraContext,
-  isPro: isProUser(user),
-});
+    const result = await generateOrthodoxAnswer({
+      userMessage: message.trim(),
+      contextKey: contextKey ?? "general",
+      extraContext: combinedExtraContext,
+      isPro: isProUser(user),
+    });
 
     await prisma.chatMessage.create({
       data: {
@@ -79,9 +81,12 @@ const result = await generateOrthodoxAnswer({
 
     await logUsage(user.id, "chat");
 
+    const remaining =
+      permission.remaining === null ? null : Math.max(0, permission.remaining - 1);
+
     return NextResponse.json({
       answer: result.answer,
-      remaining: permission.remaining,
+      remaining,
       plan: user.plan,
     });
   } catch (error) {
