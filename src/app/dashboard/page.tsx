@@ -292,7 +292,16 @@ function DashboardContent(){
           )}
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            {isPro ? <CustomerPortalButton /> : <CheckoutButton />}
+           {isPro ? (
+  <Link
+            href="/settings"
+            className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-center text-sm font-semibold text-gray-800 hover:border-gray-950"
+          >
+            Manage account
+          </Link>
+        ) : (
+          <CheckoutButton />
+        )}
 
             <Link
               href="/pricing"

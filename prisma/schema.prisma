@@ -27,11 +27,12 @@ model User {
   stripeCustomerId   String?
   subscriptionStatus String?
   subscriptionId     String?
-
+  
   lemonSqueezyCustomerId     String?
   lemonSqueezySubscriptionId String?
   lemonSqueezyOrderId        String?
   lemonSqueezyVariantId      String?
+ 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

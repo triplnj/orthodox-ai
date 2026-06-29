@@ -21,7 +21,7 @@ export function CheckoutButton({
     setEmailVerificationRequired(false);
 
     try {
-      const response = await fetch("/api/stripe/create-checkout-session", {
+      const response = await fetch("/api/lemonsqueezy/create-checkout", {
         method: "POST",
       });
 
@@ -34,6 +34,11 @@ export function CheckoutButton({
           setEmailVerificationRequired(true);
         }
 
+        return;
+      }
+
+         if (!data.url) {
+        setError("Checkout URL was not returned.");
         return;
       }
 
