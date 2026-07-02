@@ -133,12 +133,14 @@ export function NavbarClient({ user, isPro }: NavbarClientProps) {
               </>
             )}
 
+            {!isPro && (
             <Link
               href="/pricing"
-              className="rounded-lg bg-gray-950 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              className="rounded-lg bg-gray-950 px-4 py-2 text-sm font-semibold text-white"
             >
-              Go Pro
+              Full Access
             </Link>
+          )}
           </div>
 
           <button
@@ -213,7 +215,7 @@ export function NavbarClient({ user, isPro }: NavbarClientProps) {
                 onClick={closeMenu}
                 className="rounded-lg bg-gray-950 px-4 py-2 text-center text-sm font-medium text-white hover:bg-gray-800"
               >
-                Go Pro
+                Full Access
               </Link>
             </div>
           </div>
