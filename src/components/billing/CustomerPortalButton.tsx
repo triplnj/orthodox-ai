@@ -11,7 +11,7 @@ export function CustomerPortalButton() {
     setError(null);
 
     try {
-      const response = await fetch("/api/stripe/customer-portal", {
+      const response = await fetch("/api/lemonsqueezy/customer-portal", {
         method: "POST",
       });
 
@@ -19,6 +19,11 @@ export function CustomerPortalButton() {
 
       if (!response.ok) {
         setError(data.error ?? "Could not open billing portal.");
+        return;
+      }
+
+      if (!data.url) {
+        setError("Billing portal URL was not returned.");
         return;
       }
 
@@ -36,9 +41,9 @@ export function CustomerPortalButton() {
         type="button"
         onClick={handlePortal}
         disabled={isLoading}
-        className="rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-800 hover:border-gray-950 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-800 hover:border-gray-950 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isLoading ? "Opening billing portal..." : "Manage billing"}
+        {isLoading ? "Opening billing portal..." : "Manage subscription"}
       </button>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
