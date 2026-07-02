@@ -32,9 +32,9 @@ export default function SettingsPage() {
   const [account, setAccount] = useState<AccountData | null>(null);
   const [name, setName] = useState("");
 
-const [currentPassword, setCurrentPassword] = useState("");
-const [newPassword, setNewPassword] = useState("");
-const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -48,9 +48,13 @@ const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
-const [verificationError, setVerificationError] = useState<string | null>(null);
-const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState<
+    string | null
+  >(null);
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null
+  );
+  const [isSendingVerification, setIsSendingVerification] = useState(false);
 
   useEffect(() => {
     async function loadAccount() {
@@ -123,95 +127,127 @@ const [isSendingVerification, setIsSendingVerification] = useState(false);
       setIsSavingProfile(false);
     }
   }
+
   async function changePassword(event: React.FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-
-  setIsChangingPassword(true);
-  setPasswordMessage(null);
-  setPasswordError(null);
-
-  try {
-    const response = await fetch("/api/settings/password", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        currentPassword,
-        newPassword,
-        confirmPassword,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setPasswordError(data.error ?? "Could not change password.");
-      return;
-    }
-
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordMessage("Password changed successfully.");
-  } catch {
-    setPasswordError("Network error while changing password.");
-  } finally {
-    setIsChangingPassword(false);
-  }
-}
-async function resendVerificationEmail() {
-  setIsSendingVerification(true);
-  setVerificationMessage(null);
-  setVerificationError(null);
-
-  try {
-    const response = await fetch("/api/auth/resend-verification", {
-      method: "POST",
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setVerificationError(data.error ?? "Could not send verification email.");
-      return;
-    }
-
-    setVerificationMessage(data.message ?? "Verification email sent.");
-  } catch {
-    setVerificationError("Network error while sending verification email.");
-  } finally {
-    setIsSendingVerification(false);
-  }
-}
-  async function deleteAccount(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    setIsDeleting(true);
-    setDeleteError(null);
+    setIsChangingPassword(true);
+    setPasswordMessage(null);
+    setPasswordError(null);
 
     try {
-      const response = await fetch("/api/settings/delete", {
-        method: "DELETE",
+      const response = await fetch("/api/settings/password", {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          confirmation: deleteConfirmation,
+          currentPassword,
+          newPassword,
+          confirmPassword,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setDeleteError(data.error ?? "Could not delete account.");
+        setPasswordError(data.error ?? "Could not change password.");
         return;
       }
 
-      router.push("/");
-      router.refresh();
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMessage("Password changed successfully.");
     } catch {
-      setDeleteError("Network error while deleting account.");
+      setPasswordError("Network error while changing password.");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  }
+
+  async function resendVerificationEmail() {
+    setIsSendingVerification(true);
+    setVerificationMessage(null);
+    setVerificationError(null);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setVerificationError(
+          data.error ?? "Could not send verification email."
+        );
+        return;
+      }
+
+      setVerificationMessage(data.message ?? "Verification email sent.");
+    } catch {
+      setVerificationError(
+        "Network error while sending verification email."
+      );
+    } finally {
+      setIsSendingVerification(false);
+    }
+  }
+
+  async function deleteAccount(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setDeleteError(null);
+
+    if (deleteConfirmation !== "DELETE") {
+      setDeleteError("Type DELETE exactly to confirm account deletion.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch("/api/account/delete", {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      /*
+       * Aktivna Lemon Squeezy pretplata:
+       * nalog se ne briše i korisnik se šalje u Customer Portal.
+       */
+      if (
+        response.status === 409 &&
+        data.subscriptionActive === true &&
+        typeof data.customerPortalUrl === "string"
+      ) {
+        window.location.href = data.customerPortalUrl;
+        return;
+      }
+
+      if (!response.ok) {
+        setDeleteError(
+          data.error ??
+            "Your account could not be deleted. Please try again."
+        );
+        return;
+      }
+
+      window.location.href = "/";
+    } catch {
+      setDeleteError(
+        "A network error occurred while deleting your account. Please try again."
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -257,7 +293,7 @@ async function resendVerificationEmail() {
           Settings
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Account settings
         </h1>
 
@@ -270,9 +306,7 @@ async function resendVerificationEmail() {
       <section className="mt-10 grid gap-8 lg:grid-cols-[1fr_0.85fr]">
         <div className="space-y-8">
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-950">
-              Profile
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-950">Profile</h2>
 
             <p className="mt-2 text-sm leading-6 text-gray-600">
               Update the display name used in your dashboard and account pages.
@@ -314,78 +348,84 @@ async function resendVerificationEmail() {
           </section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-  <h2 className="text-xl font-semibold text-gray-950">
-    Change password
-  </h2>
+            <h2 className="text-xl font-semibold text-gray-950">
+              Change password
+            </h2>
 
-  <p className="mt-2 text-sm leading-6 text-gray-600">
-    Update your account password. Use at least 8 characters.
-  </p>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Update your account password. Use at least 8 characters.
+            </p>
 
-  {passwordError && (
-    <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-      {passwordError}
-    </div>
-  )}
+            {passwordError && (
+              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {passwordError}
+              </div>
+            )}
 
-  {passwordMessage && (
-    <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-      {passwordMessage}
-    </div>
-  )}
+            {passwordMessage && (
+              <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+                {passwordMessage}
+              </div>
+            )}
 
-  <form onSubmit={changePassword} className="mt-6 space-y-4">
-    <div>
-      <label className="text-sm font-medium text-gray-700">
-        Current password
-      </label>
+            <form onSubmit={changePassword} className="mt-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Current password
+                </label>
 
-      <input
-        type="password"
-        value={currentPassword}
-        onChange={(event) => setCurrentPassword(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
-        required
-      />
-    </div>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(event) =>
+                    setCurrentPassword(event.target.value)
+                  }
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
+                  required
+                />
+              </div>
 
-    <div>
-      <label className="text-sm font-medium text-gray-700">
-        New password
-      </label>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  New password
+                </label>
 
-      <input
-        type="password"
-        value={newPassword}
-        onChange={(event) => setNewPassword(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
-        required
-      />
-    </div>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
+                  required
+                />
+              </div>
 
-    <div>
-      <label className="text-sm font-medium text-gray-700">
-        Confirm new password
-      </label>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Confirm new password
+                </label>
 
-      <input
-        type="password"
-        value={confirmPassword}
-        onChange={(event) => setConfirmPassword(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
-        required
-      />
-    </div>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) =>
+                    setConfirmPassword(event.target.value)
+                  }
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
+                  required
+                />
+              </div>
 
-    <button
-      type="submit"
-      disabled={isChangingPassword}
-      className="rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {isChangingPassword ? "Changing password..." : "Change password"}
-    </button>
-  </form>
-</section>
+              <button
+                type="submit"
+                disabled={isChangingPassword}
+                className="rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isChangingPassword
+                  ? "Changing password..."
+                  : "Change password"}
+              </button>
+            </form>
+          </section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-950">
@@ -417,9 +457,10 @@ async function resendVerificationEmail() {
             </p>
 
             <p className="mt-3 text-sm leading-6 text-red-800">
-            If you have an active Stripe subscription, OrthodoxAI will try to cancel it
-            before deleting your local account. If cancellation fails, account deletion
-            will stop and you should cancel billing through the billing portal first.
+              If you have an active Full Access subscription, you will first be
+              redirected to the Lemon Squeezy billing portal. Cancel the
+              subscription there, then return to OrthodoxAI to delete your
+              account.
             </p>
 
             {deleteError && (
@@ -448,7 +489,11 @@ async function resendVerificationEmail() {
                 disabled={isDeleting}
                 className="rounded-lg bg-red-700 px-5 py-3 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isDeleting ? "Deleting..." : "Delete account"}
+                {isDeleting
+                  ? "Processing..."
+                  : account.isPro
+                    ? "Manage subscription before deletion"
+                    : "Delete account"}
               </button>
             </form>
           </section>
@@ -467,17 +512,18 @@ async function resendVerificationEmail() {
                   {account.user.email}
                 </span>
               </div>
+
               <div className="flex justify-between gap-4 py-3">
-                    <span className="text-gray-500">Email verified</span>
-                    <span className="font-medium text-gray-950">
-                    {account.user.emailVerified ? "Yes" : "No"}
+                <span className="text-gray-500">Email verified</span>
+                <span className="font-medium text-gray-950">
+                  {account.user.emailVerified ? "Yes" : "No"}
                 </span>
-                </div>
+              </div>
 
               <div className="flex justify-between gap-4 py-3">
                 <span className="text-gray-500">Plan</span>
                 <span className="font-medium text-gray-950">
-                  {account.isPro ? "Pro" : "Free"}
+                  {account.isPro ? "Full Access" : "Free"}
                 </span>
               </div>
 
@@ -505,38 +551,41 @@ async function resendVerificationEmail() {
           </section>
 
           {!account.user.emailVerified && (
-  <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
-    <h2 className="text-xl font-semibold text-amber-950">
-      Verify your email
-    </h2>
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+              <h2 className="text-xl font-semibold text-amber-950">
+                Verify your email
+              </h2>
 
-    <p className="mt-2 text-sm leading-6 text-amber-900">
-      Your email address is not verified yet. Verify your email to improve
-      account security and prepare your account for production features.
-    </p>
+              <p className="mt-2 text-sm leading-6 text-amber-900">
+                Your email address is not verified yet. Verify your email to
+                improve account security and prepare your account for
+                production features.
+              </p>
 
-    {verificationMessage && (
-      <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-        {verificationMessage}
-      </div>
-    )}
+              {verificationMessage && (
+                <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+                  {verificationMessage}
+                </div>
+              )}
 
-    {verificationError && (
-      <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-        {verificationError}
-      </div>
-    )}
+              {verificationError && (
+                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  {verificationError}
+                </div>
+              )}
 
-    <button
-      type="button"
-      onClick={resendVerificationEmail}
-      disabled={isSendingVerification}
-      className="mt-6 rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {isSendingVerification ? "Sending..." : "Resend verification email"}
-    </button>
-  </section>
-)}
+              <button
+                type="button"
+                onClick={resendVerificationEmail}
+                disabled={isSendingVerification}
+                className="mt-6 rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSendingVerification
+                  ? "Sending..."
+                  : "Resend verification email"}
+              </button>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-950">
