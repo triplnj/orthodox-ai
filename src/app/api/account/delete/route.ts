@@ -39,107 +39,24 @@ export async function DELETE() {
       );
     }
 
+    const subscriptionStatus =
+      user.subscriptionStatus?.toLowerCase() ?? "";
+
     const hasActiveSubscription =
       Boolean(user.lemonSqueezySubscriptionId) &&
-      ACTIVE_SUBSCRIPTION_STATUSES.includes(
-        user.subscriptionStatus?.toLowerCase() ?? ""
-      );
+      ACTIVE_SUBSCRIPTION_STATUSES.includes(subscriptionStatus);
 
     if (hasActiveSubscription) {
-      const apiKey = process.env.LEMONSQUEEZY_API_KEY;
-
-      if (!apiKey) {
-        return NextResponse.json(
-          {
-            error:
-              "Billing is not configured correctly. Your account was not deleted. Please contact support.",
-          },
-          { status: 500 }
-        );
-      }
-
-      const cancelResponse = await fetch(
-        `https://api.lemonsqueezy.com/v1/subscriptions/${user.lemonSqueezySubscriptionId}`,
+      return NextResponse.json(
         {
-          method: "DELETE",
-          headers: {
-            Accept: "application/vnd.api+json",
-            "Content-Type": "application/vnd.api+json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          cache: "no-store",
-        }
+          error:
+            "Please cancel your Full Access subscription before deleting your account.",
+          subscriptionActive: true,
+        },
+        { status: 409 }
       );
-
-      if (!cancelResponse.ok) {
-        const errorBody = await cancelResponse.text();
-
-        console.error("LEMON_SQUEEZY_CANCEL_ERROR:", {
-          status: cancelResponse.status,
-          body: errorBody,
-          userId: user.id,
-          subscriptionId: user.lemonSqueezySubscriptionId,
-        });
-
-        return NextResponse.json(
-          {
-            error:
-              "Your subscription could not be cancelled, so your account was not deleted. Please try again or contact support.",
-          },
-          { status: 502 }
-        );
-      }
     }
-// 1. Otkaži Lemon Squeezy subscription
 
-if (
-  user.lemonSqueezySubscriptionId &&
-  ["active", "on_trial", "paused", "past_due", "unpaid"].includes(
-    user.subscriptionStatus?.toLowerCase() ?? ""
-  )
-) {
-  const apiKey = process.env.LEMONSQUEEZY_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        error:
-          "Billing is not configured correctly. Your account was not deleted.",
-      },
-      { status: 500 }
-    );
-  }
-
-  const cancelResponse = await fetch(
-    `https://api.lemonsqueezy.com/v1/subscriptions/${user.lemonSqueezySubscriptionId}`,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "application/vnd.api+json",
-        "Content-Type": "application/vnd.api+json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-    }
-  );
-
-  if (!cancelResponse.ok) {
-    return NextResponse.json(
-      {
-        error:
-          "Your subscription could not be cancelled, so your account was not deleted.",
-      },
-      { status: 502 }
-    );
-  }
-}
-
-
-
-await prisma.user.delete({
-  where: {
-    id: user.id,
-  },
-});
     await prisma.user.delete({
       where: {
         id: user.id,
@@ -148,8 +65,7 @@ await prisma.user.delete({
 
     const response = NextResponse.json({
       success: true,
-      message:
-        "Your subscription has been cancelled and your account has been deleted.",
+      message: "Your account has been deleted.",
     });
 
     response.cookies.set("session", "", {
