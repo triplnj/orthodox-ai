@@ -37,11 +37,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: permission.reason,
-          upgradeRequired: true,
-          remaining: 0,
+          upgradeRequired:
+            permission.limitType === "daily" && !isProUser(user),
+          rateLimited: permission.limitType === "rate",
+          limitType: permission.limitType,
+          remaining: permission.remaining,
+          dailyLimit: permission.dailyLimit,
           plan: user.plan,
         },
-        { status: 403 }
+        { status: permission.status }
       );
     }
 
@@ -82,11 +86,14 @@ ${extraContext ?? "No additional page context provided."}
     await logUsage(user.id, "chat");
 
     const remaining =
-      permission.remaining === null ? null : Math.max(0, permission.remaining - 1);
+      permission.remaining === null
+        ? null
+        : Math.max(0, permission.remaining - 1);
 
     return NextResponse.json({
       answer: result.answer,
       remaining,
+      dailyLimit: permission.dailyLimit,
       plan: user.plan,
     });
   } catch (error) {

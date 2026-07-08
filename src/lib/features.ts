@@ -1,4 +1,6 @@
 export const FREE_DAILY_CHAT_LIMIT = 5;
+export const FULL_ACCESS_DAILY_CHAT_LIMIT = 100;
+export const CHAT_RATE_LIMIT_PER_MINUTE = 10;
 
 export const features = {
   chat: {
@@ -7,6 +9,8 @@ export const features = {
     free: true,
     pro: true,
     freeDailyLimit: FREE_DAILY_CHAT_LIMIT,
+    fullAccessDailyLimit: FULL_ACCESS_DAILY_CHAT_LIMIT,
+    requestsPerMinute: CHAT_RATE_LIMIT_PER_MINUTE,
   },
 
   today: {
