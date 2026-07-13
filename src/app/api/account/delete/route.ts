@@ -21,6 +21,16 @@ export async function DELETE() {
       );
     }
 
+    const reviewEmail =
+      process.env.REVIEW_USER_EMAIL ?? "fr-josiah-review@orthodoxai.app";
+
+    if (currentUser.email === reviewEmail) {
+      return NextResponse.json(
+        { error: "This review account cannot be deleted." },
+        { status: 403 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: {
         id: currentUser.id,
@@ -39,19 +49,12 @@ export async function DELETE() {
       );
     }
 
-    const subscriptionStatus =
-      user.subscriptionStatus?.toLowerCase() ?? "";
+    const subscriptionStatus = user.subscriptionStatus?.toLowerCase() ?? "";
 
     const hasActiveSubscription =
       Boolean(user.lemonSqueezySubscriptionId) &&
       ACTIVE_SUBSCRIPTION_STATUSES.includes(subscriptionStatus);
 
-    /*
-     * Ako korisnik ima aktivnu pretplatu:
-     * - ne brišemo nalog;
-     * - tražimo njegov Lemon Squeezy Customer Portal URL;
-     * - vraćamo URL frontendu.
-     */
     if (hasActiveSubscription) {
       const apiKey = process.env.LEMONSQUEEZY_API_KEY;
 
@@ -123,10 +126,6 @@ export async function DELETE() {
       );
     }
 
-    /*
-     * Nema aktivne pretplate:
-     * nalog može da se obriše.
-     */
     await prisma.user.delete({
       where: {
         id: user.id,
