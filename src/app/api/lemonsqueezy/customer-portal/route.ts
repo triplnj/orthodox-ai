@@ -12,6 +12,21 @@ export async function POST() {
         { status: 401 }
       );
     }
+const frJosiahReviewEmail =
+  process.env.REVIEW_USER_EMAIL ?? "fr-josiah-review@orthodoxai.app";
+
+const clergyReviewEmail =
+  process.env.REVIEW_CLERGY_USER_EMAIL ?? "clergy-review@orthodoxai.app";
+
+if (
+  currentUser.email === frJosiahReviewEmail ||
+  currentUser.email === clergyReviewEmail
+) {
+  return NextResponse.json(
+    { error: "Billing portal is not available for review accounts." },
+    { status: 403 }
+  );
+}
 
     const user = await prisma.user.findUnique({
       where: {

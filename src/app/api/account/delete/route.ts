@@ -21,15 +21,21 @@ export async function DELETE() {
       );
     }
 
-    const reviewEmail =
-      process.env.REVIEW_USER_EMAIL ?? "fr-josiah-review@orthodoxai.app";
+  const frJosiahReviewEmail =
+  process.env.REVIEW_USER_EMAIL ?? "fr-josiah-review@orthodoxai.app";
 
-    if (currentUser.email === reviewEmail) {
-      return NextResponse.json(
-        { error: "This review account cannot be deleted." },
-        { status: 403 }
-      );
-    }
+const clergyReviewEmail =
+  process.env.REVIEW_CLERGY_USER_EMAIL ?? "clergy-review@orthodoxai.app";
+
+if (
+  currentUser.email === frJosiahReviewEmail ||
+  currentUser.email === clergyReviewEmail
+) {
+  return NextResponse.json(
+    { error: "This review account cannot be deleted." },
+    { status: 403 }
+  );
+}
 
     const user = await prisma.user.findUnique({
       where: {
