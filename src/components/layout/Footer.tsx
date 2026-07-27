@@ -10,7 +10,7 @@ export function Footer() {
         <div>
           <p className="font-medium text-gray-700">
             © {year} {productCopy.brandName}. All rights reserved by
-            Боготражитељ.
+            Богоискатељ.
           </p>
 
         </div>
