@@ -132,3 +132,25 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogPost {
+  id          String         @id @default(cuid())
+  title       String
+  slug        String         @unique
+  excerpt     String?
+  content     String
+  category    String?
+  status      BlogPostStatus @default(DRAFT)
+  authorEmail String?
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
