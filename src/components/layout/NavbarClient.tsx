@@ -43,7 +43,7 @@ const primaryNavItems = [
     label: "Scripture",
   },
   { href: "/blog", 
-    label: "Blog" },
+    label: "Blog" }
 ];
 
 const secondaryNavItems = [
