@@ -39,9 +39,8 @@ export async function buildPatristicContext(
   );
 
   if (usableQuotes.length === 0) {
-    return "No sufficiently relevant verified patristic records were found.";
-  }
-
+  return "";
+}
   const ids = usableQuotes.map((quote) => quote.id);
 
   const sources = await prisma.patristicQuoteSource.findMany({

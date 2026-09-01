@@ -4,20 +4,8 @@ import {
 } from "next/server";
 
 import {
-  discoverPatristicSources,
-} from "@/lib/patristics/web-discovery";
-
-import {
-  verifyDiscoveryCandidates,
-} from "@/lib/patristics/verify-discovery";
-
-import {
-  verifyCandidateAttribution,
-} from "@/lib/patristics/verify-attribution";
-
-import {
-  saveVerifiedDiscoveryCandidate,
-} from "@/lib/patristics/save-quotes";
+  discoverAndSavePatristicQuotes,
+} from "@/lib/patristics/discover-and-save";
 
 export const runtime = "nodejs";
 
@@ -52,6 +40,11 @@ export async function POST(
       ? body.query.trim()
       : "";
 
+  const language =
+    body.language === "sr"
+      ? "sr"
+      : "en";
+
   if (!query) {
     return NextResponse.json(
       {
@@ -64,98 +57,15 @@ export async function POST(
   }
 
   try {
-    const discovered =
-      await discoverPatristicSources({
+    const result =
+      await discoverAndSavePatristicQuotes(
         query,
-        language: "en",
-      });
-
-    const verified =
-      await verifyDiscoveryCandidates(
-        discovered,
+        language,
       );
 
-    const exactMatches =
-      verified.filter(
-        (candidate) =>
-          candidate.exactMatch,
-      );
-
-    const trustedExactMatches =
-      exactMatches.filter(
-        (candidate) =>
-          candidate.trustedSource,
-      );
-
-    const attributionResults =
-      await Promise.all(
-        trustedExactMatches.map(
-          async (candidate) => {
-            const attribution =
-              await verifyCandidateAttribution(
-                candidate,
-              );
-
-            return {
-              ...candidate,
-              attribution,
-            };
-          },
-        ),
-      );
-
-    const attributionVerified =
-      attributionResults.filter(
-        (candidate) =>
-          candidate.attribution
-            .matchesClaimedAuthor,
-      );
-
-    const savedResults =
-      await Promise.all(
-        attributionVerified.map(
-          async (candidate) => {
-            const saved =
-              await saveVerifiedDiscoveryCandidate(
-                candidate,
-                candidate.attribution,
-              );
-
-            return {
-              candidate,
-              saved: {
-                id: saved.id,
-                verification:
-                  saved.verification,
-                confidence:
-                  saved.confidence,
-              },
-            };
-          },
-        ),
-      );
-
-    return NextResponse.json({
-      query,
-
-      discovered:
-        discovered.length,
-
-      exactMatches:
-        exactMatches.length,
-
-      trustedExactMatches:
-        trustedExactMatches.length,
-
-      attributionVerified:
-        attributionVerified.length,
-
-      saved:
-        savedResults.length,
-
-      result:
-        savedResults,
-    });
+    return NextResponse.json(
+      result,
+    );
   } catch (error) {
     console.error(
       "PATRISTIC_DISCOVERY_ERROR",

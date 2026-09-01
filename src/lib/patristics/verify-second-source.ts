@@ -53,13 +53,24 @@ function getSourceIdentity(
 }
 
 
-export async function verifyQuotesAgainstPg() {
+export async function verifyQuotesAgainstPg(
+  quoteIds?: string[],
+) {
 
   const quotes =
     await prisma.patristicQuote.findMany({
       where: {
         verification:
           "TEXT_VERIFIED",
+
+        ...(quoteIds &&
+        quoteIds.length > 0
+          ? {
+              id: {
+                in: quoteIds,
+              },
+            }
+          : {}),
       },
 
       include: {
@@ -408,4 +419,4 @@ ${quote.sources
 
     candidateSourcesChecked,
   };
-}   
+}

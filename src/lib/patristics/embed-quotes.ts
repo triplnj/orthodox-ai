@@ -13,7 +13,9 @@ function vectorToSql(
 }
 
 
-export async function embedVerifiedQuotes() {
+export async function embedVerifiedQuotes(
+  quoteIds?: string[],
+) {
   const quotes =
     await prisma.patristicQuote.findMany({
       where: {
@@ -23,6 +25,15 @@ export async function embedVerifiedQuotes() {
         confidence: {
           gte: 90,
         },
+
+        ...(quoteIds &&
+        quoteIds.length > 0
+          ? {
+              id: {
+                in: quoteIds,
+              },
+            }
+          : {}),
       },
 
       select: {
