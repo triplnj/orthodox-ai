@@ -29,25 +29,29 @@ export async function discoverAndSavePatristicQuotes(
       discovered,
     );
     console.log(
-  "PATRISTIC_DISCOVERY_CANDIDATES:",
-  verified.map((candidate) => ({
-    authorName:
-      candidate.authorName,
-    workTitle:
-      candidate.workTitle,
-    originalLanguage:
-      candidate.originalLanguage,
-    originalText:
-      candidate.originalText,
-    sourceUrl:
-      candidate.sourceUrl,
-    exactMatch:
-      candidate.exactMatch,
-    trustedSource:
-      candidate.trustedSource,
-    verificationError:
-      candidate.verificationError,
-  })),
+  "PATRISTIC_DISCOVERY_CANDIDATES_JSON:",
+  JSON.stringify(
+    verified.map((candidate) => ({
+      authorName:
+        candidate.authorName,
+      workTitle:
+        candidate.workTitle,
+      originalLanguage:
+        candidate.originalLanguage,
+      originalText:
+        candidate.originalText,
+      sourceUrl:
+        candidate.sourceUrl,
+      exactMatch:
+        candidate.exactMatch,
+      trustedSource:
+        candidate.trustedSource,
+      verificationError:
+        candidate.verificationError,
+    })),
+    null,
+    2,
+  ),
 );
 
   const exactMatches =
