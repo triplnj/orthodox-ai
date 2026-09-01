@@ -6,6 +6,8 @@ import { isProUser } from "@/lib/subscription";
 import { getCurrentUser } from "@/lib/auth";
 import type { ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
+import { buildPatristicContext } from "@/lib/patristics/build-chat-context";
+import { detectPatristicLanguage } from "@/lib/patristics/detect-language";
 
 export async function POST(req: Request) {
   try {
@@ -58,13 +60,88 @@ export async function POST(req: Request) {
       },
     });
 
-    const userProfileContext = await getUserProfileContext(user.id);
+  const userProfileContext =
+  await getUserProfileContext(user.id);
 
-    const combinedExtraContext = `
+const language =
+  detectPatristicLanguage(
+    message.trim(),
+  );
+
+const patristicContext =
+  await buildPatristicContext(
+    message.trim(),
+    language,
+  );
+
+const combinedExtraContext = `
 ${userProfileContext}
 
 Page or feature extra context:
 ${extraContext ?? "No additional page context provided."}
+
+VERIFIED PATRISTIC DATABASE CONTEXT:
+
+${patristicContext || "NO VERIFIED PATRISTIC RECORD WAS RETRIEVED."}
+
+STRICT PATRISTIC CITATION RULES:
+
+1. PATRISTIC_RECORD entries are authoritative database material for this answer.
+
+CRITICAL CITATION RULES:
+- Treat every [PATRISTIC_RECORD_n] as a completely separate source record.
+- A quotation may use ONLY the AUTHOR, WORK, SECTION, CHAPTER, PARAGRAPH, REFERENCE, and VERIFIED_SOURCES contained inside that same PATRISTIC_RECORD.
+- Never transfer or combine a REFERENCE or source URL from one PATRISTIC_RECORD to another.
+- If a record says REFERENCE: Not specified, do not supply a reference from another record or from model memory.
+- When citing multiple patristic quotations, cite each quotation separately with its own available metadata.
+- A PG, SC, CPG, section, chapter, paragraph, or URL applies only to the PATRISTIC_RECORD in which it appears.
+
+2. If you place words attributed to a Church Father inside quotation marks,
+you MUST copy QUOTE_TO_USE exactly.
+Never rewrite, improve, shorten, combine, reconstruct or paraphrase a quotation.
+
+3. Never create a quotation from your general model knowledge.
+
+4. When using a quotation, identify:
+- author
+- work
+- section/chapter when available
+- PG or other reference when available.
+
+5. After a quotation, provide at least one VERIFIED_SOURCES URL when available.
+
+6. The quotation must be in the user's language:
+- English question -> use the supplied English QUOTE_TO_USE.
+- Serbian question -> use the supplied Serbian QUOTE_TO_USE.
+The ORIGINAL_TEXT may additionally be shown when useful.
+
+7. Do not claim:
+"St. X says..."
+"St. X teaches..."
+"According to St. X..."
+unless the claim is directly supported by one of the retrieved
+PATRISTIC_RECORD entries.
+
+8. You MAY explain the theological meaning after the citation,
+but distinguish your explanation from the Father's actual words.
+
+9. Do not turn your explanation into an attributed teaching.
+For example, prefer:
+"This can be understood as..."
+instead of:
+"St. John also teaches..."
+unless another retrieved record supports that statement.
+
+10. If no verified database record was retrieved:
+- answer the question normally,
+- do not fabricate patristic quotations,
+- do not invent PG, SC, CPG, chapter, homily or paragraph references.
+
+11. Never describe an OrthodoxAI-generated translation as an official
+published translation unless the database explicitly identifies it as one.
+
+12. A VERIFIED_SOURCES URL belongs only to the quotation with which it
+was supplied. Never attach one record's source to another quotation.
 `;
 
     const result = await generateOrthodoxAnswer({
