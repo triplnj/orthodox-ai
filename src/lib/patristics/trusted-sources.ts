@@ -82,6 +82,12 @@ export const TRUSTED_PATRISTIC_SOURCES:
   sourceType: "PATRISTIC_TEXT_REPOSITORY",
   trustLevel: 90,
 },
+{
+  domain: "catholiclibrary.org",
+  name: "Catholic Library Patristic Texts",
+  sourceType: "PATRISTIC_TEXT_REPOSITORY",
+  trustLevel: 85,
+},
 ];
 
 export function findTrustedPatristicSource(
