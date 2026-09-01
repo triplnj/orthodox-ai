@@ -76,6 +76,12 @@ export const TRUSTED_PATRISTIC_SOURCES:
     sourceType: "PATRISTIC_TEXT_REPOSITORY",
     trustLevel: 80,
   },
+  {
+  domain: "matia.gr",
+  name: "Matia PG Migne",
+  sourceType: "PATRISTIC_TEXT_REPOSITORY",
+  trustLevel: 90,
+},
 ];
 
 export function findTrustedPatristicSource(

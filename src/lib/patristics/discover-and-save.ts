@@ -13,6 +13,8 @@ import {
 import {
   saveVerifiedDiscoveryCandidate,
 } from "./save-quotes";
+import { translateQuote } from "./backfill-translations";
+import { prisma } from "@/lib/prisma";
 
 export async function discoverAndSavePatristicQuotes(
   query: string,
@@ -90,29 +92,46 @@ export async function discoverAndSavePatristicQuotes(
           .matchesClaimedAuthor,
     );
 
-  const savedResults =
-    await Promise.all(
-      attributionVerified.map(
-        async (candidate) => {
-          const saved =
-            await saveVerifiedDiscoveryCandidate(
-              candidate,
-              candidate.attribution,
-            );
-
-          return {
-            candidate,
-            saved: {
-              id: saved.id,
-              verification:
-                saved.verification,
-              confidence:
-                saved.confidence,
-            },
-          };
-        },
-      ),
+ const savedResults = await Promise.all(
+  attributionVerified.map(async candidate => {
+    const saved = await saveVerifiedDiscoveryCandidate(
+      candidate,
+      candidate.attribution,
     );
+
+    const translation = await translateQuote(
+      candidate.originalText,
+      candidate.originalLanguage ?? "Unknown",
+    );
+
+    const translatedQuote =
+      await prisma.patristicQuote.update({
+        where: {
+          id: saved.id,
+        },
+        data: {
+          translationSr:
+            saved.translationSr ??
+            translation.translationSr,
+
+          translationEn:
+            saved.translationEn ??
+            translation.translationEn,
+        },
+      });
+
+    return {
+      candidate,
+      saved: {
+        id: translatedQuote.id,
+        verification:
+          translatedQuote.verification,
+        confidence:
+          translatedQuote.confidence,
+      },
+    };
+  }),
+);
 
   return {
     query,

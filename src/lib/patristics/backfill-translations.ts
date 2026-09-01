@@ -11,7 +11,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function translateQuote(
+export async function translateQuote(
   originalText: string,
   originalLanguage: string,
 ): Promise<BackfillTranslation> {
