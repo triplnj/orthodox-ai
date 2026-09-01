@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { CanvasFactory } from "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
 
 
@@ -248,13 +249,14 @@ export async function fetchSourceText(
     const arrayBuffer =
       await response.arrayBuffer();
 
-    const parser =
-      new PDFParse({
-        data:
-          new Uint8Array(
-            arrayBuffer,
-          ),
-      });
+   const parser =
+  new PDFParse({
+    data:
+      new Uint8Array(
+        arrayBuffer,
+      ),
+    CanvasFactory,
+  });
 
 
     try {
