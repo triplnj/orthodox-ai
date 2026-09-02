@@ -17,6 +17,7 @@ export async function POST(
   const user =
     await getCurrentUser();
 
+
   if (!user) {
     return NextResponse.json(
       {
@@ -68,37 +69,7 @@ export async function POST(
       count:
         results.length,
 
-      results:
-        results.map(
-          (result) => ({
-            authorName:
-              result.authorName,
-
-            workTitle:
-              result.workTitle,
-
-            pgVolume:
-              result.pgVolume,
-
-            pgColumns:
-              result.pgColumns,
-
-            queryTerms:
-              result.queryTerms,
-
-            matchedTerm:
-              result.matchedTerm,
-
-            originalText:
-              result.originalText,
-
-            contextText:
-              result.contextText,
-
-            sourceUrl:
-              result.sourceUrl,
-          }),
-        ),
+      results,
     });
   } catch (error) {
     console.error(

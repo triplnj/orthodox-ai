@@ -1,3 +1,5 @@
+import * as cheerio from "cheerio";
+
 import {
   findPatristicAuthor,
   findRelevantWorks,
@@ -7,21 +9,25 @@ import {
 export type PgPassageMatch = {
   authorName: string;
 
-  workTitle: string;
+  candidateWorkTitles: string[];
 
   pgVolume: number;
 
-  pgColumns: string | null;
+  workPgColumns: string[];
+
+  scanPage: number;
 
   queryTerms: string[];
 
-  matchedTerm: string;
+  matchedTerms: string[];
 
   originalText: string;
 
   contextText: string;
 
   sourceUrl: string;
+
+  pageImageUrl: string;
 };
 
 
@@ -67,7 +73,6 @@ const TOPIC_TERMS = [
       /васкрс|resurrection|ἀνάστα|αναστα/iu,
 
     terms: [
-      "ἀναστα",
       "αναστα",
     ],
   },
@@ -77,7 +82,7 @@ const TOPIC_TERMS = [
       /ум\b|ума\b|mind|intellect|νοῦς|νους/iu,
 
     terms: [
-      "νο",
+      "νου",
     ],
   },
 
@@ -86,7 +91,6 @@ const TOPIC_TERMS = [
       /љубав|love|ἀγάπ|αγαπ/iu,
 
     terms: [
-      "ἀγαπ",
       "αγαπ",
     ],
   },
@@ -122,6 +126,7 @@ function detectGreekSearchTerms(
 ) {
   const terms: string[] = [];
 
+
   for (
     const topic of
     TOPIC_TERMS
@@ -136,6 +141,7 @@ function detectGreekSearchTerms(
       );
     }
   }
+
 
   return [
     ...new Set(
@@ -160,17 +166,36 @@ function getPgVolumeSource(
 }
 
 
-function archiveFullTextUrl(
+function archiveDjvuXmlUrl(
   identifier: string,
 ) {
   return (
     `https://archive.org/download/${identifier}/` +
-    `${identifier}_djvu.txt`
+    `${identifier}_djvu.xml`
   );
 }
 
 
-async function fetchPgOcrText(
+function archiveDetailsUrl(
+  identifier: string,
+) {
+  return (
+    `https://archive.org/details/${identifier}`
+  );
+}
+
+
+function archivePageUrl(
+  identifier: string,
+  scanPage: number,
+) {
+  return (
+    `https://archive.org/details/${identifier}/page/n${scanPage}/mode/1up`
+  );
+}
+
+
+async function fetchPgDjvuXml(
   volume: number,
 ) {
   const source =
@@ -178,215 +203,269 @@ async function fetchPgOcrText(
       volume,
     );
 
+
   if (!source) {
     throw new Error(
       `No OCR source configured for PG ${volume}.`,
     );
   }
 
+
   const url =
-    archiveFullTextUrl(
+    archiveDjvuXmlUrl(
       source.archiveIdentifier,
     );
 
-  const response =
-    await fetch(url, {
-      headers: {
-        "User-Agent":
-          "OrthodoxAI-Patristics/1.0 (+https://orthodoxai.app)",
-      },
 
-      next: {
-        revalidate:
-          60 * 60 * 24 * 30,
+  const response =
+    await fetch(
+      url,
+      {
+        headers: {
+          "User-Agent":
+            "OrthodoxAI-Patristics/1.0 (+https://orthodoxai.app)",
+        },
+
+        next: {
+          revalidate:
+            60 *
+            60 *
+            24 *
+            30,
+        },
       },
-    });
+    );
 
 
   if (!response.ok) {
     throw new Error(
-      `Could not fetch OCR for PG ${volume}: ${response.status}`,
+      `Could not fetch DjVu XML for PG ${volume}: ${response.status}`,
     );
   }
 
 
-  const text =
-    await response.text();
-
-
   return {
-    text,
+    xml:
+      await response.text(),
 
-    sourceUrl:
-      `https://archive.org/details/${source.archiveIdentifier}`,
+    archiveIdentifier:
+      source.archiveIdentifier,
   };
 }
 
 
-function splitIntoParagraphs(
-  text: string,
+function extractParagraphsFromPage(
+   pageElement: Parameters<cheerio.CheerioAPI>[0],
+  $: cheerio.CheerioAPI,
 ) {
-  return text
-    .replace(/\r/g, "")
-    .split(
-      /\n\s*\n+/,
+  const paragraphs: string[] =
+    [];
+
+
+  $(
+    pageElement,
+  )
+    .find(
+      "PARAGRAPH",
     )
-    .map(
-      (paragraph) =>
-        paragraph
-          .replace(
-            /\s+/g,
-            " ",
+    .each(
+      (_, paragraph) => {
+        const words: string[] =
+          [];
+
+
+        $(
+          paragraph,
+        )
+          .find(
+            "WORD",
           )
-          .trim(),
-    )
-    .filter(
-      (paragraph) =>
-        paragraph.length >=
-        40,
+          .each(
+            (_, word) => {
+              const text =
+                $(word)
+                  .text()
+                  .trim();
+
+
+              if (text) {
+                words.push(
+                  text,
+                );
+              }
+            },
+          );
+
+
+        const text =
+          words
+            .join(" ")
+            .replace(
+              /\s+/g,
+              " ",
+            )
+            .trim();
+
+
+        if (
+          text.length >=
+          40
+        ) {
+          paragraphs.push(
+            text,
+          );
+        }
+      },
     );
+
+
+  return paragraphs;
 }
 
 
-function findMatchingParagraphs(
+function findMatchedTerms(
   text: string,
   terms: string[],
-  limit: number,
 ) {
-  const paragraphs =
-    splitIntoParagraphs(
+  const normalized =
+    normalizeGreek(
       text,
     );
 
 
-  const matches: {
-    paragraph: string;
-
-    matchedTerm: string;
-
-    score: number;
-  }[] = [];
-
-
-  for (
-    const paragraph of
-    paragraphs
-  ) {
-    const normalized =
-      normalizeGreek(
-        paragraph,
-      );
-
-    let score = 0;
-
-    let firstMatchedTerm =
-      "";
-
-
-    for (
-      const term of terms
-    ) {
-      const normalizedTerm =
+  return terms.filter(
+    (term) =>
+      normalized.includes(
         normalizeGreek(
           term,
-        );
-
-      if (
-        normalized.includes(
-          normalizedTerm,
-        )
-      ) {
-        score += 1;
-
-        if (
-          !firstMatchedTerm
-        ) {
-          firstMatchedTerm =
-            term;
-        }
-      }
-    }
-
-
-    if (
-      score === 0
-    ) {
-      continue;
-    }
-
-
-    matches.push({
-      paragraph,
-
-      matchedTerm:
-        firstMatchedTerm,
-
-      score,
-    });
-  }
-
-
-  return matches
-    .sort(
-      (a, b) =>
-        b.score - a.score,
-    )
-    .slice(
-      0,
-      limit,
-    );
+        ),
+      ),
+  );
 }
 
 
-function surroundingContext(
-  text: string,
-  paragraph: string,
+type RawPageMatch = {
+  scanPage: number;
+
+  paragraphIndex: number;
+
+  paragraph: string;
+
+  context: string;
+
+  matchedTerms: string[];
+
+  score: number;
+};
+
+
+function searchPages(
+  xml: string,
+  terms: string[],
 ) {
-  const index =
-    text.indexOf(
-      paragraph,
+  const $ =
+    cheerio.load(
+      xml,
+      {
+        xmlMode: true,
+      },
     );
 
 
-  if (
-    index < 0
-  ) {
-    return paragraph;
-  }
+  const results:
+    RawPageMatch[] =
+      [];
 
 
-  const before =
-    Math.max(
-      0,
-      index - 500,
-    );
-
-  const after =
-    Math.min(
-      text.length,
-      index +
-        paragraph.length +
-        500,
-    );
+  $("OBJECT").each(
+    (pageIndex, page) => {
+      const paragraphs =
+        extractParagraphsFromPage(
+          page,
+          $,
+        );
 
 
-  return text
-    .slice(
-      before,
-      after,
-    )
-    .replace(
-      /\s+/g,
-      " ",
-    )
-    .trim();
+      paragraphs.forEach(
+        (
+          paragraph,
+          paragraphIndex,
+        ) => {
+          const matchedTerms =
+            findMatchedTerms(
+              paragraph,
+              terms,
+            );
+
+
+          if (
+            matchedTerms.length ===
+            0
+          ) {
+            return;
+          }
+
+
+          const before =
+            paragraphs[
+              paragraphIndex -
+                1
+            ] ?? "";
+
+
+          const after =
+            paragraphs[
+              paragraphIndex +
+                1
+            ] ?? "";
+
+
+          const context =
+            [
+              before,
+              paragraph,
+              after,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .replace(
+                /\s+/g,
+                " ",
+              )
+              .trim();
+
+
+          results.push({
+            scanPage:
+              pageIndex,
+
+            paragraphIndex,
+
+            paragraph,
+
+            context,
+
+            matchedTerms,
+
+            score:
+              matchedTerms.length,
+          });
+        },
+      );
+    },
+  );
+
+
+  return results;
 }
 
 
 export async function searchPgPassages(
   query: string,
   limit = 10,
-): Promise<PgPassageMatch[]> {
+): Promise<
+  PgPassageMatch[]
+> {
   const author =
     findPatristicAuthor(
       query,
@@ -424,89 +503,172 @@ export async function searchPgPassages(
       : author.works;
 
 
-  const results:
+  /*
+   * Не претражујемо исти PG том
+   * више пута само зато што се
+   * у њему налази више дела.
+   */
+  const volumes = [
+    ...new Set(
+      works
+        .map(
+          (work) =>
+            work.pgVolume,
+        )
+        .filter(
+          (
+            volume,
+          ): volume is number =>
+            typeof volume ===
+            "number",
+        ),
+    ),
+  ];
+
+
+  const allResults:
     PgPassageMatch[] =
       [];
 
 
   for (
-    const work of works
+    const volume of
+    volumes
   ) {
-    if (
-      !work.pgVolume
-    ) {
-      continue;
-    }
-
-
-    const source =
+    const volumeSource =
       getPgVolumeSource(
-        work.pgVolume,
+        volume,
       );
 
 
-    if (!source) {
+    if (!volumeSource) {
       continue;
     }
 
 
     const {
-      text,
-      sourceUrl,
+      xml,
+      archiveIdentifier,
     } =
-      await fetchPgOcrText(
-        work.pgVolume,
+      await fetchPgDjvuXml(
+        volume,
       );
 
 
-    const matches =
-      findMatchingParagraphs(
-        text,
+    const rawMatches =
+      searchPages(
+        xml,
         terms,
-        limit,
       );
+
+
+    const volumeWorks =
+      works.filter(
+        (work) =>
+          work.pgVolume ===
+          volume,
+      );
+
+
+    const candidateWorkTitles =
+      volumeWorks.map(
+        (work) =>
+          work.titleSr,
+      );
+
+
+    const workPgColumns =
+      volumeWorks
+        .map(
+          (work) =>
+            work.pgColumns,
+        )
+        .filter(
+          (
+            value,
+          ): value is string =>
+            Boolean(value),
+        );
 
 
     for (
       const match of
-      matches
+      rawMatches
     ) {
-      results.push({
+      allResults.push({
         authorName:
           author.canonicalName,
 
-        workTitle:
-          work.titleSr,
+        /*
+         * Намерно не тврдимо још
+         * да знамо тачно дело.
+         * То ћемо утврдити
+         * мапирањем PG колона.
+         */
+        candidateWorkTitles,
 
         pgVolume:
-          work.pgVolume,
+          volume,
 
-        pgColumns:
-          work.pgColumns ??
-          null,
+        workPgColumns,
+
+        scanPage:
+          match.scanPage,
 
         queryTerms:
           terms,
 
-        matchedTerm:
-          match.matchedTerm,
+        matchedTerms:
+          match.matchedTerms,
 
         originalText:
           match.paragraph,
 
         contextText:
-          surroundingContext(
-            text,
-            match.paragraph,
+          match.context,
+
+        sourceUrl:
+          archiveDetailsUrl(
+            archiveIdentifier,
           ),
 
-        sourceUrl,
+        pageImageUrl:
+          archivePageUrl(
+            archiveIdentifier,
+            match.scanPage,
+          ),
       });
     }
   }
 
 
-  return results
+  return allResults
+    .sort(
+      (a, b) => {
+        /*
+         * Пасус који има и ψυχ-
+         * и θαν- иде испред пасуса
+         * који има само један појам.
+         */
+        const scoreDifference =
+          b.matchedTerms.length -
+          a.matchedTerms.length;
+
+
+        if (
+          scoreDifference !==
+          0
+        ) {
+          return scoreDifference;
+        }
+
+
+        return (
+          a.scanPage -
+          b.scanPage
+        );
+      },
+    )
     .slice(
       0,
       limit,
