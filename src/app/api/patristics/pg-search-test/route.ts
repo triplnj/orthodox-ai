@@ -10,6 +10,10 @@ import {
   searchPgPassages,
 } from "@/lib/patristics/pg-passage-search";
 
+import {
+  mapPgScanPageToColumns,
+} from "@/lib/patristics/pg-column-map";
+
 
 export async function POST(
   request: Request,
@@ -63,13 +67,43 @@ export async function POST(
       );
 
 
+    const enrichedResults =
+      results.map(
+        (result) => {
+          const columns =
+            mapPgScanPageToColumns(
+              result.pgVolume,
+              result.scanPage,
+            );
+
+
+          return {
+            ...result,
+
+            pgFirstColumn:
+              columns.firstColumn,
+
+            pgSecondColumn:
+              columns.secondColumn,
+
+            pgReference:
+              columns.firstColumn &&
+              columns.secondColumn
+                ? `PG ${result.pgVolume}, cols. ${columns.firstColumn}–${columns.secondColumn}`
+                : `PG ${result.pgVolume}`,
+          };
+        },
+      );
+
+
     return NextResponse.json({
       query,
 
       count:
-        results.length,
+        enrichedResults.length,
 
-      results,
+      results:
+        enrichedResults,
     });
   } catch (error) {
     console.error(
