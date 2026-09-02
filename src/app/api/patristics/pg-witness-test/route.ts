@@ -27,7 +27,7 @@ import {
 } from "@/lib/patristics/compare-greek-texts";
 
 import {
-  mapPgScanPageToColumns,
+  mapScanPageToPgColumns,
 } from "@/lib/patristics/pg-column-map";
 
 
@@ -158,7 +158,7 @@ export async function POST(
 
 
       const columns =
-        mapPgScanPageToColumns(
+        mapScanPageToPgColumns(
           passage.pgVolume,
           passage.scanPage,
         );
@@ -178,9 +178,9 @@ export async function POST(
           passage.scanPage,
 
         pgReference:
-          columns.firstColumn &&
-          columns.secondColumn
-            ? `PG ${passage.pgVolume}, cols. ${columns.firstColumn}–${columns.secondColumn}`
+          columns.pgFirstColumn &&
+          columns.pgSecondColumn
+            ? `PG ${passage.pgVolume}, cols. ${columns.pgFirstColumn}–${columns.pgSecondColumn}`
             : `PG ${passage.pgVolume}`,
 
         cleanedGreekText:

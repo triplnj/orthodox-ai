@@ -15,7 +15,7 @@ import {
 } from "@/lib/patristics/translate-pg-passages";
 
 import {
-  mapPgScanPageToColumns,
+  mapScanPageToPgColumns,
 } from "@/lib/patristics/pg-column-map";
 
 
@@ -83,7 +83,7 @@ export async function POST(
       translated.map(
         (passage) => {
           const columns =
-            mapPgScanPageToColumns(
+            mapScanPageToPgColumns(
               passage.pgVolume,
               passage.scanPage,
             );
@@ -103,15 +103,15 @@ export async function POST(
               passage.scanPage,
 
             pgFirstColumn:
-              columns.firstColumn,
+              columns.pgFirstColumn,
 
             pgSecondColumn:
-              columns.secondColumn,
+              columns.pgSecondColumn,
 
             pgReference:
-              columns.firstColumn &&
-              columns.secondColumn
-                ? `PG ${passage.pgVolume}, cols. ${columns.firstColumn}–${columns.secondColumn}`
+              columns.pgFirstColumn &&
+              columns.pgSecondColumn
+                ? `PG ${passage.pgVolume}, cols. ${columns.pgFirstColumn}–${columns.pgSecondColumn}`
                 : `PG ${passage.pgVolume}`,
 
             matchedTerms:

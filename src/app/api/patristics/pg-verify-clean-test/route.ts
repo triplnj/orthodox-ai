@@ -19,7 +19,7 @@ import {
 } from "@/lib/patristics/verify-cleaned-pg";
 
 import {
-  mapPgScanPageToColumns,
+  mapScanPageToPgColumns,
 } from "@/lib/patristics/pg-column-map";
 
 
@@ -105,7 +105,7 @@ export async function POST(
       verified.map(
         (passage) => {
           const columns =
-            mapPgScanPageToColumns(
+            mapScanPageToPgColumns(
               passage.pgVolume,
               passage.scanPage,
             );
@@ -125,9 +125,9 @@ export async function POST(
               passage.scanPage,
 
             pgReference:
-              columns.firstColumn &&
-              columns.secondColumn
-                ? `PG ${passage.pgVolume}, cols. ${columns.firstColumn}–${columns.secondColumn}`
+              columns.pgFirstColumn &&
+              columns.pgSecondColumn
+                ? `PG ${passage.pgVolume}, cols. ${columns.pgFirstColumn}–${columns.pgSecondColumn}`
                 : `PG ${passage.pgVolume}`,
 
             matchedTerms:

@@ -15,7 +15,7 @@ import {
 } from "@/lib/patristics/clean-pg-ocr";
 
 import {
-  mapPgScanPageToColumns,
+  mapScanPageToPgColumns,
 } from "@/lib/patristics/pg-column-map";
 
 
@@ -90,7 +90,7 @@ export async function POST(
       cleaned.map(
         (passage) => {
           const columns =
-            mapPgScanPageToColumns(
+            mapScanPageToPgColumns(
               passage.pgVolume,
               passage.scanPage,
             );
@@ -110,9 +110,9 @@ export async function POST(
               passage.scanPage,
 
             pgReference:
-              columns.firstColumn &&
-              columns.secondColumn
-                ? `PG ${passage.pgVolume}, cols. ${columns.firstColumn}–${columns.secondColumn}`
+              columns.pgFirstColumn &&
+              columns.pgSecondColumn
+                ? `PG ${passage.pgVolume}, cols. ${columns.pgFirstColumn}–${columns.pgSecondColumn}`
                 : `PG ${passage.pgVolume}`,
 
             matchedTerms:
