@@ -719,9 +719,13 @@ Do not return merely a thematically similar passage.
 
             samePassage:
               parallel.samePassage,
+confidence:
+  parallel.confidence,
 
-            confidence:
-              parallel.confidence,
+normalizedConfidence:
+  parallel.confidence <= 1
+    ? parallel.confidence * 100
+    : parallel.confidence,
 
             reason:
               parallel.reason,
@@ -733,12 +737,18 @@ Do not return merely a thematically similar passage.
          * Require a high-confidence same-passage
          * decision.
          */
-        if (
-          !parallel.samePassage ||
-          parallel.confidence < 90
-        ) {
-          continue;
-        }
+       const normalizedConfidence =
+  parallel.confidence <= 1
+    ? parallel.confidence * 100
+    : parallel.confidence;
+
+
+if (
+  !parallel.samePassage ||
+  normalizedConfidence < 90
+) {
+  continue;
+}
 
 
         matchedCandidate =
