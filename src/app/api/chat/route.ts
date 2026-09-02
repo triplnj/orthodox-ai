@@ -7,12 +7,12 @@ import {
 } from "workflow/api";
 
 import {
-  prisma,
-} from "@/lib/prisma";
+  getCurrentUser,
+} from "@/lib/auth";
 
 import {
-  generateOrthodoxAnswer,
-} from "@/lib/ai/chatService";
+  prisma,
+} from "@/lib/prisma";
 
 import {
   canUseChat,
@@ -20,20 +20,8 @@ import {
 } from "@/lib/usage";
 
 import {
-  isProUser,
-} from "@/lib/subscription";
-
-import {
-  getCurrentUser,
-} from "@/lib/auth";
-
-import type {
-  ChatContextKey,
-} from "@/lib/ai/chatContexts";
-
-import {
-  getUserProfileContext,
-} from "@/lib/userProfileContext";
+  generateOrthodoxAnswer,
+} from "@/lib/ai/chatService";
 
 import {
   buildPatristicContext,
@@ -44,50 +32,52 @@ import {
 } from "@/lib/patristics/enqueue-discovery";
 
 import {
+  formatPatristicResearchLinks,
+} from "@/lib/patristics/research-links";
+
+import {
   patristicDiscoveryWorkflow,
 } from "@/workflows/patristic-discovery";
 
 
+type GenerateOrthodoxAnswerInput =
+  Parameters<
+    typeof generateOrthodoxAnswer
+  >[0];
+
+type ChatContextKey =
+  GenerateOrthodoxAnswerInput[
+    "contextKey"
+  ];
+
+
 function detectChatLanguage(
   message: string,
-): "sr" | "en" {
-  /*
-   * Cyrillic Serbian.
-   */
-  if (
-    /[А-Яа-яЉљЊњЋћЂђЖжЧчШш]/u.test(
+):
+  | "sr"
+  | "en" {
+  const hasCyrillic =
+    /[\u0400-\u04FF]/u.test(
       message,
-    )
-  ) {
-    return "sr";
-  }
+    );
 
-
-  /*
-   * Serbian Latin characters.
-   */
-  if (
-    /[čćžšđČĆŽŠĐ]/u.test(
+  const hasSerbianLatin =
+    /[čćžšđ]/iu.test(
       message,
-    )
-  ) {
-    return "sr";
-  }
+    );
 
-
-  /*
-   * Frequent Serbian Latin words.
-   */
-  if (
-    /\b(šta|sto|sveti|svetog|svetom|duša|duse|duši|molitva|molitvi|pokajanje|bog|božji|crkva|crkveni|oci|otac|uči|piše|govori|kako|zašto)\b/iu.test(
+  const commonSerbianWords =
+    /\b(šta|шта|kako|како|zašto|зашто|sveti|свети|otac|отац|oci|оци|duša|душа|molitva|молитва|smrt|смрт)\b/iu.test(
       message,
-    )
-  ) {
-    return "sr";
-  }
+    );
 
-
-  return "en";
+  return (
+    hasCyrillic ||
+    hasSerbianLatin ||
+    commonSerbianWords
+  )
+    ? "sr"
+    : "en";
 }
 
 
@@ -95,47 +85,13 @@ function isPatristicResearchQuestion(
   message: string,
 ) {
   return (
-    /\bchurch fathers?\b/iu.test(
+    /\b(church fathers?|holy fathers?|patristic|saint|st\.)\b/iu.test(
       message,
     ) ||
-
-    /\bholy fathers?\b/iu.test(
+    /\b(sveti|sv\.?|crkveni oci|sveti oci)\b/iu.test(
       message,
     ) ||
-
-    /\bpatristic\b/iu.test(
-      message,
-    ) ||
-
-    /\bsaint\s+[a-z]/iu.test(
-      message,
-    ) ||
-
-    /\bst\.?\s+[a-z]/iu.test(
-      message,
-    ) ||
-
-    /\bsveti\b/iu.test(
-      message,
-    ) ||
-
-    /\bsvetog\b/iu.test(
-      message,
-    ) ||
-
-    /\bcrkveni oci\b/iu.test(
-      message,
-    ) ||
-
-    /свет[иогм]/iu.test(
-      message,
-    ) ||
-
-    /црквен[иих]+\s+оц/iu.test(
-      message,
-    ) ||
-
-    /свети\s+оци/iu.test(
+    /(свети|св\.?|свети оци|црквени оци)/iu.test(
       message,
     )
   );
@@ -143,412 +99,256 @@ function isPatristicResearchQuestion(
 
 
 function researchMessage(
+  query: string,
   language: "sr" | "en",
 ) {
+  const researchLinks =
+    formatPatristicResearchLinks(
+      query,
+      language,
+    );
+
   if (
     language === "sr"
   ) {
     return [
-      "За ово питање тренутно немам довољно верификованог патристичког материјала у локалној бази.",
+      "За ово питање тренутно немам довољно верификованог текста у локалној бази.",
       "",
-      "Покренуо сам претрагу проверених патристичких извора. Систем сада тражи релевантан текст, проверава да ли цитат заиста постоји у извору, проверава ауторство и тражи независни други извор.",
+      "Покренута је позадинска претрага примарних извора. За коначне библијске и патристичке наводе OrthodoxAI као извор прихвата Свето Писмо, Patrologia Graeca и Филокалију.",
       "",
-      "Када се провера заврши, исти упит ће моћи да користи нове верификоване записе.",
+      researchLinks,
     ].join("\n");
   }
 
-
   return [
-    "I do not yet have enough verified patristic material in the local corpus for this question.",
+    "I do not currently have enough verified primary-source material in the local database for this question.",
     "",
-    "A search of trusted patristic sources has now been started. The system will locate relevant passages, verify the exact text and attribution, and seek an independent second source.",
+    "A background search of the primary sources has started. For final biblical and patristic quotations OrthodoxAI uses Holy Scripture, Patrologia Graeca, and the Philokalia as its authoritative corpora.",
     "",
-    "Once verification is complete, the same question can use the newly verified records.",
+    researchLinks,
   ].join("\n");
 }
 
 
 export async function POST(
-  req: Request,
+  request: Request,
 ) {
-  try {
-    const user =
-      await getCurrentUser();
+  const user =
+    await getCurrentUser();
 
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          error:
-            "You must be signed in to use OrthodoxAI.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-
-    const body =
-      await req.json();
-
-
-    const message =
-      body.message as
-        | string
-        | undefined;
-
-    const contextKey =
-      body.contextKey as
-        | ChatContextKey
-        | undefined;
-
-    const extraContext =
-      body.extraContext as
-        | string
-        | undefined;
-
-
-    if (
-      !message ||
-      typeof message !==
-        "string" ||
-      !message.trim()
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Message is required.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-
-    const cleanMessage =
-      message.trim();
-
-
-    const permission =
-      await canUseChat(
-        user,
-      );
-
-
-    if (
-      !permission.allowed
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            permission.reason,
-
-          upgradeRequired:
-            true,
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
-
-    /*
-     * Store user message.
-     */
-    await prisma
-      .chatMessage
-      .create({
-        data: {
-          userId:
-            user.id,
-
-          role:
-            "user",
-
-          content:
-            cleanMessage,
-
-          category:
-            contextKey ??
-            "general",
-        },
-      });
-
-
-    const language =
-      detectChatLanguage(
-        cleanMessage,
-      );
-
-
-    const patristicQuestion =
-      isPatristicResearchQuestion(
-        cleanMessage,
-      );
-
-
-    /*
-     * Search our already verified
-     * local corpus first.
-     */
-    let patristicContext =
-      "";
-
-
-    if (
-      patristicQuestion
-    ) {
-      patristicContext =
-        await buildPatristicContext(
-          cleanMessage,
-          language,
-        );
-    }
-
-
-    /*
-     * If this is explicitly a patristic
-     * question and our verified corpus
-     * has nothing sufficiently relevant,
-     * start durable background discovery.
-     *
-     * Do NOT ask the language model to
-     * invent an answer about that Father.
-     */
-    if (
-      patristicQuestion &&
-      !patristicContext.trim()
-    ) {
-      const job =
-        await enqueuePatristicDiscovery({
-          query:
-            cleanMessage,
-
-          language,
-        });
-
-
-      if (
-        job &&
-        (
-          job.status ===
-            "PENDING" ||
-          job.status ===
-            "PROCESSING"
-        )
-      ) {
-        /*
-         * Only PENDING jobs need a new
-         * Workflow start.
-         *
-         * PROCESSING means a run already
-         * exists or is already underway.
-         */
-        if (
-          job.status ===
-          "PENDING"
-        ) {
-          try {
-            const run =
-              await start(
-                patristicDiscoveryWorkflow,
-                [
-                  job.id,
-                  job.query,
-                  language,
-                ],
-              );
-
-
-            console.log(
-              "PATRISTIC_CHAT_WORKFLOW_STARTED:",
-              {
-                jobId:
-                  job.id,
-
-                runId:
-                  run.runId,
-
-                query:
-                  cleanMessage,
-              },
-            );
-          } catch (error) {
-            /*
-             * Chat itself should not crash
-             * merely because Workflow start
-             * failed.
-             */
-            console.error(
-              "PATRISTIC_CHAT_WORKFLOW_START_ERROR:",
-              error,
-            );
-          }
-        }
-      }
-
-
-      const answer =
-        researchMessage(
-          language,
-        );
-
-
-      await prisma
-        .chatMessage
-        .create({
-          data: {
-            userId:
-              user.id,
-
-            role:
-              "assistant",
-
-            content:
-              answer,
-
-            category:
-              contextKey ??
-              "general",
-          },
-        });
-
-
-      await logUsage(
-        user.id,
-        "chat",
-      );
-
-
-      return NextResponse.json({
-        answer,
-
-        patristicResearch:
-          true,
-
-        discoveryJobId:
-          job?.id ??
-          null,
-
-        discoveryStatus:
-          job?.status ??
-          null,
-
-        remaining:
-          permission.remaining,
-
-        plan:
-          user.plan,
-      });
-    }
-
-
-    /*
-     * Normal answering path:
-     *
-     * either
-     * - non-patristic question
-     * or
-     * - verified patristic material exists.
-     */
-    const userProfileContext =
-      await getUserProfileContext(
-        user.id,
-      );
-
-
-    const combinedExtraContext = `
-${userProfileContext}
-
-Page or feature extra context:
-
-${
-  extraContext ??
-  "No additional page context provided."
-}
-`.trim();
-
-
-    const result =
-      await generateOrthodoxAnswer({
-        userMessage:
-          cleanMessage,
-
-        contextKey:
-          contextKey ??
-          "general",
-
-        extraContext:
-          combinedExtraContext,
-
-        isPro:
-          isProUser(
-            user,
-          ),
-
-        patristicContext:
-          patristicContext ||
-          undefined,
-      });
-
-
-    await prisma
-      .chatMessage
-      .create({
-        data: {
-          userId:
-            user.id,
-
-          role:
-            "assistant",
-
-          content:
-            result.answer,
-
-          category:
-            contextKey ??
-            "general",
-        },
-      });
-
-
-    await logUsage(
-      user.id,
-      "chat",
-    );
-
-
-    return NextResponse.json({
-      answer:
-        result.answer,
-
-      patristicResearch:
-        false,
-
-      remaining:
-        permission.remaining,
-
-      plan:
-        user.plan,
-    });
-  } catch (error) {
-    console.error(
-      "CHAT_API_ERROR:",
-      error,
-    );
-
-
+  if (!user) {
     return NextResponse.json(
       {
         error:
-          "Something went wrong while generating the answer.",
+          "Unauthorized.",
       },
       {
-        status: 500,
+        status: 401,
       },
     );
   }
+
+  const body =
+    await request.json();
+
+  const message =
+    typeof body?.message ===
+      "string"
+      ? body.message.trim()
+      : "";
+
+  const contextKey =
+    typeof body?.contextKey ===
+      "string"
+      ? (
+          body.contextKey as
+            ChatContextKey
+        )
+      : undefined;
+
+  const extraContext =
+    typeof body?.extraContext ===
+      "string"
+      ? body.extraContext
+      : undefined;
+
+  if (!message) {
+    return NextResponse.json(
+      {
+        error:
+          "Message is required.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  const permission =
+    await canUseChat(user);
+
+  if (!permission.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          permission.reason,
+
+        remaining:
+          permission.remaining,
+      },
+      {
+        status: 429,
+      },
+    );
+  }
+
+  await prisma.chatMessage.create({
+    data: {
+      userId:
+        user.id,
+
+      role:
+        "USER",
+
+      content:
+        message,
+    },
+  });
+
+  const language =
+    detectChatLanguage(
+      message,
+    );
+
+  const isPatristic =
+    isPatristicResearchQuestion(
+      message,
+    );
+
+  let patristicContext = "";
+
+  if (isPatristic) {
+    patristicContext =
+      await buildPatristicContext(
+        message,
+        language,
+      );
+  }
+
+  if (
+    isPatristic &&
+    !patristicContext
+  ) {
+    const job =
+      await enqueuePatristicDiscovery({
+        query:
+          message,
+
+        language,
+      });
+
+    if (
+      job &&
+      job.status ===
+        "PENDING"
+    ) {
+      try {
+        await start(
+          patristicDiscoveryWorkflow,
+          [
+            job.id,
+            job.query,
+            language,
+          ],
+        );
+      } catch (error) {
+        console.error(
+          "PATRISTIC_WORKFLOW_START_ERROR:",
+          error,
+        );
+      }
+    }
+
+    const answer =
+      researchMessage(
+        message,
+        language,
+      );
+
+    await prisma.chatMessage.create({
+      data: {
+        userId:
+          user.id,
+
+        role:
+          "ASSISTANT",
+
+        content:
+          answer,
+      },
+    });
+
+    await logUsage(
+      user.id,
+      "CHAT",
+    );
+
+    return NextResponse.json({
+      answer,
+
+      patristicResearch:
+        true,
+
+      discoveryJobId:
+        job?.id ?? null,
+
+      discoveryStatus:
+        job?.status ?? null,
+    });
+  }
+
+  const generated =
+    await generateOrthodoxAnswer({
+      userMessage:
+        message,
+
+      contextKey,
+
+      extraContext,
+
+      isPro:
+        user.plan === "PRO",
+
+      patristicContext:
+        patristicContext ||
+        undefined,
+    });
+
+  const answer =
+    generated.answer;
+
+  await prisma.chatMessage.create({
+    data: {
+      userId:
+        user.id,
+
+      role:
+        "ASSISTANT",
+
+      content:
+        answer,
+    },
+  });
+
+  await logUsage(
+    user.id,
+    "CHAT",
+  );
+
+  return NextResponse.json({
+    answer,
+
+    patristicResearch:
+      false,
+  });
 }
