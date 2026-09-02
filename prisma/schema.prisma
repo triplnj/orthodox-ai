@@ -177,6 +177,20 @@ model PatristicQuoteSource {
   @@unique([quoteId, url])
 }
 
+model PatristicDiscoveryJob {
+  id         String                      @id @default(cuid())
+  query      String
+  language   String
+  status     PatristicDiscoveryJobStatus @default(PENDING)
+  attempts   Int                         @default(0)
+  error      String?
+  createdAt  DateTime                    @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  @@index([status, createdAt])
+}
+
 enum Plan {
   FREE
   PRO
@@ -192,4 +206,11 @@ enum PatristicVerification {
   TEXT_VERIFIED
   MULTI_SOURCE_VERIFIED
   REJECTED
+}
+
+enum PatristicDiscoveryJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }

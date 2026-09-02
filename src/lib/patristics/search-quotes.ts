@@ -1,134 +1,129 @@
 import { prisma } from "@/lib/prisma";
+import { createEmbedding } from "./embeddings";
 
-function getSearchTerms(
-  query: string,
-) {
-  const stopWords =
-    new Set([
-      "what",
-      "does",
-      "about",
-      "teach",
-      "teaches",
-      "said",
-      "says",
-      "say",
-      "the",
-      "and",
-      "for",
-      "from",
-      "with",
-      "that",
-      "this",
-      "who",
-      "kako",
-      "sta",
-      "što",
-      "sto",
-      "sveti",
-      "svetog",
-      "svetih",
-      "kaže",
-      "kaze",
-      "govori",
-      "uči",
-      "uci",
-      "kod",
-      "ima",
-      "jel",
-      "ili",
-    ]);
+export type SemanticPatristicQuote = {
+  id: string;
+  authorName: string;
+  workTitle: string;
+  originalLanguage: string;
+  originalText: string;
+  translationSr: string | null;
+  translationEn: string | null;
+  section: string | null;
+  chapter: string | null;
+  paragraph: string | null;
+  pgReference: string | null;
+  scReference: string | null;
+  cpgReference: string | null;
+  topics: string[];
+  verification: string;
+  confidence: number;
+  similarity: number;
 
-  return Array.from(
-    new Set(
-      query
-        .normalize("NFC")
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .split(/\s+/)
-        .filter(
-          (word) =>
-            word.length >= 4 &&
-            !stopWords.has(word),
-        ),
-    ),
-  ).slice(0, 12);
-}
+  sources: {
+    url: string;
+    sourceName: string | null;
+    sourceType: string | null;
+    exactMatch: boolean;
+  }[];
+};
 
-
-export async function searchPatristicQuotes(
+export async function semanticSearchPatristicQuotes(
   query: string,
   limit = 5,
-) {
-  const terms =
-    getSearchTerms(query);
+  minSimilarity = 0.55,
+  authorName?: string,
+): Promise<SemanticPatristicQuote[]> {
+  const embedding =
+    await createEmbedding(query);
 
-  if (terms.length === 0) {
-    return [];
-  }
+  const vector =
+    `[${embedding.join(",")}]`;
 
-  return prisma.patristicQuote.findMany({
-    where: {
-      verification:
-        "MULTI_SOURCE_VERIFIED",
+  const authorFilter =
+    authorName
+      ? `AND LOWER(q."authorName") = LOWER($4)`
+      : "";
 
-      confidence: {
-        gte: 90,
-      },
+  const results =
+    await prisma.$queryRawUnsafe<
+      SemanticPatristicQuote[]
+    >(
+      `
+      SELECT
+        q."id",
+        q."authorName",
+        q."workTitle",
+        q."originalLanguage",
+        q."originalText",
+        q."translationSr",
+        q."translationEn",
+        q."section",
+        q."chapter",
+        q."paragraph",
+        q."pgReference",
+        q."scReference",
+        q."cpgReference",
+        q."topics",
+        q."verification",
+        q."confidence",
 
-      OR: [
-        {
-          topics: {
-            hasSome: terms,
-          },
-        },
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'url',
+                s."url",
+                'sourceName',
+                s."sourceName",
+                'sourceType',
+                s."sourceType",
+                'exactMatch',
+                s."exactMatch"
+              )
+              ORDER BY s."retrievedAt" ASC
+            )
+            FROM "PatristicQuoteSource" s
+            WHERE
+              s."quoteId" = q."id"
+              AND s."exactMatch" = true
+          ),
+          '[]'::jsonb
+        ) AS "sources",
 
-        ...terms.flatMap(
-          (term) => [
-            {
-              authorName: {
-                contains: term,
-                mode: "insensitive" as const,
-              },
-            },
+        1 - (
+          q."embedding" <=> $1::vector
+        ) AS "similarity"
 
-            {
-              workTitle: {
-                contains: term,
-                mode: "insensitive" as const,
-              },
-            },
+      FROM "PatristicQuote" q
 
-            {
-              translationEn: {
-                contains: term,
-                mode: "insensitive" as const,
-              },
-            },
+      WHERE
+        q."verification" =
+          'MULTI_SOURCE_VERIFIED'
 
-            {
-              translationSr: {
-                contains: term,
-                mode: "insensitive" as const,
-              },
-            },
-          ],
-        ),
-      ],
-    },
+        AND q."confidence" >= 90
 
-    take: limit,
+        AND q."embedding"
+          IS NOT NULL
 
-    orderBy: {
-      confidence: "desc",
-    },
+        AND 1 - (
+          q."embedding" <=> $1::vector
+        ) >= $3
 
-    include: {
-      sources: {
-        where: {
-          exactMatch: true,
-        },
-      },
-    },
-  });
+        ${authorFilter}
+
+      ORDER BY
+        q."embedding" <=> $1::vector
+
+      LIMIT $2
+      `,
+      vector,
+      limit,
+      minSimilarity,
+      ...(authorName
+        ? [authorName]
+        : []),
+    );
+
+  return results;
 }
