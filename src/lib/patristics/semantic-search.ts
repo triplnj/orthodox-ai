@@ -19,6 +19,12 @@ export type SemanticPatristicQuote = {
   verification: string;
   confidence: number;
   similarity: number;
+    sources: {
+    url: string;
+    sourceName: string | null;
+    sourceType: string | null;
+    exactMatch: boolean;
+  }[];
 };
 
 export async function semanticSearchPatristicQuotes(

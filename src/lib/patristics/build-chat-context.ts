@@ -45,6 +45,7 @@ const minSimilarity = 0.0;
         Boolean(quote.translationSr),
       hasTranslationEn:
         Boolean(quote.translationEn),
+      sources: quote.sources,
     })),
   );
 
