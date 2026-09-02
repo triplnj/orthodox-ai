@@ -8,7 +8,6 @@ import {
 import {
   resolvePgAuthor,
 } from "./resolve-pg-author";
-
 import {
   verifyPgAuthorCandidate,
 } from "./verify-pg-author-candidate";
@@ -66,7 +65,10 @@ function uniqueNumbers(
     ...new Set(
       values,
     ),
-  ];
+  ].sort(
+    (a, b) =>
+      a - b,
+  );
 }
 
 
@@ -120,8 +122,8 @@ export async function buildPgSearchPlan(
 
 
   /*
-   * PRVI PUT:
-   *
+   * 1.
+   * Prvo pokušavamo
    * deterministički lokalni indeks.
    */
   const localAuthor =
@@ -140,6 +142,12 @@ export async function buildPgSearchPlan(
       );
 
 
+    /*
+     * Ako lokalni indeks zna
+     * konkretna relevantna dela,
+     * pretražujemo samo njihove
+     * PG tomove.
+     */
     if (
       relevantWorks.length >
       0
@@ -188,6 +196,13 @@ export async function buildPgSearchPlan(
     }
 
 
+    /*
+     * Autor je poznat,
+     * ali konkretno delo nije.
+     *
+     * Koristimo sve poznate
+     * PG tomove tog autora.
+     */
     return {
       query:
         normalizedQuery,
@@ -225,12 +240,11 @@ export async function buildPgSearchPlan(
 
 
   /*
-   * DRUGI PUT:
+   * 2.
+   * Autor nije u lokalnom indeksu.
    *
-   * autor nije u lokalnom indeksu.
-   *
-   * AI ga identifikuje i predlaže
-   * PG tomove.
+   * AI samo pokušava da
+   * identifikuje kandidata.
    */
   const resolvedAuthor =
     await resolvePgAuthor(
@@ -270,9 +284,17 @@ export async function buildPgSearchPlan(
 
 
   /*
-   * Proveravamo da li predloženi
-   * PG tomovi imaju stvarno
-   * dostupan digitalni PG izvor.
+   * 3.
+   * Kandidata proveravamo
+   * protiv PG autor-kataloga.
+   *
+   * Ovde razdvajamo:
+   *
+   * autor -> PG tom
+   *
+   * od:
+   *
+   * PG tom -> dostupan OCR izvor
    */
   const verified =
     await verifyPgAuthorCandidate(
@@ -280,10 +302,15 @@ export async function buildPgSearchPlan(
     );
 
 
+  /*
+   * Ako autor nije potvrđen
+   * u našem PG katalogu,
+   * ne dozvoljavamo routing.
+   */
   if (
     !verified.routingVerified ||
-    verified.availablePgVolumes
-      .length === 0
+    verified.pgVolumes.length ===
+      0
   ) {
     return {
       query:
@@ -317,12 +344,21 @@ export async function buildPgSearchPlan(
 
 
   /*
-   * AI fallback nema lokalni
-   * PatristicAuthorIndex i još
-   * ne tvrdimo da znamo delo.
+   * 4.
+   * Autor i njegovi PG tomovi
+   * su potvrđeni katalogom.
    *
-   * Ali imamo PG tomove kroz
-   * koje pretraga može da prođe.
+   * Ne koristimo ovde samo
+   * availablePgVolumes.
+   *
+   * Činjenica da neki digitalni
+   * OCR trenutno nije pronađen
+   * ne znači da autor ne pripada
+   * tom PG tomu.
+   *
+   * Digitalni source resolver
+   * će kasnije odlučiti koje
+   * tomove stvarno može da otvori.
    */
   return {
     query:
@@ -335,7 +371,7 @@ export async function buildPgSearchPlan(
 
     pgVolumes:
       uniqueNumbers(
-        verified.availablePgVolumes,
+        verified.pgVolumes,
       ),
 
     works: [],

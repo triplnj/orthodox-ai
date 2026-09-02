@@ -6,6 +6,11 @@ import {
 } from "./corpus-index";
 
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+
 export type ResolvedPgAuthor = {
   canonicalName: string;
 
@@ -25,31 +30,49 @@ export type ResolvedPgAuthor = {
 };
 
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env.OPENAI_API_KEY,
-  });
+type AiAuthorResponse = {
+  hasExplicitAuthor: boolean;
+
+  canonicalName:
+    | string
+    | null;
+
+  latinName:
+    | string
+    | null;
+
+  greekName:
+    | string
+    | null;
+
+  pgVolumes: number[];
+};
 
 
-function uniqueVolumes(
-  volumes: number[],
-) {
+function uniqueValidPgVolumes(
+  values: unknown,
+): number[] {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  const volumes =
+    values
+      .map((value) =>
+        typeof value === "number"
+          ? value
+          : Number(value),
+      )
+      .filter(
+        (value) =>
+          Number.isInteger(value) &&
+          value >= 1 &&
+          value <= 161,
+      );
+
   return [
-    ...new Set(
-      volumes.filter(
-        (volume) =>
-          Number.isInteger(
-            volume,
-          ) &&
-          volume >= 1 &&
-          volume <= 161,
-      ),
-    ),
-  ].sort(
-    (a, b) =>
-      a - b,
-  );
+    ...new Set(volumes),
+  ].sort((a, b) => a - b);
 }
 
 
@@ -58,13 +81,22 @@ export async function resolvePgAuthor(
 ): Promise<
   ResolvedPgAuthor | null
 > {
+  const trimmedQuery =
+    query.trim();
+
+  if (!trimmedQuery) {
+    return null;
+  }
+
+
   /*
-   * Lokalni indeks uvek ima
-   * prednost.
+   * 1.
+   * Deterministički lokalni indeks
+   * uvek ima prednost.
    */
   const localAuthor =
     findPatristicAuthor(
-      query,
+      trimmedQuery,
     );
 
 
@@ -80,7 +112,7 @@ export async function resolvePgAuthor(
         null,
 
       pgVolumes:
-        uniqueVolumes(
+        uniqueValidPgVolumes(
           localAuthor.pgVolumes ??
             [],
         ),
@@ -94,212 +126,197 @@ export async function resolvePgAuthor(
 
 
   /*
-   * Ako autor nije u našem
-   * lokalnom indeksu, AI sme
-   * samo da predloži identitet
-   * autora i moguće PG tomove.
+   * 2.
+   * Ako autor nije u lokalnom
+   * indeksu, AI sme samo da
+   * identifikuje eksplicitno
+   * pomenutog autora i predloži
+   * PG tomove.
    *
-   * Ovo NIJE konačna verifikacija.
+   * Ovi tomovi NISU verifikovani
+   * samo zato što ih je AI naveo.
    */
   const response =
-    await openai.responses.create({
+    await openai.chat.completions.create({
       model:
         "gpt-4.1-mini",
 
-      input: [
+      temperature: 0,
+
+      messages: [
         {
-          role:
-            "system",
+          role: "system",
 
           content: `
-You identify authors represented in
-Jacques-Paul Migne's Patrologia Graeca.
+You identify explicitly named Church Fathers or ecclesiastical authors
+who may appear in Patrologia Graeca.
 
 The user may ask in any language.
 
-Determine whether the question explicitly
-refers to a specific Christian author whose
-works are contained in Patrologia Graeca.
+Important rules:
 
-Do not answer the theological question.
+1. Identify an author only if the author is explicitly named
+   or completely unambiguous in the query.
 
-Do not infer an author merely from the topic.
-The author must be explicitly named or
-unambiguously identified in the question.
+2. Do not infer an author merely from the theological topic.
 
-If there is no specific identifiable PG
-author, return found=false.
+3. Return the standard scholarly English canonical name.
 
-If there is one, return:
-- canonical commonly used English name;
-- Latin scholarly name if known;
-- Greek name if known;
-- candidate Patrologia Graeca volume numbers.
+4. If known, also return the common Latin and Greek forms of the name.
 
-PG has volumes 1 through 161.
+5. PG volumes are only routing candidates.
+   Do not treat them as verified bibliographic facts.
 
-The PG volume numbers are routing candidates,
-not verified citations.
+6. Patrologia Graeca contains volumes 1 through 161.
+
+7. If there is no explicit identifiable author, set
+   hasExplicitAuthor to false.
 
 Return JSON only.
-`.trim(),
+          `.trim(),
         },
 
         {
-          role:
-            "user",
+          role: "user",
 
           content:
-            query,
+            trimmedQuery,
         },
       ],
 
-      text: {
-        format: {
-          type:
-            "json_schema",
+      response_format: {
+        type: "json_schema",
 
+        json_schema: {
           name:
             "pg_author_resolution",
 
-          strict:
-            true,
+          strict: true,
 
           schema: {
-            type:
-              "object",
+            type: "object",
+
+            additionalProperties:
+              false,
 
             properties: {
-              found: {
-                type:
-                  "boolean",
+              hasExplicitAuthor: {
+                type: "boolean",
               },
 
               canonicalName: {
-                type: [
-                  "string",
-                  "null",
+                anyOf: [
+                  {
+                    type: "string",
+                  },
+                  {
+                    type: "null",
+                  },
                 ],
               },
 
               latinName: {
-                type: [
-                  "string",
-                  "null",
+                anyOf: [
+                  {
+                    type: "string",
+                  },
+                  {
+                    type: "null",
+                  },
                 ],
               },
 
               greekName: {
-                type: [
-                  "string",
-                  "null",
+                anyOf: [
+                  {
+                    type: "string",
+                  },
+                  {
+                    type: "null",
+                  },
                 ],
               },
 
               pgVolumes: {
-                type:
-                  "array",
+                type: "array",
 
                 items: {
-                  type:
-                    "integer",
+                  type: "integer",
                 },
               },
             },
 
             required: [
-              "found",
+              "hasExplicitAuthor",
               "canonicalName",
               "latinName",
               "greekName",
               "pgVolumes",
             ],
-
-            additionalProperties:
-              false,
           },
         },
       },
     });
 
 
-  if (
-    !response.output_text
-  ) {
+  const content =
+    response.choices[0]
+      ?.message
+      ?.content;
+
+
+  if (!content) {
     return null;
   }
 
 
-  let parsed: {
-    found: boolean;
-
-    canonicalName:
-      | string
-      | null;
-
-    latinName:
-      | string
-      | null;
-
-    greekName:
-      | string
-      | null;
-
-    pgVolumes: number[];
-  };
-
+  let parsed:
+    AiAuthorResponse;
 
   try {
     parsed =
       JSON.parse(
-        response.output_text,
-      );
+        content,
+      ) as AiAuthorResponse;
   } catch {
     return null;
   }
 
 
   if (
-    !parsed.found ||
+    !parsed.hasExplicitAuthor ||
     !parsed.canonicalName
   ) {
     return null;
   }
 
 
-  const pgVolumes =
-    uniqueVolumes(
-      parsed.pgVolumes ??
-        [],
-    );
+  const canonicalName =
+    parsed.canonicalName.trim();
 
 
-  /*
-   * Bez makar jednog PG toma
-   * još nemamo upotrebljiv
-   * routing kandidat.
-   */
-  if (
-    pgVolumes.length ===
-    0
-  ) {
+  if (!canonicalName) {
     return null;
   }
 
 
   return {
-    canonicalName:
-      parsed.canonicalName.trim(),
+    canonicalName,
 
     latinName:
-      parsed.latinName?.trim() ||
+      parsed.latinName
+        ?.trim() ||
       null,
 
     greekName:
-      parsed.greekName?.trim() ||
+      parsed.greekName
+        ?.trim() ||
       null,
 
-    pgVolumes,
+    pgVolumes:
+      uniqueValidPgVolumes(
+        parsed.pgVolumes,
+      ),
 
     source:
       "AI_CANDIDATE",
