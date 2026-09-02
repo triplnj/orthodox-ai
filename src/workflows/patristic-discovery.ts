@@ -1,4 +1,5 @@
 import { discoverPatristicSourceUrls } from "@/lib/patristics/discover-and-save";
+import { fetchSourceText } from "@/lib/patristics/fetch-source";
 
 export async function patristicDiscoveryWorkflow(
   jobId: string,
@@ -7,11 +8,39 @@ export async function patristicDiscoveryWorkflow(
 ) {
   "use workflow";
 
-  return await discoverSourcesStep(
+  const discovery =
+    await discoverSourcesStep(
+      jobId,
+      query,
+      language,
+    );
+
+  if (
+    discovery.sourceUrls.length === 0
+  ) {
+    return {
+      jobId,
+      discovered:
+        discovery.discovered,
+      sourceUrls: [],
+      fetched: null,
+    };
+  }
+
+  const fetched =
+    await fetchSourceStep(
+      jobId,
+      discovery.sourceUrls[0],
+    );
+
+  return {
     jobId,
-    query,
-    language,
-  );
+    discovered:
+      discovery.discovered,
+    sourceUrls:
+      discovery.sourceUrls,
+    fetched,
+  };
 }
 
 async function discoverSourcesStep(
@@ -40,8 +69,10 @@ async function discoverSourcesStep(
     "PATRISTIC_WORKFLOW_DISCOVERY_RESULT:",
     {
       jobId,
-      discovered: result.discovered,
-      sourceUrls: result.sourceUrls,
+      discovered:
+        result.discovered,
+      sourceUrls:
+        result.sourceUrls,
     },
   );
 
@@ -49,4 +80,43 @@ async function discoverSourcesStep(
     jobId,
     ...result,
   };
+}
+
+async function fetchSourceStep(
+  jobId: string,
+  sourceUrl: string,
+) {
+  "use step";
+
+  console.log(
+    "PATRISTIC_WORKFLOW_FETCH_START:",
+    {
+      jobId,
+      sourceUrl,
+    },
+  );
+
+  const source =
+    await fetchSourceText(
+      sourceUrl,
+    );
+
+  const result = {
+    sourceUrl,
+    title: source.title,
+    textLength:
+      source.text.length,
+    hasText:
+      source.text.length > 0,
+  };
+
+  console.log(
+    "PATRISTIC_WORKFLOW_FETCH_RESULT:",
+    {
+      jobId,
+      ...result,
+    },
+  );
+
+  return result;
 }
