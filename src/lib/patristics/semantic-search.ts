@@ -19,7 +19,8 @@ export type SemanticPatristicQuote = {
   verification: string;
   confidence: number;
   similarity: number;
-    sources: {
+
+  sources: {
     url: string;
     sourceName: string | null;
     sourceType: string | null;
@@ -36,45 +37,89 @@ export async function semanticSearchPatristicQuotes(
   const embedding = await createEmbedding(query);
 
   const vector = `[${embedding.join(",")}]`;
-  const authorFilter = authorName
-  ? `AND LOWER(q."authorName") = LOWER($4)`
-  : "";
 
-  const results = await prisma.$queryRawUnsafe<SemanticPatristicQuote[]>(
-    `
-    SELECT
-      q."id",
-      q."authorName",
-      q."workTitle",
-      q."originalLanguage",
-      q."originalText",
-      q."translationSr",
-      q."translationEn",
-      q."section",
-      q."chapter",
-      q."paragraph",
-      q."pgReference",
-      q."scReference",
-      q."cpgReference",
-      q."topics",
-      q."verification",
-      q."confidence",
-      1 - (q."embedding" <=> $1::vector) AS "similarity"
-    FROM "PatristicQuote" q
-    WHERE
-      q."verification" = 'MULTI_SOURCE_VERIFIED'
-      AND q."confidence" >= 90
-      AND q."embedding" IS NOT NULL
-      AND 1 - (q."embedding" <=> $1::vector) >= $3
-      ${authorFilter}
-    ORDER BY q."embedding" <=> $1::vector
-    LIMIT $2
-    `,
-    vector,
-    limit,
-    minSimilarity,
-    ...(authorName ? [authorName] : []),
-  );
+  const authorFilter = authorName
+    ? `AND LOWER(q."authorName") = LOWER($4)`
+    : "";
+
+  const results =
+    await prisma.$queryRawUnsafe<
+      SemanticPatristicQuote[]
+    >(
+      `
+      SELECT
+        q."id",
+        q."authorName",
+        q."workTitle",
+        q."originalLanguage",
+        q."originalText",
+        q."translationSr",
+        q."translationEn",
+        q."section",
+        q."chapter",
+        q."paragraph",
+        q."pgReference",
+        q."scReference",
+        q."cpgReference",
+        q."topics",
+        q."verification",
+        q."confidence",
+
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'url',
+                s."url",
+                'sourceName',
+                s."sourceName",
+                'sourceType',
+                s."sourceType",
+                'exactMatch',
+                s."exactMatch"
+              )
+              ORDER BY s."retrievedAt" ASC
+            )
+            FROM "PatristicQuoteSource" s
+            WHERE
+              s."quoteId" = q."id"
+              AND s."exactMatch" = true
+          ),
+          '[]'::jsonb
+        ) AS "sources",
+
+        1 - (
+          q."embedding" <=> $1::vector
+        ) AS "similarity"
+
+      FROM "PatristicQuote" q
+
+      WHERE
+        q."verification" =
+          'MULTI_SOURCE_VERIFIED'
+
+        AND q."confidence" >= 90
+
+        AND q."embedding" IS NOT NULL
+
+        AND 1 - (
+          q."embedding" <=> $1::vector
+        ) >= $3
+
+        ${authorFilter}
+
+      ORDER BY
+        q."embedding" <=> $1::vector
+
+      LIMIT $2
+      `,
+      vector,
+      limit,
+      minSimilarity,
+      ...(authorName
+        ? [authorName]
+        : []),
+    );
 
   return results;
-}
+} 
