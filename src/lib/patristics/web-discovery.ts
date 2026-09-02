@@ -316,11 +316,61 @@ Return structured discovery candidates only.
    * the result dependent on another broad,
    * stochastic web search.
    */
-  if (
-    trustedUnique.length >= 3
-  ) {
-    return trustedUnique;
-  }
+  const trustedDomainsFound =
+  new Set(
+    trustedUnique
+      .map((candidate) => {
+        try {
+          return new URL(
+            candidate.sourceUrl,
+          )
+            .hostname
+            .toLowerCase()
+            .replace(/^www\./, "");
+        } catch {
+          return null;
+        }
+      })
+      .filter(
+        (
+          value,
+        ): value is string =>
+          Boolean(value),
+      ),
+  );
+
+
+console.log(
+  "PATRISTIC_TRUSTED_DOMAIN_DIVERSITY:",
+  {
+    candidates:
+      trustedUnique.length,
+
+    distinctDomains:
+      trustedDomainsFound.size,
+
+    domains:
+      [
+        ...trustedDomainsFound,
+      ],
+  },
+);
+
+
+/*
+ * Do not stop simply because we found three URLs.
+ *
+ * Three URLs from the same repository are still
+ * only one source ecosystem. Continue to broad
+ * discovery until we have candidates from at
+ * least three different trusted domains.
+ */
+if (
+  trustedUnique.length >= 3 &&
+  trustedDomainsFound.size >= 3
+) {
+  return trustedUnique;
+}
 
 
   /*
