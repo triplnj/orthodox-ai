@@ -1,26 +1,52 @@
-import { processPatristicDiscoveryJob } from "@/lib/patristics/process-discovery-job";
+import { discoverPatristicSourceUrls } from "@/lib/patristics/discover-and-save";
 
 export async function patristicDiscoveryWorkflow(
   jobId: string,
+  query: string,
+  language: "sr" | "en",
 ) {
   "use workflow";
 
-  return await processPatristicDiscoveryJobStep(
+  return await discoverSourcesStep(
     jobId,
+    query,
+    language,
   );
 }
 
-async function processPatristicDiscoveryJobStep(
+async function discoverSourcesStep(
   jobId: string,
+  query: string,
+  language: "sr" | "en",
 ) {
   "use step";
 
   console.log(
-    "PATRISTIC_WORKFLOW_JOB_ID:",
-    jobId,
+    "PATRISTIC_WORKFLOW_DISCOVERY_START:",
+    {
+      jobId,
+      query,
+      language,
+    },
   );
 
-  return await processPatristicDiscoveryJob(
-    jobId,
+  const result =
+    await discoverPatristicSourceUrls(
+      query,
+      language,
+    );
+
+  console.log(
+    "PATRISTIC_WORKFLOW_DISCOVERY_RESULT:",
+    {
+      jobId,
+      discovered: result.discovered,
+      sourceUrls: result.sourceUrls,
+    },
   );
+
+  return {
+    jobId,
+    ...result,
+  };
 }

@@ -37,6 +37,30 @@ import {
   translateQuote,
 } from "./backfill-translations";
 
+export async function discoverPatristicSourceUrls(
+  query: string,
+  language: "sr" | "en",
+) {
+  const discovered =
+    await discoverPatristicSources({
+      query,
+      language,
+    });
+
+  const sourceUrls = [
+    ...new Set(
+      discovered.map(
+        (candidate) =>
+          candidate.sourceUrl,
+      ),
+    ),
+  ];
+
+  return {
+    discovered: discovered.length,
+    sourceUrls,
+  };
+}
 
 export async function discoverAndSavePatristicQuotes(
   query: string,

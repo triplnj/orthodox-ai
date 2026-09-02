@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 import { start } from "workflow/api";
 
@@ -32,14 +33,39 @@ export async function POST(
     );
   }
 
+  const job =
+    await prisma.patristicDiscoveryJob.findUnique({
+      where: {
+        id: jobId,
+      },
+    });
+
+  if (!job) {
+    return NextResponse.json(
+      { error: "Discovery job not found." },
+      { status: 404 },
+    );
+  }
+
+  const language =
+    job.language === "sr"
+      ? "sr"
+      : "en";
+
   const run = await start(
     patristicDiscoveryWorkflow,
-    [jobId],
+    [
+      job.id,
+      job.query,
+      language,
+    ],
   );
 
   return NextResponse.json({
     ok: true,
-    jobId,
+    jobId: job.id,
+    query: job.query,
+    language,
     runId: run.runId,
   });
 }
