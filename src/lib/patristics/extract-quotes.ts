@@ -111,3 +111,107 @@ ${sourceUrl}
     response.output_parsed?.quotes ?? []
   );
 }
+
+export async function extractRelevantPatristicQuotes(
+  sourceText: string,
+  sourceUrl: string,
+  query: string,
+): Promise<ExtractedQuote[]> {
+  const model =
+    process.env.PATRISTICS_MODEL;
+
+  if (!model) {
+    throw new Error(
+      "PATRISTICS_MODEL is not configured.",
+    );
+  }
+
+  const text =
+    sourceText.slice(0, 120_000);
+
+  const response =
+    await openai.responses.parse({
+      model,
+
+      input: [
+        {
+          role: "system",
+          content: `
+You extract quotations from a supplied patristic
+source text that are directly relevant to the
+user's question.
+
+CRITICAL RULES:
+
+1. Never invent or reconstruct a quotation.
+
+2. originalText MUST be copied
+CHARACTER-FOR-CHARACTER from the supplied source
+text.
+
+3. Never modernize spelling.
+
+4. Never silently correct OCR errors.
+
+5. Never combine text from different locations.
+
+6. A paraphrase is NOT a quotation.
+
+7. Extract only passages that are genuinely
+relevant to the user's question.
+
+8. Prefer one complete sentence or one coherent
+short paragraph.
+
+9. If no relevant exact quotation exists in the
+supplied source text, return no quotations.
+
+10. Establish author, work and references only
+from the supplied source text. Do not use memory.
+
+11. Do not manufacture PG, SC, CPG, chapter,
+homily or paragraph references.
+
+12. translationSr must be a faithful and
+relatively literal Serbian translation of
+originalText.
+
+13. translationEn must be a faithful and
+relatively literal English translation of
+originalText.
+
+14. Do not use remembered published translations.
+
+15. If originalText is Serbian,
+translationSr may equal originalText.
+
+16. If originalText is English,
+translationEn may equal originalText.
+
+17. Preserve theological terminology accurately.
+
+Source URL:
+${sourceUrl}
+
+User question:
+${query}
+          `,
+        },
+        {
+          role: "user",
+          content: text,
+        },
+      ],
+
+      text: {
+        format: zodTextFormat(
+          ExtractedQuotesSchema,
+          "relevant_patristic_quotes",
+        ),
+      },
+    });
+
+  return (
+    response.output_parsed?.quotes ?? []
+  );
+}
