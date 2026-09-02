@@ -1,4 +1,8 @@
 import {
+  findPgAuthorCatalogEntry,
+} from "./pg-author-catalog";
+
+import {
   resolvePgVolumeSource,
 } from "./pg-volume-source";
 
@@ -14,95 +18,274 @@ export type VerifiedPgAuthorCandidate = {
 
   greekName: string | null;
 
+  /*
+   * Bibliografski potvrđeni PG
+   * tomovi autora.
+   */
   pgVolumes: number[];
 
+  /*
+   * Tomovi za koje smo trenutno
+   * uspeli da pronađemo digitalni
+   * OCR source.
+   */
   availablePgVolumes: number[];
 
+  /*
+   * Bibliografski validni tomovi
+   * za koje digitalni resolver
+   * trenutno nije našao source.
+   */
   unavailablePgVolumes: number[];
 
   source:
     | "LOCAL_INDEX"
     | "AI_CANDIDATE";
 
+  /*
+   * Da li znamo dovoljno pouzdano
+   * kome treba rutirati upit.
+   */
   routingVerified: boolean;
 
+  /*
+   * Da li je veza:
+   *
+   * autor -> PG tomovi
+   *
+   * deterministički potvrđena,
+   * a ne samo AI pretpostavka.
+   */
   authorVolumeVerified: boolean;
 };
 
 
-export async function verifyPgAuthorCandidate(
-  candidate: ResolvedPgAuthor,
-): Promise<
-  VerifiedPgAuthorCandidate
-> {
-  const availablePgVolumes:
-    number[] = [];
+function uniqueNumbers(
+  values: number[],
+): number[] {
+  return [
+    ...new Set(
+      values.filter(
+        (value) =>
+          Number.isInteger(value) &&
+          value >= 1 &&
+          value <= 161,
+      ),
+    ),
+  ].sort(
+    (a, b) =>
+      a - b,
+  );
+}
 
-  const unavailablePgVolumes:
-    number[] = [];
 
+async function checkDigitalSources(
+  volumes: number[],
+): Promise<{
+  available: number[];
+  unavailable: number[];
+}> {
+  const available: number[] = [];
+  const unavailable: number[] = [];
 
-  /*
-   * Proveravamo svaki predloženi
-   * PG tom preko stvarnog resolvera.
-   *
-   * Time dokazujemo da postoji
-   * upotrebljiv digitalni PG izvor.
-   */
-  for (
-    const volume of
-    candidate.pgVolumes
-  ) {
+  for (const volume of volumes) {
     try {
       const source =
         await resolvePgVolumeSource(
           volume,
         );
 
-
       if (source) {
-        availablePgVolumes.push(
-          volume,
-        );
+        available.push(volume);
       } else {
-        unavailablePgVolumes.push(
-          volume,
-        );
+        unavailable.push(volume);
       }
     } catch {
-      unavailablePgVolumes.push(
-        volume,
-      );
+      unavailable.push(volume);
     }
+  }
+
+  return {
+    available:
+      uniqueNumbers(available),
+
+    unavailable:
+      uniqueNumbers(unavailable),
+  };
+}
+
+
+export async function verifyPgAuthorCandidate(
+  candidate: ResolvedPgAuthor,
+): Promise<VerifiedPgAuthorCandidate> {
+  /*
+   * ------------------------------------------------
+   * 1. Lokalni indeks
+   * ------------------------------------------------
+   *
+   * Ako je autor već u našem
+   * kontrolisanom corpus-index.ts,
+   * njegovi PG tomovi se smatraju
+   * bibliografski potvrđenim.
+   */
+  if (
+    candidate.source ===
+    "LOCAL_INDEX"
+  ) {
+    const pgVolumes =
+      uniqueNumbers(
+        candidate.pgVolumes,
+      );
+
+    const digital =
+      await checkDigitalSources(
+        pgVolumes,
+      );
+
+    return {
+      canonicalName:
+        candidate.canonicalName,
+
+      latinName:
+        candidate.latinName,
+
+      greekName:
+        candidate.greekName,
+
+      pgVolumes,
+
+      availablePgVolumes:
+        digital.available,
+
+      unavailablePgVolumes:
+        digital.unavailable,
+
+      source:
+        candidate.source,
+
+      routingVerified:
+        pgVolumes.length > 0,
+
+      authorVolumeVerified:
+        pgVolumes.length > 0,
+    };
   }
 
 
   /*
-   * LOCAL_INDEX:
+   * ------------------------------------------------
+   * 2. AI kandidat
+   * ------------------------------------------------
    *
-   * autor -> PG tom veza dolazi
-   * iz našeg kontrolisanog indeksa.
+   * AI je dozvoljeno da kaže:
    *
-   * AI_CANDIDATE:
+   * "Mislim da je ovo Epifanije."
    *
-   * trenutno smo proverili samo
-   * da predloženi PG tom postoji
-   * i da možemo da mu pristupimo.
+   * Ali AI PG tomovi se NE
+   * prihvataju kao dokaz.
    *
-   * Još NISMO nezavisno dokazali
-   * da taj tom pripada baš tom
-   * autoru.
+   * Autor se mora pronaći u našem
+   * determinističkom PG katalogu.
    */
-  const authorVolumeVerified =
-    candidate.source ===
-      "LOCAL_INDEX" &&
-    availablePgVolumes.length >
-      0;
+  let catalogEntry =
+    findPgAuthorCatalogEntry(
+      candidate.canonicalName,
+    );
+
+
+  if (
+    !catalogEntry &&
+    candidate.latinName
+  ) {
+    catalogEntry =
+      findPgAuthorCatalogEntry(
+        candidate.latinName,
+      );
+  }
+
+
+  if (
+    !catalogEntry &&
+    candidate.greekName
+  ) {
+    catalogEntry =
+      findPgAuthorCatalogEntry(
+        candidate.greekName,
+      );
+  }
+
+
+  /*
+   * Autor nije potvrđen
+   * determinističkim katalogom.
+   *
+   * Zato ne koristimo AI PG
+   * brojeve za produkcioni routing.
+   */
+  if (!catalogEntry) {
+    return {
+      canonicalName:
+        candidate.canonicalName,
+
+      latinName:
+        candidate.latinName,
+
+      greekName:
+        candidate.greekName,
+
+      pgVolumes: [],
+
+      availablePgVolumes: [],
+
+      unavailablePgVolumes: [],
+
+      source:
+        candidate.source,
+
+      routingVerified:
+        false,
+
+      authorVolumeVerified:
+        false,
+    };
+  }
+
+
+  /*
+   * ------------------------------------------------
+   * 3. Autor je pronađen u katalogu
+   * ------------------------------------------------
+   *
+   * Ovo su sada bibliografski
+   * potvrđeni PG tomovi.
+   */
+  const pgVolumes =
+    uniqueNumbers(
+      catalogEntry.pgVolumes,
+    );
+
+
+  /*
+   * ------------------------------------------------
+   * 4. Digitalna dostupnost
+   * ------------------------------------------------
+   *
+   * Ovo je potpuno odvojena stvar.
+   *
+   * Ako Internet Archive/OCR
+   * resolver ne pronađe neki tom,
+   * taj tom NE nestaje iz
+   * pgVolumes.
+   */
+  const digital =
+    await checkDigitalSources(
+      pgVolumes,
+    );
 
 
   return {
     canonicalName:
-      candidate.canonicalName,
+      catalogEntry.canonicalName,
 
     latinName:
       candidate.latinName,
@@ -110,20 +293,29 @@ export async function verifyPgAuthorCandidate(
     greekName:
       candidate.greekName,
 
-    pgVolumes:
-      candidate.pgVolumes,
+    pgVolumes,
 
-    availablePgVolumes,
+    availablePgVolumes:
+      digital.available,
 
-    unavailablePgVolumes,
+    unavailablePgVolumes:
+      digital.unavailable,
 
     source:
       candidate.source,
 
+    /*
+     * Autor je deterministički
+     * pronađen u našem katalogu.
+     */
     routingVerified:
-      availablePgVolumes.length >
-      0,
+      pgVolumes.length > 0,
 
-    authorVolumeVerified,
+    /*
+     * Veza autor -> PG tom je
+     * potvrđena katalogom.
+     */
+    authorVolumeVerified:
+      pgVolumes.length > 0,
   };
 }
