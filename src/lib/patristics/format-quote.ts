@@ -18,6 +18,13 @@ type PatristicQuoteForDisplay = {
 
   verification: string;
   confidence: number;
+
+  sources?: {
+    url: string;
+    sourceName: string | null;
+    sourceType: string | null;
+    exactMatch: boolean;
+  }[];
 };
 
 export function formatPatristicQuote(
@@ -32,6 +39,30 @@ export function formatPatristicQuote(
   const quoteToUse =
     translation ??
     quote.originalText;
+
+  const verifiedSources =
+    quote.sources
+      ?.filter(
+        (source) =>
+          source.exactMatch,
+      )
+      .map(
+        (source, index) =>
+          [
+            `SOURCE_${index + 1}:`,
+            `URL: ${source.url}`,
+            `NAME: ${
+              source.sourceName ??
+              "Not specified"
+            }`,
+            `TYPE: ${
+              source.sourceType ??
+              "Not specified"
+            }`,
+          ].join("\n"),
+      )
+      .join("\n\n") ||
+    "No verified source URL supplied.";
 
   return [
     `AUTHOR: ${quote.authorName}`,
@@ -77,5 +108,8 @@ export function formatPatristicQuote(
 
     `VERIFICATION: ${quote.verification}`,
     `CONFIDENCE: ${quote.confidence}`,
+
+    `VERIFIED_SOURCES:`,
+    verifiedSources,
   ].join("\n");
 }
