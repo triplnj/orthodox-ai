@@ -20,35 +20,117 @@ export type GreekWitnessPassageMatch = {
 };
 
 
-function countMatches(
-  queryWords: string[],
-  candidateWords: string[],
+function buildFrequencyMap(
+  words: string[],
 ) {
-  let matches = 0;
-
-
-  const length =
-    Math.min(
-      queryWords.length,
-      candidateWords.length,
-    );
+  const frequencies =
+    new Map<string, number>();
 
 
   for (
-    let index = 0;
-    index < length;
-    index += 1
+    const word
+    of words
   ) {
-    if (
-      queryWords[index] ===
-      candidateWords[index]
-    ) {
-      matches += 1;
-    }
+    frequencies.set(
+      word,
+      (
+        frequencies.get(
+          word,
+        ) ?? 0
+      ) + 1,
+    );
   }
 
 
-  return matches;
+  return frequencies;
+}
+
+
+function calculateOverlap(
+  queryFrequencies:
+    Map<string, number>,
+
+  candidateFrequencies:
+    Map<string, number>,
+) {
+  let overlap =
+    0;
+
+
+  for (
+    const [
+      word,
+      queryCount,
+    ]
+    of queryFrequencies
+  ) {
+    const candidateCount =
+      candidateFrequencies.get(
+        word,
+      ) ?? 0;
+
+
+    overlap +=
+      Math.min(
+        queryCount,
+        candidateCount,
+      );
+  }
+
+
+  return overlap;
+}
+
+
+function incrementFrequency(
+  frequencies:
+    Map<string, number>,
+
+  word: string,
+) {
+  frequencies.set(
+    word,
+    (
+      frequencies.get(
+        word,
+      ) ?? 0
+    ) + 1,
+  );
+}
+
+
+function decrementFrequency(
+  frequencies:
+    Map<string, number>,
+
+  word: string,
+) {
+  const current =
+    frequencies.get(
+      word,
+    );
+
+
+  if (!current) {
+    return;
+  }
+
+
+  if (
+    current <= 1
+  ) {
+    frequencies.delete(
+      word,
+    );
+
+    return;
+  }
+
+
+  frequencies.set(
+    word,
+    current - 1,
+  );
 }
 
 
@@ -91,9 +173,34 @@ export function findGreekWitnessPassage(
   }
 
 
+  /*
+   * Dirty OCR садржи додатне
+   * бројеве, слова, апарат,
+   * поломљене речи итд.
+   *
+   * Зато прозор правимо нешто
+   * већи од чистог пасуса.
+   */
+  const extraWords =
+    Math.max(
+      20,
+      Math.ceil(
+        queryWords.length *
+        0.25,
+      ),
+    );
+
+
+  const windowSize =
+    Math.min(
+      witnessWords.length,
+      queryWords.length +
+        extraWords,
+    );
+
+
   if (
-    witnessWords.length <
-    queryWords.length
+    windowSize === 0
   ) {
     return {
       found: false,
@@ -114,52 +221,94 @@ export function findGreekWitnessPassage(
   }
 
 
-  /*
-   * Тражимо најбољи прозор исте
-   * дужине као пасус.
-   *
-   * Ово је намерно детерминистички:
-   * нема AI одлуке о томе шта
-   * "личи" на извор.
-   */
-  let bestStart =
-    -1;
+  const queryFrequencies =
+    buildFrequencyMap(
+      queryWords,
+    );
 
-  let bestMatches =
-    -1;
+
+  const candidateFrequencies =
+    buildFrequencyMap(
+      witnessWords.slice(
+        0,
+        windowSize,
+      ),
+    );
+
+
+  let bestStart =
+    0;
+
+  let bestOverlap =
+    calculateOverlap(
+      queryFrequencies,
+      candidateFrequencies,
+    );
 
 
   const lastStart =
     witnessWords.length -
-    queryWords.length;
+    windowSize;
 
 
+  /*
+   * Sliding window:
+   *
+   * не поредимо више реч по реч
+   * на истој позицији.
+   *
+   * Меримо колико речи из чистог
+   * пасуса постоји у датом OCR
+   * прозору.
+   *
+   * Тако нас (27), xoi, OE,
+   * поломљене речи и сличан OCR
+   * отпад више не померају.
+   */
   for (
-    let start = 0;
+    let start = 1;
     start <= lastStart;
     start += 1
   ) {
-    const candidate =
-      witnessWords.slice(
-        start,
+    const removedWord =
+      witnessWords[
+        start - 1
+      ];
+
+
+    const addedWord =
+      witnessWords[
         start +
-          queryWords.length,
-      );
+        windowSize -
+        1
+      ];
 
 
-    const matches =
-      countMatches(
-        queryWords,
-        candidate,
+    decrementFrequency(
+      candidateFrequencies,
+      removedWord,
+    );
+
+
+    incrementFrequency(
+      candidateFrequencies,
+      addedWord,
+    );
+
+
+    const overlap =
+      calculateOverlap(
+        queryFrequencies,
+        candidateFrequencies,
       );
 
 
     if (
-      matches >
-      bestMatches
+      overlap >
+      bestOverlap
     ) {
-      bestMatches =
-        matches;
+      bestOverlap =
+        overlap;
 
       bestStart =
         start;
@@ -167,11 +316,11 @@ export function findGreekWitnessPassage(
 
 
     /*
-     * Савршено поклапање:
-     * нема потребе да настављамо.
+     * Све речи чистог пасуса
+     * постоје у прозору.
      */
     if (
-      matches ===
+      bestOverlap ===
       queryWords.length
     ) {
       break;
@@ -179,30 +328,8 @@ export function findGreekWitnessPassage(
   }
 
 
-  if (
-    bestStart < 0
-  ) {
-    return {
-      found: false,
-
-      similarity: 0,
-
-      queryWordCount:
-        queryWords.length,
-
-      matchedWordCount: 0,
-
-      startWordIndex: null,
-
-      endWordIndex: null,
-
-      matchedText: "",
-    };
-  }
-
-
   const similarity =
-    bestMatches /
+    bestOverlap /
     queryWords.length;
 
 
@@ -210,22 +337,22 @@ export function findGreekWitnessPassage(
     witnessWords.slice(
       bestStart,
       bestStart +
-        queryWords.length,
+        windowSize,
     );
 
 
   return {
     /*
-     * За сада је 0.70 само праг
-     * да кажемо да смо вероватно
-     * нашли исти пасус.
+     * Ово значи само:
      *
-     * То НИЈЕ праг за коначну
-     * теолошку/текстуалну
-     * верификацију.
+     * "врло вероватно смо
+     * лоцирали исти пасус".
+     *
+     * НЕ значи да је текст
+     * верификован.
      */
     found:
-      similarity >= 0.7,
+      similarity >= 0.55,
 
     similarity,
 
@@ -233,14 +360,14 @@ export function findGreekWitnessPassage(
       queryWords.length,
 
     matchedWordCount:
-      bestMatches,
+      bestOverlap,
 
     startWordIndex:
       bestStart,
 
     endWordIndex:
       bestStart +
-      queryWords.length -
+      windowSize -
       1,
 
     matchedText:
