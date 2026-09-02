@@ -12,8 +12,7 @@ export async function buildPatristicContext(
   const detectedAuthor =
     await detectPatristicAuthor(query);
 
-  const minSimilarity =
-    detectedAuthor ? 0.55 : 0.0;
+const minSimilarity = 0.0;
 
   console.log(
     "PATRISTIC_RETRIEVAL_INPUT:",
