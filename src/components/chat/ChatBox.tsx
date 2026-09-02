@@ -132,7 +132,9 @@ export function ChatBox({
                 : "mr-auto max-w-[85%] rounded-xl bg-white px-4 py-3 text-sm leading-6 text-gray-800 shadow-sm"
             }
           >
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <p className="whitespace-pre-wrap break-words">
+  {message.content}
+</p>  
           </div>
         ))}
 
