@@ -1,9 +1,8 @@
 import * as cheerio from "cheerio";
 
 import {
-  findPatristicAuthor,
-  findRelevantWorks,
-} from "./corpus-index";
+  buildPgSearchPlan,
+} from "./build-pg-search-plan";
 
 
 export type PgPassageMatch = {
@@ -29,24 +28,6 @@ export type PgPassageMatch = {
 
   pageImageUrl: string;
 };
-
-
-type PgVolumeSource = {
-  volume: number;
-
-  archiveIdentifier: string;
-};
-
-
-const PG_VOLUME_SOURCES:
-  PgVolumeSource[] = [
-    {
-      volume: 46,
-
-      archiveIdentifier:
-        "patrologiaecursu46mignuoft",
-    },
-  ];
 
 
 const TOPIC_TERMS = [
@@ -153,15 +134,24 @@ function detectGreekSearchTerms(
 }
 
 
-function getPgVolumeSource(
+/*
+ * Internet Archive PG kolekcija
+ * uglavnom koristi ovaj obrazac
+ * identifikatora.
+ *
+ * Više nemamo ručnu tabelu
+ * PG 46 -> Gregory.
+ *
+ * Ako konkretan tom nije
+ * dostupan pod ovim ID-em,
+ * fetch će jednostavno vratiti
+ * neuspeh i taj tom preskačemo.
+ */
+function getArchiveIdentifier(
   volume: number,
 ) {
   return (
-    PG_VOLUME_SOURCES.find(
-      (source) =>
-        source.volume ===
-        volume,
-    ) ?? null
+    `patrologiaecursu${volume}mignuoft`
   );
 }
 
@@ -198,22 +188,15 @@ function archivePageUrl(
 async function fetchPgDjvuXml(
   volume: number,
 ) {
-  const source =
-    getPgVolumeSource(
+  const archiveIdentifier =
+    getArchiveIdentifier(
       volume,
     );
 
 
-  if (!source) {
-    throw new Error(
-      `No OCR source configured for PG ${volume}.`,
-    );
-  }
-
-
   const url =
     archiveDjvuXmlUrl(
-      source.archiveIdentifier,
+      archiveIdentifier,
     );
 
 
@@ -238,9 +221,7 @@ async function fetchPgDjvuXml(
 
 
   if (!response.ok) {
-    throw new Error(
-      `Could not fetch DjVu XML for PG ${volume}: ${response.status}`,
-    );
+    return null;
   }
 
 
@@ -248,15 +229,19 @@ async function fetchPgDjvuXml(
     xml:
       await response.text(),
 
-    archiveIdentifier:
-      source.archiveIdentifier,
+    archiveIdentifier,
   };
 }
 
 
 function extractParagraphsFromPage(
-   pageElement: Parameters<cheerio.CheerioAPI>[0],
-  $: cheerio.CheerioAPI,
+  pageElement:
+    Parameters<
+      cheerio.CheerioAPI
+    >[0],
+
+  $:
+    cheerio.CheerioAPI,
 ) {
   const paragraphs: string[] =
     [];
@@ -378,7 +363,10 @@ function searchPages(
 
 
   $("OBJECT").each(
-    (pageIndex, page) => {
+    (
+      pageIndex,
+      page,
+    ) => {
       const paragraphs =
         extractParagraphsFromPage(
           page,
@@ -466,13 +454,17 @@ export async function searchPgPassages(
 ): Promise<
   PgPassageMatch[]
 > {
-  const author =
-    findPatristicAuthor(
+  const plan =
+    buildPgSearchPlan(
       query,
     );
 
 
-  if (!author) {
+  if (
+    !plan.hasSpecificAuthor ||
+    !plan.author ||
+    !plan.authorName
+  ) {
     return [];
   }
 
@@ -490,40 +482,24 @@ export async function searchPgPassages(
   }
 
 
-  const relevantWorks =
-    findRelevantWorks(
-      query,
-      author,
-    );
-
-
-  const works =
-    relevantWorks.length > 0
-      ? relevantWorks
-      : author.works;
-
-
   /*
-   * Не претражујемо исти PG том
-   * више пута само зато што се
-   * у њему налази више дела.
+   * Tomove više ne određuje
+   * ovaj fajl.
+   *
+   * Search plan je jedino mesto
+   * koje odlučuje šta treba
+   * pretraživati.
    */
-  const volumes = [
-    ...new Set(
-      works
-        .map(
-          (work) =>
-            work.pgVolume,
-        )
-        .filter(
-          (
-            volume,
-          ): volume is number =>
-            typeof volume ===
-            "number",
-        ),
-    ),
-  ];
+  const volumes =
+    plan.pgVolumes;
+
+
+  if (
+    volumes.length ===
+    0
+  ) {
+    return [];
+  }
 
 
   const allResults:
@@ -535,13 +511,25 @@ export async function searchPgPassages(
     const volume of
     volumes
   ) {
-    const volumeSource =
-      getPgVolumeSource(
-        volume,
-      );
+    let fetched:
+      Awaited<
+        ReturnType<
+          typeof fetchPgDjvuXml
+        >
+      >;
 
 
-    if (!volumeSource) {
+    try {
+      fetched =
+        await fetchPgDjvuXml(
+          volume,
+        );
+    } catch {
+      continue;
+    }
+
+
+    if (!fetched) {
       continue;
     }
 
@@ -550,9 +538,7 @@ export async function searchPgPassages(
       xml,
       archiveIdentifier,
     } =
-      await fetchPgDjvuXml(
-        volume,
-      );
+      fetched;
 
 
     const rawMatches =
@@ -562,19 +548,41 @@ export async function searchPgPassages(
       );
 
 
+    /*
+     * Ako plan već zna konkretna
+     * dela, koristimo samo njih.
+     *
+     * Ako ne zna, uzimamo sva
+     * indeksirana dela autora
+     * koja pripadaju tom tomu.
+     */
     const volumeWorks =
-      works.filter(
-        (work) =>
-          work.pgVolume ===
-          volume,
-      );
+      plan.hasSpecificWorks
+        ? plan.works.filter(
+            (work) =>
+              work.pgVolume ===
+              volume,
+          )
+        : plan.author.works.filter(
+            (work) =>
+              work.pgVolume ===
+              volume,
+          );
 
 
     const candidateWorkTitles =
       volumeWorks.map(
-        (work) =>
-          work.titleSr,
-      );
+        (work) => {
+          if (
+            "titleSr" in work
+          ) {
+            return work.titleSr;
+          }
+
+          return "";
+        },
+      )
+      .filter(Boolean);
 
 
     const workPgColumns =
@@ -597,14 +605,8 @@ export async function searchPgPassages(
     ) {
       allResults.push({
         authorName:
-          author.canonicalName,
+          plan.authorName,
 
-        /*
-         * Намерно не тврдимо још
-         * да знамо тачно дело.
-         * То ћемо утврдити
-         * мапирањем PG колона.
-         */
         candidateWorkTitles,
 
         pgVolume:
@@ -645,11 +647,6 @@ export async function searchPgPassages(
   return allResults
     .sort(
       (a, b) => {
-        /*
-         * Пасус који има и ψυχ-
-         * и θαν- иде испред пасуса
-         * који има само један појам.
-         */
         const scoreDifference =
           b.matchedTerms.length -
           a.matchedTerms.length;
@@ -660,6 +657,17 @@ export async function searchPgPassages(
           0
         ) {
           return scoreDifference;
+        }
+
+
+        if (
+          a.pgVolume !==
+          b.pgVolume
+        ) {
+          return (
+            a.pgVolume -
+            b.pgVolume
+          );
         }
 
 
