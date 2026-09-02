@@ -8,44 +8,74 @@ type PatristicQuoteForDisplay = {
   translationSr: string | null;
   translationEn: string | null;
 
+  section?: string | null;
+  chapter?: string | null;
+  paragraph?: string | null;
+
   pgReference: string | null;
+  scReference?: string | null;
+  cpgReference?: string | null;
 
   verification: string;
   confidence: number;
 };
 
-
 export function formatPatristicQuote(
   quote: PatristicQuoteForDisplay,
   language: "sr" | "en",
-) {
+): string {
   const translation =
     language === "sr"
       ? quote.translationSr
       : quote.translationEn;
 
+  const quoteToUse =
+    translation ??
+    quote.originalText;
 
-  return {
-    author: quote.authorName,
-    work: quote.workTitle,
+  return [
+    `AUTHOR: ${quote.authorName}`,
+    `WORK: ${quote.workTitle}`,
 
-    text:
-      translation ??
-      quote.originalText,
+    `SECTION: ${
+      quote.section ??
+      "Not specified"
+    }`,
 
-    original:
-      quote.originalText,
+    `CHAPTER: ${
+      quote.chapter ??
+      "Not specified"
+    }`,
 
-    originalLanguage:
-      quote.originalLanguage,
+    `PARAGRAPH: ${
+      quote.paragraph ??
+      "Not specified"
+    }`,
 
-    reference:
-      quote.pgReference,
+    `PG_REFERENCE: ${
+      quote.pgReference ??
+      "Not specified"
+    }`,
 
-    verification:
-      quote.verification,
+    `SC_REFERENCE: ${
+      quote.scReference ??
+      "Not specified"
+    }`,
 
-    confidence:
-      quote.confidence,
-  };
+    `CPG_REFERENCE: ${
+      quote.cpgReference ??
+      "Not specified"
+    }`,
+
+    `ORIGINAL_LANGUAGE: ${quote.originalLanguage}`,
+
+    `ORIGINAL_TEXT:`,
+    quote.originalText,
+
+    `QUOTE_TO_USE:`,
+    quoteToUse,
+
+    `VERIFICATION: ${quote.verification}`,
+    `CONFIDENCE: ${quote.confidence}`,
+  ].join("\n");
 }
