@@ -1,6 +1,6 @@
 import { detectPatristicAuthor } from "./detect-author";
 import { formatPatristicQuote } from "./format-quote";
-import { hybridScore } from "./hybrid-score";
+import { calculateHybridScore } from "./hybrid-score";
 import { semanticSearchPatristicQuotes } from "./semantic-search";
 
 export type PatristicLanguage = "sr" | "en";
@@ -51,73 +51,91 @@ export async function buildPatristicContext(
 
   const rankedQuotes =
     semanticQuotes
-      .map((quote) => ({
-        quote,
-        score: hybridScore(
-          query,
+      .map((quote) => {
+        const scores =
+          calculateHybridScore(
+            query,
+            quote,
+          );
+
+        return {
           quote,
-        ),
-      }))
+          ...scores,
+        };
+      })
       .sort(
         (a, b) =>
-          b.score - a.score,
+          b.hybridScore -
+          a.hybridScore,
       );
 
   console.log(
     "PATRISTIC_HYBRID_RESULTS:",
     rankedQuotes.map(
-      ({ quote, score }) => ({
+      ({
+        quote,
+        semanticScore,
+        keywordScore,
+        hybridScore,
+        matchedTerms,
+        totalTerms,
+      }) => ({
         id: quote.id,
         authorName:
           quote.authorName,
         workTitle:
           quote.workTitle,
-        similarity:
-          quote.similarity,
-        hybridScore: score,
+        semanticScore,
+        keywordScore,
+        hybridScore,
+        matchedTerms,
+        totalTerms,
       }),
     ),
   );
 
   const usableQuotes =
     rankedQuotes
-      .filter(
-        ({ quote, score }) => {
-          if (score < 0.35) {
-            return false;
-          }
+      .filter((item) => {
+        if (
+          item.hybridScore < 0.35
+        ) {
+          return false;
+        }
 
-          if (
-            language === "sr" &&
-            !quote.translationSr
-          ) {
-            return false;
-          }
+        if (
+          language === "sr" &&
+          !item.quote.translationSr
+        ) {
+          return false;
+        }
 
-          if (
-            language === "en" &&
-            !quote.translationEn
-          ) {
-            return false;
-          }
+        if (
+          language === "en" &&
+          !item.quote.translationEn
+        ) {
+          return false;
+        }
 
-          return true;
-        },
-      )
+        return true;
+      })
       .slice(0, 3);
 
   console.log(
     "PATRISTIC_USABLE_QUOTES:",
     usableQuotes.map(
-      ({ quote, score }) => ({
-        id: quote.id,
+      (item) => ({
+        id: item.quote.id,
         authorName:
-          quote.authorName,
+          item.quote.authorName,
         workTitle:
-          quote.workTitle,
-        similarity:
-          quote.similarity,
-        hybridScore: score,
+          item.quote.workTitle,
+        semanticScore:
+          item.semanticScore,
+        keywordScore:
+          item.keywordScore,
+        hybridScore:
+          item.hybridScore,
       }),
     ),
   );
@@ -128,10 +146,10 @@ export async function buildPatristicContext(
 
   const records =
     usableQuotes.map(
-      ({ quote }, index) => {
+      (item, index) => {
         const formatted =
           formatPatristicQuote(
-            quote,
+            item.quote,
             language,
           );
 
