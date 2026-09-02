@@ -23,15 +23,26 @@ export async function patristicDiscoveryWorkflow(
       discovered:
         discovery.discovered,
       sourceUrls: [],
-      fetched: null,
+      fetchedSources: [],
     };
   }
 
-  const fetched =
-    await fetchSourceStep(
-      jobId,
-      discovery.sourceUrls[0],
+  const fetchedSources = [];
+
+  for (
+    const sourceUrl of
+    discovery.sourceUrls
+  ) {
+    const fetched =
+      await fetchSourceStep(
+        jobId,
+        sourceUrl,
+      );
+
+    fetchedSources.push(
+      fetched,
     );
+  }
 
   return {
     jobId,
@@ -39,7 +50,7 @@ export async function patristicDiscoveryWorkflow(
       discovery.discovered,
     sourceUrls:
       discovery.sourceUrls,
-    fetched,
+    fetchedSources,
   };
 }
 
