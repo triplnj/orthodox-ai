@@ -4,43 +4,56 @@ import { discoverAndSavePatristicQuotes } from "./discover-and-save";
 import { verifyQuotesAgainstPg } from "./verify-second-source";
 import { embedVerifiedQuotes } from "./embed-quotes";
 
-export async function processNextPatristicDiscoveryJob() {
+export async function processPatristicDiscoveryJob(
+  jobId: string,
+) {
   const job =
-    await prisma.patristicDiscoveryJob.findFirst({
+    await prisma.patristicDiscoveryJob.findUnique({
       where: {
-        status: "PENDING",
-      },
-      orderBy: {
-        createdAt: "asc",
+        id: jobId,
       },
     });
 
   if (!job) {
     return {
       processed: false,
-      reason: "NO_PENDING_JOB",
+      reason: "JOB_NOT_FOUND",
     };
   }
 
-  await prisma.patristicDiscoveryJob.update({
-    where: {
-      id: job.id,
-    },
-    data: {
-      status: "PROCESSING",
-      attempts: {
-        increment: 1,
+  if (
+    job.status !== "PENDING" &&
+    job.status !== "PROCESSING"
+  ) {
+    return {
+      processed: false,
+      reason: "JOB_NOT_PROCESSABLE",
+      status: job.status,
+    };
+  }
+
+  if (job.status === "PENDING") {
+    await prisma.patristicDiscoveryJob.update({
+      where: {
+        id: job.id,
       },
-      startedAt: new Date(),
-      error: null,
-    },
-  });
+      data: {
+        status: "PROCESSING",
+        attempts: {
+          increment: 1,
+        },
+        startedAt: new Date(),
+        error: null,
+      },
+    });
+  }
 
   try {
     const language =
-  job.language === "sr"
-    ? "sr"
-    : "en";
+      job.language === "sr"
+        ? "sr"
+        : "en";
+
     const discoveryResult =
       await discoverAndSavePatristicQuotes(
         job.query,

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { processNextPatristicDiscoveryJob } from "@/lib/patristics/process-discovery-job";
+import { processPatristicDiscoveryJob } from "@/lib/patristics/process-discovery-job";
 
-export async function POST() {
+export async function POST(
+  request: Request,
+) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -14,8 +16,24 @@ export async function POST() {
   }
 
   try {
+    const body = await request.json();
+
+    const jobId =
+      typeof body?.jobId === "string"
+        ? body.jobId.trim()
+        : "";
+
+    if (!jobId) {
+      return NextResponse.json(
+        { error: "jobId is required." },
+        { status: 400 },
+      );
+    }
+
     const result =
-      await processNextPatristicDiscoveryJob();
+      await processPatristicDiscoveryJob(
+        jobId,
+      );
 
     return NextResponse.json({
       ok: true,
