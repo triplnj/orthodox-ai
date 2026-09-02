@@ -1,109 +1,153 @@
-export type PgColumnLocation = {
+export type PgColumnReference = {
   pgVolume: number;
 
   scanPage: number;
 
-  firstColumn: number | null;
+  pgFirstColumn:
+    | number
+    | null;
 
-  secondColumn: number | null;
+  pgSecondColumn:
+    | number
+    | null;
+
+  pgReference:
+    | string
+    | null;
+
+  mapped: boolean;
+};
+
+
+type PgVolumeAnchor = {
+  pgVolume: number;
+
+  scanPage: number;
+
+  firstColumn: number;
+
+  columnsPerScanPage: number;
 };
 
 
 /*
- * За PG 46, De anima et resurrectione
- * почиње у PG col. 11.
+ * Ovde čuvamo samo PROVERENE
+ * anchor-e.
  *
- * У нашем Internet Archive примерку
- * scan page 13 је прва страница
- * самог текста тог дела.
+ * Ne dodajemo tom dok ne znamo
+ * pouzdano odnos:
  *
- * PG штампа има по две колоне
- * на једној скенираној страници.
+ * scan page -> PG column.
+ *
+ * PG 46 je već proveravan tokom
+ * našeg prototipa.
  */
-const PG_46_KNOWN_ANCHORS = [
-  {
-    scanPage: 13,
+const PG_VOLUME_ANCHORS:
+  PgVolumeAnchor[] = [
+    {
+      pgVolume: 46,
 
-    firstColumn: 11,
-  },
-];
+      scanPage: 13,
+
+      firstColumn: 11,
+
+      columnsPerScanPage: 2,
+    },
+  ];
 
 
-function findNearestAnchor(
-  scanPage: number,
+function findAnchor(
+  pgVolume: number,
 ) {
   return (
-    [...PG_46_KNOWN_ANCHORS]
-      .filter(
-        (anchor) =>
-          anchor.scanPage <=
-          scanPage,
-      )
-      .sort(
-        (a, b) =>
-          b.scanPage -
-          a.scanPage,
-      )[0] ?? null
+    PG_VOLUME_ANCHORS.find(
+      (anchor) =>
+        anchor.pgVolume ===
+        pgVolume,
+    ) ?? null
   );
 }
 
 
-export function mapPg46ScanPageToColumns(
+export function mapScanPageToPgColumns(
+  pgVolume: number,
   scanPage: number,
-): PgColumnLocation {
+): PgColumnReference {
   const anchor =
-    findNearestAnchor(
-      scanPage,
+    findAnchor(
+      pgVolume,
     );
 
 
+  /*
+   * Ako nemamo pouzdan anchor,
+   * NE izmišljamo PG kolonu.
+   */
   if (!anchor) {
     return {
-      pgVolume: 46,
+      pgVolume,
 
       scanPage,
 
-      firstColumn: null,
+      pgFirstColumn:
+        null,
 
-      secondColumn: null,
+      pgSecondColumn:
+        null,
+
+      pgReference:
+        null,
+
+      mapped:
+        false,
     };
   }
 
 
-  const pageOffset =
+  const pageDifference =
     scanPage -
     anchor.scanPage;
 
 
   const firstColumn =
     anchor.firstColumn +
-    pageOffset * 2;
+    pageDifference *
+      anchor.columnsPerScanPage;
 
 
-  return {
-    pgVolume: 46,
-
-    scanPage,
-
-    firstColumn,
-
-    secondColumn:
-      firstColumn + 1,
-  };
-}
-
-
-export function mapPgScanPageToColumns(
-  pgVolume: number,
-  scanPage: number,
-): PgColumnLocation {
+  /*
+   * Ako scan vodi pre početka
+   * stvarnog PG teksta,
+   * rezultat nije validan.
+   */
   if (
-    pgVolume === 46
+    firstColumn <
+    1
   ) {
-    return mapPg46ScanPageToColumns(
+    return {
+      pgVolume,
+
       scanPage,
-    );
+
+      pgFirstColumn:
+        null,
+
+      pgSecondColumn:
+        null,
+
+      pgReference:
+        null,
+
+      mapped:
+        false,
+    };
   }
+
+
+  const secondColumn =
+    firstColumn +
+    anchor.columnsPerScanPage -
+    1;
 
 
   return {
@@ -111,8 +155,19 @@ export function mapPgScanPageToColumns(
 
     scanPage,
 
-    firstColumn: null,
+    pgFirstColumn:
+      firstColumn,
 
-    secondColumn: null,
+    pgSecondColumn:
+      secondColumn,
+
+    pgReference:
+      secondColumn ===
+      firstColumn
+        ? `PG ${pgVolume}, col. ${firstColumn}`
+        : `PG ${pgVolume}, cols. ${firstColumn}–${secondColumn}`,
+
+    mapped:
+      true,
   };
 }

@@ -4,6 +4,14 @@ import {
   buildPgSearchPlan,
 } from "./build-pg-search-plan";
 
+import {
+  buildGreekSearchTerms,
+} from "./build-greek-search-terms";
+
+import {
+  resolvePgVolumeSource,
+} from "./pg-volume-source";
+
 
 export type PgPassageMatch = {
   authorName: string;
@@ -27,64 +35,13 @@ export type PgPassageMatch = {
   sourceUrl: string;
 
   pageImageUrl: string;
+
+  authorSource:
+    | "LOCAL_INDEX"
+    | "AI_CANDIDATE";
+
+  authorVolumeVerified: boolean;
 };
-
-
-const TOPIC_TERMS = [
-  {
-    test:
-      /душ|soul|ψυχ/iu,
-
-    terms: [
-      "ψυχ",
-    ],
-  },
-
-  {
-    test:
-      /смрт|смрти|death|θαν/iu,
-
-    terms: [
-      "θαν",
-    ],
-  },
-
-  {
-    test:
-      /васкрс|resurrection|ἀνάστα|αναστα/iu,
-
-    terms: [
-      "αναστα",
-    ],
-  },
-
-  {
-    test:
-      /ум\b|ума\b|mind|intellect|νοῦς|νους/iu,
-
-    terms: [
-      "νου",
-    ],
-  },
-
-  {
-    test:
-      /љубав|love|ἀγάπ|αγαπ/iu,
-
-    terms: [
-      "αγαπ",
-    ],
-  },
-
-  {
-    test:
-      /молит|prayer|pray|προσευχ/iu,
-
-    terms: [
-      "προσευχ",
-    ],
-  },
-];
 
 
 function normalizeGreek(
@@ -97,81 +54,24 @@ function normalizeGreek(
       "",
     )
     .toLowerCase()
+    .replace(/ς/g, "σ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 
-function detectGreekSearchTerms(
-  query: string,
+function uniqueStrings(
+  values: string[],
 ) {
-  const terms: string[] = [];
-
-
-  for (
-    const topic of
-    TOPIC_TERMS
-  ) {
-    if (
-      topic.test.test(
-        query,
-      )
-    ) {
-      terms.push(
-        ...topic.terms,
-      );
-    }
-  }
-
-
   return [
     ...new Set(
-      terms.map(
-        normalizeGreek,
-      ),
+      values
+        .map(
+          normalizeGreek,
+        )
+        .filter(Boolean),
     ),
   ];
-}
-
-
-/*
- * Internet Archive PG kolekcija
- * uglavnom koristi ovaj obrazac
- * identifikatora.
- *
- * Više nemamo ručnu tabelu
- * PG 46 -> Gregory.
- *
- * Ako konkretan tom nije
- * dostupan pod ovim ID-em,
- * fetch će jednostavno vratiti
- * neuspeh i taj tom preskačemo.
- */
-function getArchiveIdentifier(
-  volume: number,
-) {
-  return (
-    `patrologiaecursu${volume}mignuoft`
-  );
-}
-
-
-function archiveDjvuXmlUrl(
-  identifier: string,
-) {
-  return (
-    `https://archive.org/download/${identifier}/` +
-    `${identifier}_djvu.xml`
-  );
-}
-
-
-function archiveDetailsUrl(
-  identifier: string,
-) {
-  return (
-    `https://archive.org/details/${identifier}`
-  );
 }
 
 
@@ -180,7 +80,8 @@ function archivePageUrl(
   scanPage: number,
 ) {
   return (
-    `https://archive.org/details/${identifier}/page/n${scanPage}/mode/1up`
+    `https://archive.org/details/${identifier}` +
+    `/page/n${scanPage}/mode/1up`
   );
 }
 
@@ -188,21 +89,20 @@ function archivePageUrl(
 async function fetchPgDjvuXml(
   volume: number,
 ) {
-  const archiveIdentifier =
-    getArchiveIdentifier(
+  const source =
+    await resolvePgVolumeSource(
       volume,
     );
 
 
-  const url =
-    archiveDjvuXmlUrl(
-      archiveIdentifier,
-    );
+  if (!source) {
+    return null;
+  }
 
 
   const response =
     await fetch(
-      url,
+      source.djvuXmlUrl,
       {
         headers: {
           "User-Agent":
@@ -229,7 +129,11 @@ async function fetchPgDjvuXml(
     xml:
       await response.text(),
 
-    archiveIdentifier,
+    archiveIdentifier:
+      source.archiveIdentifier,
+
+    detailsUrl:
+      source.detailsUrl,
   };
 }
 
@@ -247,24 +151,16 @@ function extractParagraphsFromPage(
     [];
 
 
-  $(
-    pageElement,
-  )
-    .find(
-      "PARAGRAPH",
-    )
+  $(pageElement)
+    .find("PARAGRAPH")
     .each(
       (_, paragraph) => {
         const words: string[] =
           [];
 
 
-        $(
-          paragraph,
-        )
-          .find(
-            "WORD",
-          )
+        $(paragraph)
+          .find("WORD")
           .each(
             (_, word) => {
               const text =
@@ -312,7 +208,7 @@ function findMatchedTerms(
   text: string,
   terms: string[],
 ) {
-  const normalized =
+  const normalizedText =
     normalizeGreek(
       text,
     );
@@ -320,7 +216,7 @@ function findMatchedTerms(
 
   return terms.filter(
     (term) =>
-      normalized.includes(
+      normalizedText.includes(
         normalizeGreek(
           term,
         ),
@@ -339,8 +235,6 @@ type RawPageMatch = {
   context: string;
 
   matchedTerms: string[];
-
-  score: number;
 };
 
 
@@ -396,15 +290,13 @@ function searchPages(
 
           const before =
             paragraphs[
-              paragraphIndex -
-                1
+              paragraphIndex - 1
             ] ?? "";
 
 
           const after =
             paragraphs[
-              paragraphIndex +
-                1
+              paragraphIndex + 1
             ] ?? "";
 
 
@@ -434,9 +326,6 @@ function searchPages(
             context,
 
             matchedTerms,
-
-            score:
-              matchedTerms.length,
           });
         },
       );
@@ -455,48 +344,42 @@ export async function searchPgPassages(
   PgPassageMatch[]
 > {
   const plan =
-    buildPgSearchPlan(
+    await buildPgSearchPlan(
       query,
     );
 
 
   if (
     !plan.hasSpecificAuthor ||
-    !plan.author ||
-    !plan.authorName
+    !plan.authorName ||
+    !plan.routingVerified
   ) {
     return [];
   }
 
 
-  const terms =
-    detectGreekSearchTerms(
+  const greekSearch =
+    await buildGreekSearchTerms(
       query,
     );
 
 
-  if (
-    terms.length === 0
-  ) {
-    return [];
-  }
+  const terms =
+    uniqueStrings([
+      ...greekSearch.greekStems,
 
-
-  /*
-   * Tomove više ne određuje
-   * ovaj fajl.
-   *
-   * Search plan je jedino mesto
-   * koje odlučuje šta treba
-   * pretraživati.
-   */
-  const volumes =
-    plan.pgVolumes;
+      ...(
+        greekSearch.greekStems
+          .length === 0
+          ? greekSearch.greekTerms
+          : []
+      ),
+    ]);
 
 
   if (
-    volumes.length ===
-    0
+    terms.length === 0 ||
+    plan.pgVolumes.length === 0
   ) {
     return [];
   }
@@ -509,7 +392,7 @@ export async function searchPgPassages(
 
   for (
     const volume of
-    volumes
+    plan.pgVolumes
   ) {
     let fetched:
       Awaited<
@@ -537,6 +420,7 @@ export async function searchPgPassages(
     const {
       xml,
       archiveIdentifier,
+      detailsUrl,
     } =
       fetched;
 
@@ -549,12 +433,12 @@ export async function searchPgPassages(
 
 
     /*
-     * Ako plan već zna konkretna
-     * dela, koristimo samo njih.
+     * Za lokalno poznatog autora
+     * možemo imati poznata dela.
      *
-     * Ako ne zna, uzimamo sva
-     * indeksirana dela autora
-     * koja pripadaju tom tomu.
+     * Kod AI fallback-a lista ostaje
+     * prazna dok delo ne utvrdimo
+     * drugim mehanizmom.
      */
     const volumeWorks =
       plan.hasSpecificWorks
@@ -563,40 +447,44 @@ export async function searchPgPassages(
               work.pgVolume ===
               volume,
           )
-        : plan.author.works.filter(
-            (work) =>
-              work.pgVolume ===
-              volume,
-          );
+        : plan.author
+          ? plan.author.works.filter(
+              (work) =>
+                work.pgVolume ===
+                volume,
+            )
+          : [];
 
 
     const candidateWorkTitles =
-      volumeWorks.map(
-        (work) => {
-          if (
-            "titleSr" in work
-          ) {
-            return work.titleSr;
-          }
-
-          return "";
-        },
-      )
-      .filter(Boolean);
+      [
+        ...new Set(
+          volumeWorks
+            .map(
+              (work) =>
+                work.titleSr,
+            )
+            .filter(Boolean),
+        ),
+      ];
 
 
     const workPgColumns =
-      volumeWorks
-        .map(
-          (work) =>
-            work.pgColumns,
-        )
-        .filter(
-          (
-            value,
-          ): value is string =>
-            Boolean(value),
-        );
+      [
+        ...new Set(
+          volumeWorks
+            .map(
+              (work) =>
+                work.pgColumns,
+            )
+            .filter(
+              (
+                value,
+              ): value is string =>
+                Boolean(value),
+            ),
+        ),
+      ];
 
 
     for (
@@ -630,15 +518,20 @@ export async function searchPgPassages(
           match.context,
 
         sourceUrl:
-          archiveDetailsUrl(
-            archiveIdentifier,
-          ),
+          detailsUrl,
 
         pageImageUrl:
           archivePageUrl(
             archiveIdentifier,
             match.scanPage,
           ),
+
+        authorSource:
+          plan.authorSource ??
+          "AI_CANDIDATE",
+
+        authorVolumeVerified:
+          plan.authorVolumeVerified,
       });
     }
   }

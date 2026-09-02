@@ -11,7 +11,7 @@ import {
 } from "@/lib/patristics/pg-passage-search";
 
 import {
-  mapPgScanPageToColumns,
+  mapScanPageToPgColumns,
 } from "@/lib/patristics/pg-column-map";
 
 
@@ -26,7 +26,7 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          "Unauthorized.",
+          "Unauthorized",
       },
       {
         status: 401,
@@ -35,15 +35,29 @@ export async function POST(
   }
 
 
-  const body =
-    await request.json();
+  let body: {
+    query?: string;
+  };
+
+
+  try {
+    body =
+      await request.json();
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Invalid JSON body.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
 
 
   const query =
-    typeof body?.query ===
-      "string"
-      ? body.query.trim()
-      : "";
+    body.query?.trim();
 
 
   if (!query) {
@@ -60,37 +74,37 @@ export async function POST(
 
 
   try {
-    const results =
+    const passages =
       await searchPgPassages(
         query,
-        5,
+        10,
       );
 
 
-    const enrichedResults =
-      results.map(
-        (result) => {
-          const columns =
-            mapPgScanPageToColumns(
-              result.pgVolume,
-              result.scanPage,
+    const results =
+      passages.map(
+        (passage) => {
+          const columnMap =
+            mapScanPageToPgColumns(
+              passage.pgVolume,
+              passage.scanPage,
             );
 
 
           return {
-            ...result,
+            ...passage,
 
             pgFirstColumn:
-              columns.firstColumn,
+              columnMap.pgFirstColumn,
 
             pgSecondColumn:
-              columns.secondColumn,
+              columnMap.pgSecondColumn,
 
             pgReference:
-              columns.firstColumn &&
-              columns.secondColumn
-                ? `PG ${result.pgVolume}, cols. ${columns.firstColumn}–${columns.secondColumn}`
-                : `PG ${result.pgVolume}`,
+              columnMap.pgReference,
+
+            pgColumnMapped:
+              columnMap.mapped,
           };
         },
       );
@@ -100,14 +114,13 @@ export async function POST(
       query,
 
       count:
-        enrichedResults.length,
+        results.length,
 
-      results:
-        enrichedResults,
+      results,
     });
   } catch (error) {
     console.error(
-      "PG_SEARCH_TEST_ERROR:",
+      "PG search test failed:",
       error,
     );
 

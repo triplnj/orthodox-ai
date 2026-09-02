@@ -5,6 +5,14 @@ import {
   type PatristicWorkIndex,
 } from "./corpus-index";
 
+import {
+  resolvePgAuthor,
+} from "./resolve-pg-author";
+
+import {
+  verifyPgAuthorCandidate,
+} from "./verify-pg-author-candidate";
+
 
 export type PgSearchPlanWork = {
   titleSr: string;
@@ -39,6 +47,15 @@ export type PgSearchPlan = {
   hasSpecificAuthor: boolean;
 
   hasSpecificWorks: boolean;
+
+  authorSource:
+    | "LOCAL_INDEX"
+    | "AI_CANDIDATE"
+    | null;
+
+  routingVerified: boolean;
+
+  authorVolumeVerified: boolean;
 };
 
 
@@ -93,26 +110,135 @@ function mapWork(
 }
 
 
-export function buildPgSearchPlan(
+export async function buildPgSearchPlan(
   query: string,
-): PgSearchPlan {
+): Promise<
+  PgSearchPlan
+> {
   const normalizedQuery =
     query.trim();
 
 
-  const author =
+  /*
+   * PRVI PUT:
+   *
+   * deterministički lokalni indeks.
+   */
+  const localAuthor =
     findPatristicAuthor(
       normalizedQuery,
     );
 
 
+  if (localAuthor) {
+    const relevantWorks =
+      findRelevantWorks(
+        normalizedQuery,
+        localAuthor,
+      ).filter(
+        hasPgVolume,
+      );
+
+
+    if (
+      relevantWorks.length >
+      0
+    ) {
+      const works =
+        relevantWorks.map(
+          mapWork,
+        );
+
+
+      return {
+        query:
+          normalizedQuery,
+
+        author:
+          localAuthor,
+
+        authorName:
+          localAuthor.canonicalName,
+
+        pgVolumes:
+          uniqueNumbers(
+            works.map(
+              (work) =>
+                work.pgVolume,
+            ),
+          ),
+
+        works,
+
+        hasSpecificAuthor:
+          true,
+
+        hasSpecificWorks:
+          true,
+
+        authorSource:
+          "LOCAL_INDEX",
+
+        routingVerified:
+          true,
+
+        authorVolumeVerified:
+          true,
+      };
+    }
+
+
+    return {
+      query:
+        normalizedQuery,
+
+      author:
+        localAuthor,
+
+      authorName:
+        localAuthor.canonicalName,
+
+      pgVolumes:
+        uniqueNumbers(
+          localAuthor.pgVolumes ??
+            [],
+        ),
+
+      works: [],
+
+      hasSpecificAuthor:
+        true,
+
+      hasSpecificWorks:
+        false,
+
+      authorSource:
+        "LOCAL_INDEX",
+
+      routingVerified:
+        true,
+
+      authorVolumeVerified:
+        true,
+    };
+  }
+
+
   /*
-   * Autor nije prepoznat.
+   * DRUGI PUT:
    *
-   * Za sada ne otvaramo
-   * nasumično ceo PG korpus.
+   * autor nije u lokalnom indeksu.
+   *
+   * AI ga identifikuje i predlaže
+   * PG tomove.
    */
-  if (!author) {
+  const resolvedAuthor =
+    await resolvePgAuthor(
+      normalizedQuery,
+    );
+
+
+  if (!resolvedAuthor) {
     return {
       query:
         normalizedQuery,
@@ -130,82 +256,86 @@ export function buildPgSearchPlan(
 
       hasSpecificWorks:
         false,
+
+      authorSource:
+        null,
+
+      routingVerified:
+        false,
+
+      authorVolumeVerified:
+        false,
     };
   }
 
 
-  const relevantWorks =
-    findRelevantWorks(
-      normalizedQuery,
-      author,
-    ).filter(
-      hasPgVolume,
+  /*
+   * Proveravamo da li predloženi
+   * PG tomovi imaju stvarno
+   * dostupan digitalni PG izvor.
+   */
+  const verified =
+    await verifyPgAuthorCandidate(
+      resolvedAuthor,
     );
 
 
-  /*
-   * Ako pitanje upućuje na
-   * određena poznata dela,
-   * pretražujemo njihove tomove.
-   */
   if (
-    relevantWorks.length >
-    0
+    !verified.routingVerified ||
+    verified.availablePgVolumes
+      .length === 0
   ) {
-    const works =
-      relevantWorks.map(
-        mapWork,
-      );
-
-
     return {
       query:
         normalizedQuery,
 
-      author,
+      author: null,
 
       authorName:
-        author.canonicalName,
+        verified.canonicalName,
 
-      pgVolumes:
-        uniqueNumbers(
-          works.map(
-            (work) =>
-              work.pgVolume,
-          ),
-        ),
+      pgVolumes: [],
 
-      works,
+      works: [],
 
       hasSpecificAuthor:
         true,
 
       hasSpecificWorks:
-        true,
+        false,
+
+      authorSource:
+        verified.source,
+
+      routingVerified:
+        false,
+
+      authorVolumeVerified:
+        false,
     };
   }
 
 
   /*
-   * Autor jeste poznat,
-   * ali konkretno delo nije.
+   * AI fallback nema lokalni
+   * PatristicAuthorIndex i još
+   * ne tvrdimo da znamo delo.
    *
-   * Pretražujemo sve PG tomove
-   * koje indeks za njega poznaje.
+   * Ali imamo PG tomove kroz
+   * koje pretraga može da prođe.
    */
   return {
     query:
       normalizedQuery,
 
-    author,
+    author: null,
 
     authorName:
-      author.canonicalName,
+      verified.canonicalName,
 
     pgVolumes:
       uniqueNumbers(
-        author.pgVolumes ??
-          [],
+        verified.availablePgVolumes,
       ),
 
     works: [],
@@ -215,5 +345,14 @@ export function buildPgSearchPlan(
 
     hasSpecificWorks:
       false,
+
+    authorSource:
+      verified.source,
+
+    routingVerified:
+      verified.routingVerified,
+
+    authorVolumeVerified:
+      verified.authorVolumeVerified,
   };
 }
