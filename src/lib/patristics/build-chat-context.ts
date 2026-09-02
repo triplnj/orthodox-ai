@@ -1,134 +1,151 @@
-import { prisma } from "@/lib/prisma";
-import { semanticSearchPatristicQuotes } from "./semantic-search";
 import { detectPatristicAuthor } from "./detect-author";
-import { calculateHybridScore } from "./hybrid-score";
+import { formatPatristicQuote } from "./format-quote";
+import { hybridScore } from "./hybrid-score";
+import { semanticSearchPatristicQuotes } from "./semantic-search";
+
+export type PatristicLanguage = "sr" | "en";
 
 export async function buildPatristicContext(
   query: string,
-  language: "sr" | "en",
-) {
-  const detectedAuthor = await detectPatristicAuthor(query);
+  language: PatristicLanguage,
+): Promise<string> {
+  const detectedAuthor =
+    await detectPatristicAuthor(query);
 
-  const minSimilarity = detectedAuthor ? 0.55 : 0.0;
+  const minSimilarity =
+    detectedAuthor ? 0.55 : 0.0;
 
-  const quotes = await semanticSearchPatristicQuotes(
-    query,
-    5,
-    minSimilarity,
-    detectedAuthor,
+  console.log(
+    "PATRISTIC_RETRIEVAL_INPUT:",
+    {
+      query,
+      language,
+      detectedAuthor,
+      minSimilarity,
+    },
   );
 
-  const rankedQuotes = quotes
-    .map((quote) => ({
-      ...quote,
-      hybrid: calculateHybridScore(query, quote),
-    }))
-    .sort(
-      (a, b) =>
-        b.hybrid.hybridScore - a.hybrid.hybridScore,
+  const semanticQuotes =
+    await semanticSearchPatristicQuotes(
+      query,
+      5,
+      minSimilarity,
+      detectedAuthor ?? undefined,
     );
 
-  const filteredQuotes = rankedQuotes.filter(
-    (quote) => quote.hybrid.hybridScore >= 0.35,
+  console.log(
+    "PATRISTIC_RETRIEVAL_RESULTS:",
+    semanticQuotes.map((quote) => ({
+      id: quote.id,
+      authorName: quote.authorName,
+      workTitle: quote.workTitle,
+      similarity: quote.similarity,
+      verification: quote.verification,
+      confidence: quote.confidence,
+      hasTranslationSr:
+        Boolean(quote.translationSr),
+      hasTranslationEn:
+        Boolean(quote.translationEn),
+    })),
   );
 
-  const usableQuotes = filteredQuotes.filter((quote) =>
-    language === "sr"
-      ? Boolean(quote.translationSr)
-      : Boolean(quote.translationEn),
+  const rankedQuotes =
+    semanticQuotes
+      .map((quote) => ({
+        quote,
+        score: hybridScore(
+          query,
+          quote,
+        ),
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score,
+      );
+
+  console.log(
+    "PATRISTIC_HYBRID_RESULTS:",
+    rankedQuotes.map(
+      ({ quote, score }) => ({
+        id: quote.id,
+        authorName:
+          quote.authorName,
+        workTitle:
+          quote.workTitle,
+        similarity:
+          quote.similarity,
+        hybridScore: score,
+      }),
+    ),
+  );
+
+  const usableQuotes =
+    rankedQuotes
+      .filter(
+        ({ quote, score }) => {
+          if (score < 0.35) {
+            return false;
+          }
+
+          if (
+            language === "sr" &&
+            !quote.translationSr
+          ) {
+            return false;
+          }
+
+          if (
+            language === "en" &&
+            !quote.translationEn
+          ) {
+            return false;
+          }
+
+          return true;
+        },
+      )
+      .slice(0, 3);
+
+  console.log(
+    "PATRISTIC_USABLE_QUOTES:",
+    usableQuotes.map(
+      ({ quote, score }) => ({
+        id: quote.id,
+        authorName:
+          quote.authorName,
+        workTitle:
+          quote.workTitle,
+        similarity:
+          quote.similarity,
+        hybridScore: score,
+      }),
+    ),
   );
 
   if (usableQuotes.length === 0) {
-  return "";
-}
-  const ids = usableQuotes.map((quote) => quote.id);
-
-  const sources = await prisma.patristicQuoteSource.findMany({
-    where: {
-      quoteId: {
-        in: ids,
-      },
-      exactMatch: true,
-    },
-  });
-
-  const sourcesByQuote = new Map<
-    string,
-    typeof sources
-  >();
-
-  for (const source of sources) {
-    const existing = sourcesByQuote.get(source.quoteId) ?? [];
-    existing.push(source);
-    sourcesByQuote.set(source.quoteId, existing);
+    return "";
   }
 
-  return usableQuotes
-    .map((quote, index) => {
-      const quoteSources = sourcesByQuote.get(quote.id) ?? [];
+  const records =
+    usableQuotes.map(
+      ({ quote }, index) => {
+        const formatted =
+          formatPatristicQuote(
+            quote,
+            language,
+          );
 
-      const textToUse =
-        language === "sr"
-          ? quote.translationSr ?? quote.originalText
-          : quote.translationEn ?? quote.originalText;
+        return [
+          `[PATRISTIC_RECORD_${index + 1}]`,
+          formatted,
+          `[/PATRISTIC_RECORD_${index + 1}]`,
+        ].join("\n");
+      },
+    );
 
-      const references = [
-        quote.pgReference,
-        quote.scReference,
-        quote.cpgReference,
-      ]
-        .filter(Boolean)
-        .join("; ");
-
-      const verifiedSources =
-        quoteSources.length > 0
-          ? quoteSources
-              .map((source) => {
-                const details = [
-                  source.sourceName,
-                  source.page
-                    ? `page ${source.page}`
-                    : null,
-                  source.column
-                    ? `column ${source.column}`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ");
-
-                return `- ${
-                  details || "Verified source"
-                }: ${source.url}`;
-              })
-              .join("\n")
-          : "- No source URL available.";
-
-      return `
-[PATRISTIC_RECORD_${index + 1}]
-STATUS: VERIFIED DATABASE RECORD
-AUTHOR: ${quote.authorName}
-WORK: ${quote.workTitle}
-SECTION: ${quote.section ?? "Not specified"}
-CHAPTER: ${quote.chapter ?? "Not specified"}
-PARAGRAPH: ${quote.paragraph ?? "Not specified"}
-REFERENCE: ${references || "Not specified"}
-QUOTE_TO_USE:
-${textToUse}
-
-ORIGINAL_TEXT:
-${quote.originalText}
-
-ORIGINAL_LANGUAGE: ${quote.originalLanguage}
-VERIFICATION: ${quote.verification}
-CONFIDENCE: ${quote.confidence}
-SEMANTIC_SIMILARITY: ${quote.similarity.toFixed(4)}
-KEYWORD_SCORE: ${quote.hybrid.keywordScore.toFixed(4)}
-HYBRID_SCORE: ${quote.hybrid.hybridScore.toFixed(4)}
-
-VERIFIED_SOURCES:
-${verifiedSources}
-[/PATRISTIC_RECORD_${index + 1}]
-`.trim();
-    })
-    .join("\n\n");
+  return [
+    "VERIFIED PATRISTIC DATABASE CONTEXT:",
+    "",
+    ...records,
+  ].join("\n\n");
 }
