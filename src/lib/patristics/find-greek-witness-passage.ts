@@ -26,7 +26,6 @@ function buildFrequencyMap(
   const frequencies =
     new Map<string, number>();
 
-
   for (
     const word
     of words
@@ -40,7 +39,6 @@ function buildFrequencyMap(
       ) + 1,
     );
   }
-
 
   return frequencies;
 }
@@ -56,7 +54,6 @@ function calculateOverlap(
   let overlap =
     0;
 
-
   for (
     const [
       word,
@@ -69,14 +66,12 @@ function calculateOverlap(
         word,
       ) ?? 0;
 
-
     overlap +=
       Math.min(
         queryCount,
         candidateCount,
       );
   }
-
 
   return overlap;
 }
@@ -110,11 +105,9 @@ function decrementFrequency(
       word,
     );
 
-
   if (!current) {
     return;
   }
-
 
   if (
     current <= 1
@@ -126,11 +119,181 @@ function decrementFrequency(
     return;
   }
 
-
   frequencies.set(
     word,
     current - 1,
   );
+}
+
+
+/*
+ * Nalazi stvarni početak
+ * grčkog odlomka unutar već
+ * pronađenog šireg OCR prozora.
+ *
+ * Prvo pokušavamo sa prvom
+ * rečju čistog teksta.
+ *
+ * Ako je baš ona OCR-oštećena,
+ * pokušavamo sa sledećih nekoliko.
+ */
+function findAlignedStart(
+  queryWords: string[],
+  witnessWords: string[],
+  approximateStart: number,
+  approximateEnd: number,
+) {
+  const searchStart =
+    Math.max(
+      0,
+      approximateStart,
+    );
+
+  const searchEnd =
+    Math.min(
+      witnessWords.length,
+      approximateEnd,
+    );
+
+
+  const prefixWordsToTry =
+    Math.min(
+      10,
+      queryWords.length,
+    );
+
+
+  /*
+   * Najbolji slučaj:
+   *
+   * prva reč pasusa postoji
+   * neoštećena u witness OCR-u.
+   */
+  const firstWord =
+    queryWords[0];
+
+
+  for (
+    let i = searchStart;
+    i < searchEnd;
+    i += 1
+  ) {
+    if (
+      witnessWords[i] ===
+      firstWord
+    ) {
+      return i;
+    }
+  }
+
+
+  /*
+   * Ako je prva reč oštećena,
+   * tražimo drugu, treću...
+   *
+   * Tada približno vraćamo
+   * početak za broj reči koje
+   * prethode pronađenoj reči.
+   */
+  for (
+    let queryIndex = 1;
+    queryIndex <
+      prefixWordsToTry;
+    queryIndex += 1
+  ) {
+    const queryWord =
+      queryWords[
+        queryIndex
+      ];
+
+
+    for (
+      let witnessIndex =
+        searchStart;
+      witnessIndex <
+        searchEnd;
+      witnessIndex += 1
+    ) {
+      if (
+        witnessWords[
+          witnessIndex
+        ] !==
+        queryWord
+      ) {
+        continue;
+      }
+
+
+      const estimatedStart =
+        Math.max(
+          searchStart,
+          witnessIndex -
+            queryIndex,
+        );
+
+
+      /*
+       * Ne prihvatamo samo jednu
+       * slučajnu zajedničku reč.
+       *
+       * Gledamo da li u neposrednoj
+       * blizini postoji još nekoliko
+       * reči iz početka pasusa.
+       */
+      let nearbyMatches =
+        0;
+
+
+      const checkLength =
+        Math.min(
+          8,
+          queryWords.length,
+        );
+
+
+      const localWitnessEnd =
+        Math.min(
+          witnessWords.length,
+          estimatedStart +
+            checkLength +
+            8,
+        );
+
+
+      const localWitness =
+        new Set(
+          witnessWords.slice(
+            estimatedStart,
+            localWitnessEnd,
+          ),
+        );
+
+
+      for (
+        let q = 0;
+        q < checkLength;
+        q += 1
+      ) {
+        if (
+          localWitness.has(
+            queryWords[q],
+          )
+        ) {
+          nearbyMatches += 1;
+        }
+      }
+
+
+      if (
+        nearbyMatches >= 4
+      ) {
+        return estimatedStart;
+      }
+    }
+  }
+
+
+  return null;
 }
 
 
@@ -173,20 +336,12 @@ export function findGreekWitnessPassage(
   }
 
 
-  /*
-   * Dirty OCR садржи додатне
-   * бројеве, слова, апарат,
-   * поломљене речи итд.
-   *
-   * Зато прозор правимо нешто
-   * већи од чистог пасуса.
-   */
   const extraWords =
     Math.max(
       20,
       Math.ceil(
         queryWords.length *
-        0.25,
+          0.25,
       ),
     );
 
@@ -197,28 +352,6 @@ export function findGreekWitnessPassage(
       queryWords.length +
         extraWords,
     );
-
-
-  if (
-    windowSize === 0
-  ) {
-    return {
-      found: false,
-
-      similarity: 0,
-
-      queryWordCount:
-        queryWords.length,
-
-      matchedWordCount: 0,
-
-      startWordIndex: null,
-
-      endWordIndex: null,
-
-      matchedText: "",
-    };
-  }
 
 
   const queryFrequencies =
@@ -239,6 +372,7 @@ export function findGreekWitnessPassage(
   let bestStart =
     0;
 
+
   let bestOverlap =
     calculateOverlap(
       queryFrequencies,
@@ -251,20 +385,6 @@ export function findGreekWitnessPassage(
     windowSize;
 
 
-  /*
-   * Sliding window:
-   *
-   * не поредимо више реч по реч
-   * на истој позицији.
-   *
-   * Меримо колико речи из чистог
-   * пасуса постоји у датом OCR
-   * прозору.
-   *
-   * Тако нас (27), xoi, OE,
-   * поломљене речи и сличан OCR
-   * отпад више не померају.
-   */
   for (
     let start = 1;
     start <= lastStart;
@@ -315,10 +435,6 @@ export function findGreekWitnessPassage(
     }
 
 
-    /*
-     * Све речи чистог пасуса
-     * постоје у прозору.
-     */
     if (
       bestOverlap ===
       queryWords.length
@@ -328,33 +444,117 @@ export function findGreekWitnessPassage(
   }
 
 
-  const similarity =
+  const locatorSimilarity =
     bestOverlap /
     queryWords.length;
 
 
-  const matchedWords =
+  /*
+   * Locator nam je našao
+   * širi region.
+   *
+   * Sada u njegovoj okolini
+   * tražimo pravi početak
+   * grčkog teksta.
+   */
+  const alignedStart =
+    findAlignedStart(
+      queryWords,
+      witnessWords,
+
+      Math.max(
+        0,
+        bestStart - 30,
+      ),
+
+      Math.min(
+        witnessWords.length,
+        bestStart +
+          windowSize +
+          30,
+      ),
+    );
+
+
+  if (
+    alignedStart === null
+  ) {
+    return {
+      found: false,
+
+      similarity:
+        locatorSimilarity,
+
+      queryWordCount:
+        queryWords.length,
+
+      matchedWordCount:
+        bestOverlap,
+
+      startWordIndex:
+        bestStart,
+
+      endWordIndex:
+        bestStart +
+        windowSize -
+        1,
+
+      matchedText:
+        witnessWords
+          .slice(
+            bestStart,
+            bestStart +
+              windowSize,
+          )
+          .join(" "),
+    };
+  }
+
+
+  /*
+   * Za sada ostavljamo malo
+   * dodatnog prostora na kraju,
+   * jer dirty OCR ubacuje brojeve,
+   * kritički aparat i druge tokene.
+   *
+   * Kasnije ćemo i kraj poravnati
+   * sekvencijalnim algoritmom.
+   */
+  const alignedLength =
+    Math.min(
+      witnessWords.length -
+        alignedStart,
+
+      queryWords.length +
+        Math.max(
+          10,
+          Math.ceil(
+            queryWords.length *
+              0.15,
+          ),
+        ),
+    );
+
+
+  const alignedEnd =
+    alignedStart +
+    alignedLength;
+
+
+  const alignedWords =
     witnessWords.slice(
-      bestStart,
-      bestStart +
-        windowSize,
+      alignedStart,
+      alignedEnd,
     );
 
 
   return {
-    /*
-     * Ово значи само:
-     *
-     * "врло вероватно смо
-     * лоцирали исти пасус".
-     *
-     * НЕ значи да је текст
-     * верификован.
-     */
     found:
-      similarity >= 0.55,
+      locatorSimilarity >=
+      0.55,
 
-    similarity,
+    similarity:
+      locatorSimilarity,
 
     queryWordCount:
       queryWords.length,
@@ -363,15 +563,13 @@ export function findGreekWitnessPassage(
       bestOverlap,
 
     startWordIndex:
-      bestStart,
+      alignedStart,
 
     endWordIndex:
-      bestStart +
-      windowSize -
-      1,
+      alignedEnd - 1,
 
     matchedText:
-      matchedWords.join(
+      alignedWords.join(
         " ",
       ),
   };
