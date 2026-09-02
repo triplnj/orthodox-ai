@@ -96,27 +96,55 @@ async function fetchSourceStep(
     },
   );
 
-  const source =
-    await fetchSourceText(
+  try {
+    const source =
+      await fetchSourceText(
+        sourceUrl,
+      );
+
+    const result = {
       sourceUrl,
+      ok: true as const,
+      title: source.title,
+      textLength:
+        source.text.length,
+      hasText:
+        source.text.length > 0,
+      error: null,
+    };
+
+    console.log(
+      "PATRISTIC_WORKFLOW_FETCH_RESULT:",
+      {
+        jobId,
+        ...result,
+      },
     );
 
-  const result = {
-    sourceUrl,
-    title: source.title,
-    textLength:
-      source.text.length,
-    hasText:
-      source.text.length > 0,
-  };
+    return result;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unknown fetch error.";
 
-  console.log(
-    "PATRISTIC_WORKFLOW_FETCH_RESULT:",
-    {
-      jobId,
-      ...result,
-    },
-  );
+    const result = {
+      sourceUrl,
+      ok: false as const,
+      title: "",
+      textLength: 0,
+      hasText: false,
+      error: message,
+    };
 
-  return result;
+    console.warn(
+      "PATRISTIC_WORKFLOW_FETCH_SKIPPED:",
+      {
+        jobId,
+        ...result,
+      },
+    );
+
+    return result;
+  }
 }
