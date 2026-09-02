@@ -271,9 +271,55 @@ export async function discoverAndSavePatristicQuotes(
 
   const attributionVerified =
     attributionResults.filter(
-      (candidate) =>
-        candidate.attribution
-          .matchesClaimedAuthor,
+      (candidate) => {
+        if (
+          !candidate.attribution
+            .matchesClaimedAuthor
+        ) {
+          return false;
+        }
+
+        if (!candidate.authorName) {
+          console.warn(
+            "PATRISTIC_INCOMPLETE_CANDIDATE_SKIPPED:",
+            JSON.stringify({
+              reason:
+                "missing authorName",
+
+              sourceUrl:
+                candidate.sourceUrl,
+
+              originalText:
+                candidate.originalText,
+            }),
+          );
+
+          return false;
+        }
+
+        if (!candidate.workTitle) {
+          console.warn(
+            "PATRISTIC_INCOMPLETE_CANDIDATE_SKIPPED:",
+            JSON.stringify({
+              reason:
+                "missing workTitle",
+
+              authorName:
+                candidate.authorName,
+
+              sourceUrl:
+                candidate.sourceUrl,
+
+              originalText:
+                candidate.originalText,
+            }),
+          );
+
+          return false;
+        }
+
+        return true;
+      },
     );
 
 
