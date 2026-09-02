@@ -182,7 +182,28 @@ if (!patristicContext) {
   - section/chapter when available
   - PG or other reference when available.
 
-  5. After a quotation, provide at least one VERIFIED_SOURCES URL when available.
+ 5. SOURCE URL IS MANDATORY WHEN A PATRISTIC_RECORD IS USED:
+
+- If you use any quotation or attribution from a PATRISTIC_RECORD,
+  and that record contains one or more VERIFIED_SOURCES URLs,
+  you MUST print at least one of those URLs in the final answer.
+
+- Copy the URL exactly as supplied inside that same PATRISTIC_RECORD.
+
+- Display it immediately after the quotation or its bibliographic reference
+  in this form:
+
+  Source: <exact VERIFIED_SOURCES URL>
+
+- Do not replace the URL with phrases such as
+  "verified source",
+  "patristic database",
+  "source from the database",
+  or any other description.
+
+- If two VERIFIED_SOURCES URLs are supplied, you may display both.
+
+- Never invent, reconstruct, shorten, modify, or guess a URL.
 
   6. The quotation must be in the user's language:
   - English question -> use the supplied English QUOTE_TO_USE.
