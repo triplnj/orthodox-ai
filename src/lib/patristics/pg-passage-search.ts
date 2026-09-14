@@ -12,6 +12,12 @@ import {
   resolvePgVolumeSource,
 } from "./pg-volume-source";
 
+import {
+  mapPgColumnsToScanRange,
+  parsePgColumnRange,
+  type PgScanRange,
+} from "./pg-work-range";
+
 
 export type PgPassageMatch = {
   authorName: string;
@@ -134,6 +140,9 @@ async function fetchPgDjvuXml(
 
     detailsUrl:
       source.detailsUrl,
+
+    scandataUrl:
+      source.scandataUrl,
   };
 }
 
@@ -425,11 +434,81 @@ export async function searchPgPassages(
       fetched;
 
 
-    const rawMatches =
+    let rawMatches =
       searchPages(
         xml,
         terms,
       );
+
+
+    /*
+     * Ako lokalni indeks zna PG kolone konkretnog
+     * dela, stvarno ograničavamo pretragu na to delo.
+     *
+     * Scan-range se dobija dinamički iz Internet
+     * Archive scandata.xml, bez ručnih scan anchor-a.
+     */
+    if (
+      plan.hasSpecificWorks
+    ) {
+      const volumeWorkRanges =
+        plan.works
+          .filter(
+            (work) =>
+              work.pgVolume ===
+              volume,
+          )
+          .map(
+            (work) =>
+              parsePgColumnRange(
+                work.pgColumns,
+              ),
+          )
+          .filter(
+            (
+              range,
+            ): range is NonNullable<
+              typeof range
+            > =>
+              Boolean(range),
+          );
+
+      const scanRanges:
+        PgScanRange[] = [];
+
+      for (
+        const range of
+        volumeWorkRanges
+      ) {
+        const scanRange =
+          await mapPgColumnsToScanRange(
+            fetched.scandataUrl,
+            range,
+          );
+
+        if (scanRange) {
+          scanRanges.push(
+            scanRange,
+          );
+        }
+      }
+
+      if (
+        scanRanges.length > 0
+      ) {
+        rawMatches =
+          rawMatches.filter(
+            (match) =>
+              scanRanges.some(
+                (range) =>
+                  match.scanPage >=
+                    range.firstScanPage &&
+                  match.scanPage <=
+                    range.lastScanPage,
+              ),
+          );
+      }
+    }
 
 
     /*
