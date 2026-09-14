@@ -5,14 +5,50 @@ import { semanticSearchPatristicQuotes } from "./semantic-search";
 
 export type PatristicLanguage = "sr" | "en";
 
-export async function buildPatristicContext(
+export type VerifiedPatristicSource = {
+  authorName: string;
+  workTitle: string;
+  originalLanguage: string;
+  reference: string | null;
+  sourceUrl: string;
+  sourceName: string | null;
+  verificationStatus: string;
+};
+
+export type VerifiedPatristicContextResult = {
+  context: string;
+  sources: VerifiedPatristicSource[];
+};
+
+function buildReference(
+  quote: {
+    pgReference: string | null;
+    scReference: string | null;
+    cpgReference: string | null;
+    section: string | null;
+    chapter: string | null;
+    paragraph: string | null;
+  },
+) {
+  return (
+    quote.pgReference ??
+    quote.scReference ??
+    quote.cpgReference ??
+    quote.section ??
+    quote.chapter ??
+    quote.paragraph ??
+    null
+  );
+}
+
+export async function buildVerifiedPatristicContext(
   query: string,
   language: PatristicLanguage,
-): Promise<string> {
+): Promise<VerifiedPatristicContextResult | null> {
   const detectedAuthor =
     await detectPatristicAuthor(query);
 
-const minSimilarity = 0.0;
+  const minSimilarity = 0.0;
 
   console.log(
     "PATRISTIC_RETRIEVAL_INPUT:",
@@ -31,23 +67,6 @@ const minSimilarity = 0.0;
       minSimilarity,
       detectedAuthor ?? undefined,
     );
-
-  console.log(
-    "PATRISTIC_RETRIEVAL_RESULTS:",
-    semanticQuotes.map((quote) => ({
-      id: quote.id,
-      authorName: quote.authorName,
-      workTitle: quote.workTitle,
-      similarity: quote.similarity,
-      verification: quote.verification,
-      confidence: quote.confidence,
-      hasTranslationSr:
-        Boolean(quote.translationSr),
-      hasTranslationEn:
-        Boolean(quote.translationEn),
-      sources: quote.sources,
-    })),
-  );
 
   const rankedQuotes =
     semanticQuotes
@@ -68,31 +87,6 @@ const minSimilarity = 0.0;
           b.hybridScore -
           a.hybridScore,
       );
-
-  console.log(
-    "PATRISTIC_HYBRID_RESULTS:",
-    rankedQuotes.map(
-      ({
-        quote,
-        semanticScore,
-        keywordScore,
-        hybridScore,
-        matchedTerms,
-        totalTerms,
-      }) => ({
-        id: quote.id,
-        authorName:
-          quote.authorName,
-        workTitle:
-          quote.workTitle,
-        semanticScore,
-        keywordScore,
-        hybridScore,
-        matchedTerms,
-        totalTerms,
-      }),
-    ),
-  );
 
   const usableQuotes =
     rankedQuotes
@@ -141,7 +135,7 @@ const minSimilarity = 0.0;
   );
 
   if (usableQuotes.length === 0) {
-    return "";
+    return null;
   }
 
   const records =
@@ -161,9 +155,55 @@ const minSimilarity = 0.0;
       },
     );
 
-  return [
-    "VERIFIED PATRISTIC DATABASE CONTEXT:",
-    "",
-    ...records,
-  ].join("\n\n");
+  const sources: VerifiedPatristicSource[] =
+    usableQuotes.flatMap(
+      (item) =>
+        item.quote.sources
+          .filter(
+            (source) =>
+              source.exactMatch,
+          )
+          .map(
+            (source) => ({
+              authorName:
+                item.quote.authorName,
+              workTitle:
+                item.quote.workTitle,
+              originalLanguage:
+                item.quote.originalLanguage,
+              reference:
+                buildReference(
+                  item.quote,
+                ),
+              sourceUrl:
+                source.url,
+              sourceName:
+                source.sourceName,
+              verificationStatus:
+                item.quote.verification,
+            }),
+          ),
+    );
+
+  return {
+    context: [
+      "VERIFIED PATRISTIC DATABASE CONTEXT:",
+      "",
+      ...records,
+    ].join("\n\n"),
+    sources,
+  };
+}
+
+export async function buildPatristicContext(
+  query: string,
+  language: PatristicLanguage,
+): Promise<string> {
+  const result =
+    await buildVerifiedPatristicContext(
+      query,
+      language,
+    );
+
+  return result?.context ?? "";
 }
