@@ -365,6 +365,112 @@ function normalize(
     .trim();
 }
 
+
+/*
+ * Serbian questions naturally decline names and
+ * theological nouns:
+ *
+ *   Јован Дамаскин -> Јована Дамаскина
+ *   икона -> икони / иконама
+ *
+ * Exact substring matching therefore misses valid
+ * curated routes. For Cyrillic/Serbian words use a
+ * conservative prefix comparison while preserving
+ * exact matching for short tokens and other scripts.
+ */
+function tokenMatches(
+  queryToken: string,
+  aliasToken: string,
+) {
+  if (
+    queryToken ===
+    aliasToken
+  ) {
+    return true;
+  }
+
+  const cyrillic =
+    /\p{Script=Cyrillic}/u.test(
+      queryToken,
+    ) &&
+    /\p{Script=Cyrillic}/u.test(
+      aliasToken,
+    );
+
+  if (
+    !cyrillic ||
+    queryToken.length < 5 ||
+    aliasToken.length < 5
+  ) {
+    return false;
+  }
+
+  const prefixLength =
+    Math.min(
+      5,
+      queryToken.length,
+      aliasToken.length,
+    );
+
+  return (
+    queryToken.slice(
+      0,
+      prefixLength,
+    ) ===
+    aliasToken.slice(
+      0,
+      prefixLength,
+    )
+  );
+}
+
+
+function phraseMatches(
+  normalizedQuery: string,
+  rawAlias: string,
+) {
+  const normalizedAlias =
+    normalize(
+      rawAlias,
+    );
+
+  if (
+    normalizedQuery.includes(
+      normalizedAlias,
+    )
+  ) {
+    return true;
+  }
+
+  const queryTokens =
+    normalizedQuery
+      .split(" ")
+      .filter(Boolean);
+
+  const aliasTokens =
+    normalizedAlias
+      .split(" ")
+      .filter(Boolean);
+
+  if (
+    aliasTokens.length === 0
+  ) {
+    return false;
+  }
+
+  return aliasTokens.every(
+    (aliasToken) =>
+      queryTokens.some(
+        (queryToken) =>
+          tokenMatches(
+            queryToken,
+            aliasToken,
+          ),
+      ),
+  );
+}
+
+
 export function findCuratedPatristicDocuments(
   query: string,
 ) {
@@ -376,16 +482,18 @@ export function findCuratedPatristicDocuments(
       const authorMatch =
         document.authorAliases.some(
           (alias) =>
-            normalizedQuery.includes(
-              normalize(alias),
+            phraseMatches(
+              normalizedQuery,
+              alias,
             ),
         );
 
       const workMatch =
         document.workAliases.some(
           (alias) =>
-            normalizedQuery.includes(
-              normalize(alias),
+            phraseMatches(
+              normalizedQuery,
+              alias,
             ),
         );
 
