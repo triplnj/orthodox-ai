@@ -9,14 +9,12 @@ import {
   type ChatContextKey,
 } from "./chatContexts";
 
-
 const openai =
   new OpenAI({
     apiKey:
       process.env
         .OPENAI_API_KEY,
   });
-
 
 type GenerateOrthodoxAnswerInput = {
   userMessage: string;
@@ -30,16 +28,11 @@ type GenerateOrthodoxAnswerInput = {
   isPro?: boolean;
 };
 
-
 export async function generateOrthodoxAnswer({
   userMessage,
-
   contextKey = "general",
-
   extraContext,
-
   patristicContext,
-
   isPro = false,
 }: GenerateOrthodoxAnswerInput) {
   const context =
@@ -47,78 +40,56 @@ export async function generateOrthodoxAnswer({
       contextKey
     ];
 
-
   const planInstruction =
     isPro
       ? "The user has Pro access. You may provide a deeper, more structured answer."
       : "The user is on the Free plan. Keep the answer helpful but concise.";
 
-
   const sourceInstruction =
     patristicContext
       ? `
-A Patrologia Graeca retrieval has been performed for this question.
+A patristic research retrieval has been performed for this question.
 
-You MUST prioritize the supplied PG source material over general
-model memory when discussing the named Church Father.
+The supplied context may contain evidence from:
+- the multi-source verified local patristic database;
+- live Patrologia Graeca OCR;
+- additional authoritative corpora added by the research router.
 
 STRICT RULES:
 
-- Answer in the same language as the user's question unless the user
-  explicitly requests another language.
-
+- Answer in the same language as the user's question unless the user explicitly requests another language.
 - If the user writes in Serbian Cyrillic, answer in Serbian Cyrillic.
-
+- If the user writes in Serbian Latin, answer in Serbian Latin.
 - If the user writes in German, answer in German.
-
 - If the user writes in English, answer in English.
-
+- When the user asks what a particular Church Father teaches, ground the attribution in the supplied research evidence.
+- Never substitute generic Orthodox teaching and imply that it is the named Father's teaching.
 - Do not invent quotations.
+- Do not invent work titles, PG columns, chapter numbers, homily numbers, or references.
+- Distinguish the Father's own teaching from quotations, opponents' doctrines, heresies being described, historical narration, or rhetorical objections.
+- If a relevant original-language passage is supplied, translate it directly into the user's language when useful.
+- Clearly identify a direct AI translation as a translation from the supplied original text; do not present it as a published translation.
+- Treat OCR cautiously when the source context says that it is OCR.
+- Use only source URLs present in the supplied research context or structured application metadata. Never invent a URL.
+- Do not tell the user to consult a library merely because a text is difficult to locate when the research system has already supplied evidence.
+- If the supplied evidence is insufficient for the exact requested attribution, say so precisely.
+- Prefer a careful paraphrase over a fabricated exact quotation.
 
-- Do not attribute a theological statement to a Father merely because
-  it is generally Orthodox.
-
-- Distinguish the Father's own teaching from doctrines he is merely
-  describing or refuting.
-
-- When a relevant Greek passage is present, translate it directly
-  into the user's language.
-
-- Clearly identify direct translation as a translation from the
-  supplied Greek PG text.
-
-- Do not pretend that an AI translation is a published translation.
-
-- Do not invent PG columns.
-
-- If only PG volume and digital scan page are known, use those.
-
-- Never say "I have no verified patristic sources" when this source
-  context contains relevant PG material.
-
-- Internet Archive/Wikimedia/etc. are digital carriers only.
-  The theological source is Patrologia Graeca.
-
-- Do not recommend that the user go to a priest or library merely
-  because the text is difficult to locate; the retrieval system has
-  already located source material.
-
-- If the retrieved passages are not sufficiently relevant to answer
-  the exact question, say that the retrieved PG passages do not yet
-  establish the requested point.
-
-PATROLOGIA GRAECA SOURCE MATERIAL:
+PATRISTIC RESEARCH MATERIAL:
 
 ${patristicContext}
         `.trim()
       : `
-No live Patrologia Graeca source material was retrieved for this question.
+No verified patristic research evidence was supplied for this answer.
 
-Do not fabricate patristic quotations or precise citations.
-If you give general Orthodox teaching, clearly distinguish it from
-a directly sourced statement by a particular Father.
+STRICT RULES:
+
+- Do not fabricate a quotation or precise citation.
+- Do not state that a specific Church Father teaches a proposition merely because it matches general Orthodox doctrine.
+- If the user explicitly asks what a named Father teaches and no source evidence is available, state that the specific attribution could not be verified from the currently available corpora.
+- Do not fill that gap with generic Orthodox teaching as though it were the Father's own teaching.
+- You may provide clearly labeled general background only when it directly helps the user and is not presented as sourced teaching of the named Father.
         `.trim();
-
 
   const completion =
     await openai.chat.completions.create({
@@ -162,17 +133,11 @@ ${userMessage}
         },
       ],
 
-      /*
-       * Нижа температура је
-       * намерна када радимо
-       * изворно осетљиве одговоре.
-       */
       temperature:
         patristicContext
           ? 0.15
           : 0.4,
     });
-
 
   const answer =
     completion
@@ -180,7 +145,6 @@ ${userMessage}
       ?.message
       ?.content ??
     "I could not generate an answer. Please try again.";
-
 
   return {
     answer,
