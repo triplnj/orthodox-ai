@@ -528,6 +528,40 @@ export const PATRISTIC_CORPUS_INDEX:
       works: [
         {
           titleSr:
+            "Три слова против оних који одбацују свете иконе",
+
+          titleEn:
+            "Three Treatises on the Divine Images",
+
+          titleOriginal:
+            "Contra imaginum calumniatores",
+
+          pgVolume:
+            94,
+
+          topics: [
+            "икона",
+            "иконе",
+            "иконама",
+            "icon",
+            "icons",
+            "image",
+            "images",
+            "слика",
+            "поштовање",
+            "veneration",
+            "проскинеза",
+            "proskynesis",
+            "иконоборство",
+            "iconoclasm",
+          ],
+
+          directUrl:
+            pgVolumeUrl(94),
+        },
+
+        {
+          titleSr:
             "Тачно изложење православне вере",
 
           titleEn:
