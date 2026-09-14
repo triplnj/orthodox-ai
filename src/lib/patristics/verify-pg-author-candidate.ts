@@ -306,7 +306,8 @@ export async function verifyPgAuthorCandidate(
 
   return {
     canonicalName:
-      catalogEntry.canonicalName,
+      catalogEntry?.canonicalName ??
+      candidate.canonicalName,
 
     latinName:
       candidate.latinName,
