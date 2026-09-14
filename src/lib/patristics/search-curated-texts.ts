@@ -7,6 +7,10 @@ import {
 } from "./build-text-search-terms";
 
 import {
+  expandCuratedSearchTerms,
+} from "./expand-curated-search-terms";
+
+import {
   findCuratedPatristicDocuments,
   type CuratedPatristicDocument,
 } from "./curated-text-sources";
@@ -267,7 +271,10 @@ export async function searchCuratedPatristicTexts(
           );
 
         terms =
-          generated.terms;
+          expandCuratedSearchTerms(
+            query,
+            generated.terms,
+          );
 
         termsByLanguage.set(
           document.sourceLanguage,
