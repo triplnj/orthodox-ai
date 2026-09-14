@@ -56,7 +56,7 @@ async function searchTitles(
         srlimit: "8",
         srnamespace: "0",
         srsearch:
-          `intitle:"${prefix.replace(/\/$/, "")}" "${term}"`,
+          `"${term}" prefix:"${prefix}"`,
       });
 
     const response =
