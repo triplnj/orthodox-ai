@@ -471,6 +471,26 @@ function phraseMatches(
 }
 
 
+export function queryMatchesCuratedWork(
+  query: string,
+  document:
+    CuratedPatristicDocument,
+) {
+  const normalizedQuery =
+    normalize(
+      query,
+    );
+
+  return document.workAliases.some(
+    (alias) =>
+      phraseMatches(
+        normalizedQuery,
+        alias,
+      ),
+  );
+}
+
+
 export function findCuratedPatristicDocuments(
   query: string,
 ) {
