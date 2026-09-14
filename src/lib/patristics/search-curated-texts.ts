@@ -8,6 +8,7 @@ import {
 
 import {
   findCuratedPatristicDocuments,
+  queryMatchesCuratedWork,
   type CuratedPatristicDocument,
 } from "./curated-text-sources";
 
@@ -359,6 +360,12 @@ export async function searchCuratedPatristicTexts(
           terms,
         );
 
+      const explicitWorkMatch =
+        queryMatchesCuratedWork(
+          query,
+          document,
+        );
+
       const selected =
         ranked.length > 0
           ? ranked.slice(
@@ -368,9 +375,12 @@ export async function searchCuratedPatristicTexts(
                 ? 1
                 : 2,
             )
-          : terms.length === 0 &&
-              source.text
-                .trim()
+          : (
+              explicitWorkMatch ||
+              terms.length === 0
+            ) &&
+            source.text
+              .trim()
             ? [
                 {
                   excerpt:
