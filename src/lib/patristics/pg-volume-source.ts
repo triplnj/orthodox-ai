@@ -6,6 +6,10 @@ export type PgVolumeSource = {
   djvuXmlUrl: string;
 
   detailsUrl: string;
+
+  scandataUrl:
+    | string
+    | null;
 };
 
 
@@ -94,6 +98,9 @@ function buildSource(
 
     detailsUrl:
       `https://archive.org/details/${archiveIdentifier}`,
+
+    scandataUrl:
+      `https://archive.org/download/${archiveIdentifier}/${archiveIdentifier}_scandata.xml`,
   };
 }
 
@@ -417,6 +424,27 @@ async function sourceHasDjvuXml(
         `https://archive.org/download/${identifier}/${encodeURIComponent(djvuXml.name)}`,
       detailsUrl:
         `https://archive.org/details/${identifier}`,
+
+      scandataUrl:
+        metadata.files?.find(
+          (file) =>
+            Boolean(
+              file.name?.endsWith(
+                "_scandata.xml",
+              ),
+            ),
+        )?.name
+          ? `https://archive.org/download/${identifier}/${encodeURIComponent(
+              metadata.files.find(
+                (file) =>
+                  Boolean(
+                    file.name?.endsWith(
+                      "_scandata.xml",
+                    ),
+                  ),
+              )!.name!,
+            )}`
+          : null,
     };
   } catch {
     return null;
