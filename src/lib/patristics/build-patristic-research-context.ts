@@ -8,6 +8,10 @@ import {
   type LivePgSource,
 } from "./build-live-pg-chat-context";
 
+import {
+  shouldRunPatristicResearch,
+} from "./should-run-patristic-research";
+
 export type PatristicResearchSource = {
   provider:
     | "VERIFIED_DB"
@@ -141,6 +145,21 @@ export async function buildPatristicResearchContext(
 ): Promise<
   PatristicResearchContext | null
 > {
+  /*
+   * Cost gate:
+   * ordinary prayer, fasting, Scripture, or
+   * general spiritual-life questions must not
+   * trigger embeddings + author resolution +
+   * Greek-term generation.
+   */
+  if (
+    !shouldRunPatristicResearch(
+      query,
+    )
+  ) {
+    return null;
+  }
+
   const providersAttempted:
     string[] = [];
 
