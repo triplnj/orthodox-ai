@@ -156,8 +156,11 @@ export async function resolvePgCatalogVolumes(
       /PG\s+(\d+(?:\s*-\s*\d+)?)\s*:/gi,
     );
 
-  const volumes:
-    number[] = [];
+  const catalogueSegments:
+    {
+      range: string;
+      text: string;
+    }[] = [];
 
   for (
     let index = 1;
@@ -165,33 +168,88 @@ export async function resolvePgCatalogVolumes(
     parts.length;
     index += 2
   ) {
-    const range =
-      parts[index];
+    catalogueSegments.push({
+      range:
+        parts[index],
 
-    const segment =
-      normalize(
-        parts[index + 1]
-          .slice(
-            0,
-            1200,
+      text:
+        normalize(
+          parts[index + 1]
+            .slice(
+              0,
+              1200,
+            ),
+        ),
+    });
+  }
+
+  const distinctiveTokens =
+    [
+      ...new Set(
+        normalizedNames
+          .flatMap(
+            (name) =>
+              name
+                .split(" ")
+                .filter(
+                  (token) =>
+                    token.length >= 6 &&
+                    ![
+                      "saint",
+                      "father",
+                      "bishop",
+                    ].includes(
+                      token,
+                    ),
+                ),
           ),
-      );
+      ),
+    ];
 
-    const matches =
+  const uniqueTokens =
+    distinctiveTokens.filter(
+      (token) =>
+        catalogueSegments.filter(
+          (segment) =>
+            segment.text.includes(
+              token,
+            ),
+        ).length === 1,
+    );
+
+  const volumes:
+    number[] = [];
+
+  for (
+    const segment of
+    catalogueSegments
+  ) {
+    const exactMatch =
       normalizedNames.some(
         (name) =>
-          segment.includes(
+          segment.text.includes(
             name,
           ),
       );
 
-    if (!matches) {
+    const uniqueTokenMatch =
+      uniqueTokens.some(
+        (token) =>
+          segment.text.includes(
+            token,
+          ),
+      );
+
+    if (
+      !exactMatch &&
+      !uniqueTokenMatch
+    ) {
       continue;
     }
 
     volumes.push(
       ...expandRange(
-        range,
+        segment.range,
       ),
     );
   }
