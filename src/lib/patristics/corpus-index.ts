@@ -319,6 +319,72 @@ export const PATRISTIC_CORPUS_INDEX:
       works: [
         {
           titleSr:
+            "О Светом Духу",
+
+          titleEn:
+            "On the Holy Spirit",
+
+          titleOriginal:
+            "De Spiritu Sancto",
+
+          pgVolume:
+            32,
+
+          topics: [
+            "суштина",
+            "ousia",
+            "usia",
+            "ουσια",
+            "ипостас",
+            "hypostasis",
+            "личност",
+            "лице",
+            "prosopon",
+            "просопон",
+            "тројица",
+            "trinity",
+            "свети дух",
+            "holy spirit",
+          ],
+
+          directUrl:
+            pgVolumeUrl(32),
+        },
+
+        {
+          titleSr:
+            "Писма",
+
+          titleEn:
+            "Letters",
+
+          titleOriginal:
+            "Epistulae",
+
+          pgVolume:
+            32,
+
+          topics: [
+            "суштина",
+            "ousia",
+            "usia",
+            "ουσια",
+            "ипостас",
+            "hypostasis",
+            "личност",
+            "лице",
+            "prosopon",
+            "просопон",
+            "тројица",
+            "trinity",
+          ],
+
+          directUrl:
+            pgVolumeUrl(32),
+        },
+
+        {
+          titleSr:
             "Шестоднев",
 
           titleEn:
