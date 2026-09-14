@@ -9,12 +9,18 @@ import {
 } from "./build-live-pg-chat-context";
 
 import {
+  searchCuratedPatristicTexts,
+  type CuratedTextEvidence,
+} from "./search-curated-texts";
+
+import {
   shouldRunPatristicResearch,
 } from "./should-run-patristic-research";
 
 export type PatristicResearchSource = {
   provider:
     | "VERIFIED_DB"
+    | "CURATED_TEXT"
     | "PATROLOGIA_GRAECA";
 
   authorName: string | null;
@@ -71,8 +77,8 @@ function detectRetrievalLanguage(
    * The verified database currently stores
    * Serbian and English translations.
    * German and other Latin-script questions
-   * can safely use English source translations
-   * as retrieval context; final answer language
+   * may use English source translations as
+   * retrieval context; final answer language
    * is handled by chatService.
    */
   return "en";
@@ -111,6 +117,75 @@ function mapPgSources(
   );
 }
 
+function mapCuratedSources(
+  evidence:
+    CuratedTextEvidence[],
+): PatristicResearchSource[] {
+  return evidence.map(
+    (item) => ({
+      provider:
+        "CURATED_TEXT",
+
+      authorName:
+        item.authorName,
+
+      workTitle:
+        item.workTitle,
+
+      reference:
+        null,
+
+      originalLanguage:
+        item.originalLanguage,
+
+      sourceUrl:
+        item.sourceUrl,
+
+      scanUrl:
+        null,
+
+      verificationStatus:
+        item.verificationStatus,
+    }),
+  );
+}
+
+function formatCuratedContext(
+  evidence:
+    CuratedTextEvidence[],
+) {
+  const blocks =
+    evidence.map(
+      (
+        item,
+        index,
+      ) => [
+        `[CURATED_SOURCE_${index + 1}]`,
+        `AUTHOR: ${item.authorName}`,
+        `WORK: ${item.workTitle}`,
+        `DOCUMENT_TYPE: ${item.documentType}`,
+        `SOURCE_LANGUAGE: ${item.originalLanguage}`,
+        `SOURCE_NAME: ${item.sourceName}`,
+        `SOURCE_URL: ${item.sourceUrl}`,
+        `VERIFICATION: ${item.verificationStatus}`,
+        `MATCHED_TERMS: ${item.matchedTerms.join(", ") || "None"}`,
+        "SOURCE_EXCERPT:",
+        item.excerpt,
+        `[/CURATED_SOURCE_${index + 1}]`,
+      ].join("\n"),
+    );
+
+  return [
+    "CURATED PATRISTIC SOURCE CONTEXT:",
+    "",
+    "The following excerpts come from deterministic, pre-approved source URLs.",
+    "Do not claim that a translation is the original-language text unless SOURCE_LANGUAGE says so.",
+    "For BIBLIOGRAPHIC documents, use the excerpt only for historical/bibliographic claims.",
+    "",
+    ...blocks,
+  ].join("\n\n");
+}
+
 function deduplicateSources(
   sources:
     PatristicResearchSource[],
@@ -140,6 +215,26 @@ function deduplicateSources(
   );
 }
 
+function buildFinalContext(
+  contextParts: string[],
+) {
+  return [
+    "PATRISTIC RESEARCH CONTEXT",
+    "",
+    "Rules:",
+    "- Attribute a specific teaching to a Church Father only when supported by the evidence below.",
+    "- Do not replace missing evidence with generic Orthodox teaching and imply that it belongs to the named Father.",
+    "- Distinguish the Father's own teaching from quotations, opponents, heresies, historical narration, and rhetorical objections.",
+    "- Never invent quotations, work titles, references, columns, chapter numbers, homily numbers, or URLs.",
+    "- A live PG OCR passage may contain recognition errors; translate cautiously.",
+    "- Curated translations are evidence of the source text but are not original-language witnesses.",
+    "- Bibliographic sources support historical/bibliographic claims, not direct quotations from the Father.",
+    "- If evidence is insufficient for the exact claim requested, say so precisely.",
+    "",
+    ...contextParts,
+  ].join("\n\n");
+}
+
 export async function buildPatristicResearchContext(
   query: string,
 ): Promise<
@@ -149,8 +244,7 @@ export async function buildPatristicResearchContext(
    * Cost gate:
    * ordinary prayer, fasting, Scripture, or
    * general spiritual-life questions must not
-   * trigger embeddings + author resolution +
-   * Greek-term generation.
+   * trigger patristic embeddings/LLM retrieval.
    */
   if (
     !shouldRunPatristicResearch(
@@ -180,8 +274,11 @@ export async function buildPatristicResearchContext(
 
   /*
    * Provider 1:
-   * high-confidence, multi-source verified
-   * passages already stored in our database.
+   * multi-source verified database.
+   *
+   * If this succeeds, it is already the highest
+   * confidence and cheapest evidence source, so
+   * do not trigger lower-priority providers.
    */
   providersAttempted.push(
     "VERIFIED_DB",
@@ -232,6 +329,25 @@ export async function buildPatristicResearchContext(
           }),
         ),
       );
+
+      const finalSources =
+        deduplicateSources(
+          sources,
+        );
+
+      return {
+        context:
+          buildFinalContext(
+            contextParts,
+          ),
+
+        sources:
+          finalSources,
+
+        providersAttempted,
+
+        providersSucceeded,
+      };
     }
   } catch (error) {
     console.error(
@@ -242,12 +358,75 @@ export async function buildPatristicResearchContext(
 
   /*
    * Provider 2:
+   * deterministic curated texts.
+   *
+   * This covers authoritative/public-domain
+   * sources that are not naturally handled by PG,
+   * including Syriac authors represented through
+   * curated editions/translations.
+   */
+  providersAttempted.push(
+    "CURATED_TEXT",
+  );
+
+  try {
+    const curated =
+      await searchCuratedPatristicTexts(
+        query,
+        5,
+      );
+
+    if (
+      curated.length > 0
+    ) {
+      providersSucceeded.push(
+        "CURATED_TEXT",
+      );
+
+      contextParts.push(
+        formatCuratedContext(
+          curated,
+        ),
+      );
+
+      sources.push(
+        ...mapCuratedSources(
+          curated,
+        ),
+      );
+
+      const finalSources =
+        deduplicateSources(
+          sources,
+        );
+
+      return {
+        context:
+          buildFinalContext(
+            contextParts,
+          ),
+
+        sources:
+          finalSources,
+
+        providersAttempted,
+
+        providersSucceeded,
+      };
+    }
+  } catch (error) {
+    console.error(
+      "PATRISTIC_RESEARCH_CURATED_ERROR:",
+      error,
+    );
+  }
+
+  /*
+   * Provider 3:
    * live Patrologia Graeca OCR retrieval.
    *
-   * This is intentionally independent from
-   * the verified DB provider. One provider
-   * failing must not imply that no evidence
-   * exists in another corpus.
+   * Used when higher-confidence/local providers
+   * cannot answer the question.
    */
   providersAttempted.push(
     "PATROLOGIA_GRAECA",
@@ -304,22 +483,11 @@ export async function buildPatristicResearchContext(
     return null;
   }
 
-  const context = [
-    "PATRISTIC RESEARCH CONTEXT",
-    "",
-    "Rules:",
-    "- Attribute a specific teaching to a Church Father only when supported by the evidence below.",
-    "- Do not replace missing evidence with generic Orthodox teaching and imply that it belongs to the named Father.",
-    "- Distinguish the Father's own teaching from quotations, opponents, heresies, historical narration, and rhetorical objections.",
-    "- Never invent quotations, work titles, references, columns, chapter numbers, homily numbers, or URLs.",
-    "- A live PG OCR passage may contain recognition errors; translate cautiously.",
-    "- If evidence is insufficient for the exact claim requested, say so precisely.",
-    "",
-    ...contextParts,
-  ].join("\n\n");
-
   return {
-    context,
+    context:
+      buildFinalContext(
+        contextParts,
+      ),
 
     sources:
       deduplicatedSources,
