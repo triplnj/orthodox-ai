@@ -407,7 +407,7 @@ function tokenMatches(
 
   const prefixLength =
     Math.min(
-      5,
+      4,
       queryToken.length,
       aliasToken.length,
     );
