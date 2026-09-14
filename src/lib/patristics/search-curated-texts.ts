@@ -3,15 +3,12 @@ import {
 } from "./fetch-source";
 
 import {
-  buildTextSearchTerms,
-} from "./build-text-search-terms";
-
-import {
   expandCuratedSearchTerms,
 } from "./expand-curated-search-terms";
 
 import {
   findCuratedPatristicDocuments,
+  queryMatchesCuratedWork,
   type CuratedPatristicDocument,
 } from "./curated-text-sources";
 
@@ -263,32 +260,30 @@ export async function searchCuratedPatristicTexts(
       );
 
     if (!terms) {
-      try {
-        const generated =
-          await buildTextSearchTerms(
-            query,
-            document.sourceLanguage,
-          );
-
-        terms =
-          expandCuratedSearchTerms(
-            query,
-            generated.terms,
-          );
-
-        termsByLanguage.set(
+      terms =
+        expandCuratedSearchTerms(
+          query,
+          [],
           document.sourceLanguage,
-          terms,
-        );
-      } catch (error) {
-        console.error(
-          "CURATED_TEXT_SEARCH_TERMS_ERROR:",
-          error,
         );
 
-        terms = [];
-      }
+      termsByLanguage.set(
+        document.sourceLanguage,
+        terms,
+      );
     }
+
+    console.log(
+      "CURATED_DETERMINISTIC_TERMS:",
+      {
+        query,
+        source:
+          document.key,
+        language:
+          document.sourceLanguage,
+        terms,
+      },
+    );
 
     try {
       /*
@@ -365,6 +360,12 @@ export async function searchCuratedPatristicTexts(
           terms,
         );
 
+      const explicitWorkMatch =
+        queryMatchesCuratedWork(
+          query,
+          document,
+        );
+
       const selected =
         ranked.length > 0
           ? ranked.slice(
@@ -374,9 +375,12 @@ export async function searchCuratedPatristicTexts(
                 ? 1
                 : 2,
             )
-          : terms.length === 0 &&
-              source.text
-                .trim()
+          : (
+              explicitWorkMatch ||
+              terms.length === 0
+            ) &&
+            source.text
+              .trim()
             ? [
                 {
                   excerpt:

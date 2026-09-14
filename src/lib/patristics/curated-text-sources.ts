@@ -407,7 +407,7 @@ function tokenMatches(
 
   const prefixLength =
     Math.min(
-      5,
+      4,
       queryToken.length,
       aliasToken.length,
     );
@@ -466,6 +466,26 @@ function phraseMatches(
             queryToken,
             aliasToken,
           ),
+      ),
+  );
+}
+
+
+export function queryMatchesCuratedWork(
+  query: string,
+  document:
+    CuratedPatristicDocument,
+) {
+  const normalizedQuery =
+    normalize(
+      query,
+    );
+
+  return document.workAliases.some(
+    (alias) =>
+      phraseMatches(
+        normalizedQuery,
+        alias,
       ),
   );
 }
