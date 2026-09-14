@@ -14,6 +14,14 @@ import {
 } from "./search-curated-texts";
 
 import {
+  findCuratedPatristicDocuments,
+} from "./curated-text-sources";
+
+import {
+  detectPatristicAuthor,
+} from "./detect-author";
+
+import {
   shouldRunPatristicResearch,
 } from "./should-run-patristic-research";
 
@@ -73,14 +81,6 @@ function detectRetrievalLanguage(
     return "sr";
   }
 
-  /*
-   * The verified database currently stores
-   * Serbian and English translations.
-   * German and other Latin-script questions
-   * may use English source translations as
-   * retrieval context; final answer language
-   * is handled by chatService.
-   */
   return "en";
 }
 
@@ -235,17 +235,37 @@ function buildFinalContext(
   ].join("\n\n");
 }
 
+function finalize(
+  contextParts: string[],
+  sources:
+    PatristicResearchSource[],
+  providersAttempted:
+    string[],
+  providersSucceeded:
+    string[],
+): PatristicResearchContext {
+  return {
+    context:
+      buildFinalContext(
+        contextParts,
+      ),
+
+    sources:
+      deduplicateSources(
+        sources,
+      ),
+
+    providersAttempted,
+
+    providersSucceeded,
+  };
+}
+
 export async function buildPatristicResearchContext(
   query: string,
 ): Promise<
   PatristicResearchContext | null
 > {
-  /*
-   * Cost gate:
-   * ordinary prayer, fasting, Scripture, or
-   * general spiritual-life questions must not
-   * trigger patristic embeddings/LLM retrieval.
-   */
   if (
     !shouldRunPatristicResearch(
       query,
@@ -273,160 +293,166 @@ export async function buildPatristicResearchContext(
     );
 
   /*
-   * Provider 1:
-   * multi-source verified database.
+   * Routing guard:
    *
-   * If this succeeds, it is already the highest
-   * confidence and cheapest evidence source, so
-   * do not trigger lower-priority providers.
+   * If the query matches a deterministic curated
+   * author/work, prefer that corpus before any
+   * global semantic DB search. This prevents a
+   * query such as "St Isaac the Syrian on the soul"
+   * from being answered with a semantically similar
+   * quotation by a different Father.
    */
-  providersAttempted.push(
-    "VERIFIED_DB",
-  );
+  const curatedDocuments =
+    findCuratedPatristicDocuments(
+      query,
+    );
 
-  try {
-    const verified =
-      await buildVerifiedPatristicContext(
-        query,
-        language,
-      );
+  if (
+    curatedDocuments.length >
+    0
+  ) {
+    providersAttempted.push(
+      "CURATED_TEXT",
+    );
 
-    if (verified) {
-      providersSucceeded.push(
-        "VERIFIED_DB",
-      );
-
-      contextParts.push(
-        verified.context,
-      );
-
-      sources.push(
-        ...verified.sources.map(
-          (source) => ({
-            provider:
-              "VERIFIED_DB" as const,
-
-            authorName:
-              source.authorName,
-
-            workTitle:
-              source.workTitle,
-
-            reference:
-              source.reference,
-
-            originalLanguage:
-              source.originalLanguage,
-
-            sourceUrl:
-              source.sourceUrl,
-
-            scanUrl:
-              null,
-
-            verificationStatus:
-              source.verificationStatus,
-          }),
-        ),
-      );
-
-      const finalSources =
-        deduplicateSources(
-          sources,
+    try {
+      const curated =
+        await searchCuratedPatristicTexts(
+          query,
+          5,
         );
 
-      return {
-        context:
-          buildFinalContext(
-            contextParts,
+      if (
+        curated.length >
+        0
+      ) {
+        providersSucceeded.push(
+          "CURATED_TEXT",
+        );
+
+        contextParts.push(
+          formatCuratedContext(
+            curated,
           ),
+        );
 
-        sources:
-          finalSources,
+        sources.push(
+          ...mapCuratedSources(
+            curated,
+          ),
+        );
 
-        providersAttempted,
-
-        providersSucceeded,
-      };
+        return finalize(
+          contextParts,
+          sources,
+          providersAttempted,
+          providersSucceeded,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "PATRISTIC_RESEARCH_CURATED_ERROR:",
+        error,
+      );
     }
+  }
+
+  /*
+   * Verified database provider.
+   *
+   * Only run author-filtered DB retrieval when the
+   * named author can actually be recognized in the
+   * verified database. Do not fall back to global
+   * semantic matching for an explicit but unknown
+   * author, because that can misattribute another
+   * Father's text.
+   */
+  let verifiedDbAuthor:
+    string | undefined;
+
+  try {
+    verifiedDbAuthor =
+      await detectPatristicAuthor(
+        query,
+      );
   } catch (error) {
     console.error(
-      "PATRISTIC_RESEARCH_VERIFIED_DB_ERROR:",
+      "PATRISTIC_AUTHOR_DETECTION_ERROR:",
       error,
     );
   }
 
-  /*
-   * Provider 2:
-   * deterministic curated texts.
-   *
-   * This covers authoritative/public-domain
-   * sources that are not naturally handled by PG,
-   * including Syriac authors represented through
-   * curated editions/translations.
-   */
-  providersAttempted.push(
-    "CURATED_TEXT",
-  );
+  if (verifiedDbAuthor) {
+    providersAttempted.push(
+      "VERIFIED_DB",
+    );
 
-  try {
-    const curated =
-      await searchCuratedPatristicTexts(
-        query,
-        5,
-      );
-
-    if (
-      curated.length > 0
-    ) {
-      providersSucceeded.push(
-        "CURATED_TEXT",
-      );
-
-      contextParts.push(
-        formatCuratedContext(
-          curated,
-        ),
-      );
-
-      sources.push(
-        ...mapCuratedSources(
-          curated,
-        ),
-      );
-
-      const finalSources =
-        deduplicateSources(
-          sources,
+    try {
+      const verified =
+        await buildVerifiedPatristicContext(
+          query,
+          language,
         );
 
-      return {
-        context:
-          buildFinalContext(
-            contextParts,
+      if (verified) {
+        providersSucceeded.push(
+          "VERIFIED_DB",
+        );
+
+        contextParts.push(
+          verified.context,
+        );
+
+        sources.push(
+          ...verified.sources.map(
+            (source) => ({
+              provider:
+                "VERIFIED_DB" as const,
+
+              authorName:
+                source.authorName,
+
+              workTitle:
+                source.workTitle,
+
+              reference:
+                source.reference,
+
+              originalLanguage:
+                source.originalLanguage,
+
+              sourceUrl:
+                source.sourceUrl,
+
+              scanUrl:
+                null,
+
+              verificationStatus:
+                source.verificationStatus,
+            }),
           ),
+        );
 
-        sources:
-          finalSources,
-
-        providersAttempted,
-
-        providersSucceeded,
-      };
+        return finalize(
+          contextParts,
+          sources,
+          providersAttempted,
+          providersSucceeded,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "PATRISTIC_RESEARCH_VERIFIED_DB_ERROR:",
+        error,
+      );
     }
-  } catch (error) {
-    console.error(
-      "PATRISTIC_RESEARCH_CURATED_ERROR:",
-      error,
-    );
   }
 
   /*
-   * Provider 3:
-   * live Patrologia Graeca OCR retrieval.
+   * Live Patrologia Graeca provider.
    *
-   * Used when higher-confidence/local providers
-   * cannot answer the question.
+   * This is the final deterministic/low-cost
+   * fallback for authors routed into PG.
    */
   providersAttempted.push(
     "PATROLOGIA_GRAECA",
@@ -460,40 +486,34 @@ export async function buildPatristicResearchContext(
     );
   }
 
-  const deduplicatedSources =
-    deduplicateSources(
-      sources,
-    );
+  const result =
+    contextParts.length > 0
+      ? finalize(
+          contextParts,
+          sources,
+          providersAttempted,
+          providersSucceeded,
+        )
+      : null;
 
   console.log(
     "PATRISTIC_RESEARCH:",
     {
       query,
       language,
+      curatedMatch:
+        curatedDocuments.length >
+        0,
+      verifiedDbAuthor:
+        verifiedDbAuthor ??
+        null,
       providersAttempted,
       providersSucceeded,
       sourceCount:
-        deduplicatedSources.length,
+        result?.sources.length ??
+        0,
     },
   );
 
-  if (
-    contextParts.length === 0
-  ) {
-    return null;
-  }
-
-  return {
-    context:
-      buildFinalContext(
-        contextParts,
-      ),
-
-    sources:
-      deduplicatedSources,
-
-    providersAttempted,
-
-    providersSucceeded,
-  };
+  return result;
 }
