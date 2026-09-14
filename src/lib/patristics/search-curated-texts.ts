@@ -297,8 +297,8 @@ export async function searchCuratedPatristicTexts(
               0,
               document.documentType ===
                 "BIBLIOGRAPHIC"
-                ? 2
-                : 3,
+                ? 1
+                : 2,
             )
           : source.text
               .trim()
