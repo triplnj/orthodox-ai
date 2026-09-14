@@ -21,6 +21,16 @@ export type CuratedPatristicDocument = {
     | "BIBLIOGRAPHIC";
 
   verificationStatus: string;
+
+  /*
+   * Optional Wikisource collection prefix.
+   *
+   * When present, retrieval uses the MediaWiki API
+   * to locate relevant child pages inside this
+   * specific work instead of downloading one large
+   * PDF at request time.
+   */
+  wikisourceTitlePrefix?: string;
 };
 
 export const CURATED_PATRISTIC_DOCUMENTS:
@@ -61,10 +71,13 @@ export const CURATED_PATRISTIC_DOCUMENTS:
       ],
 
       sourceUrl:
-        "https://www.atour.com/media/files/library/religion/Isaac_of_Nineveh_-_Mystical_Treatises_-_AJWensinck.pdf",
+        "https://en.wikisource.org/wiki/Mystic_Treatises",
 
       sourceName:
-        "A. J. Wensinck, Mystic Treatises by Isaac of Nineveh (1923)",
+        "Wikisource — A. J. Wensinck, Mystic Treatises by Isaac of Nineveh (1923)",
+
+      wikisourceTitlePrefix:
+        "Mystic Treatises/",
 
       sourceLanguage:
         "English",
