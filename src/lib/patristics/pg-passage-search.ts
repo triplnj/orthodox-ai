@@ -537,7 +537,18 @@ export async function searchPgPassages(
   }
 
 
+  const minimumMatchedTerms =
+    Math.min(
+      2,
+      terms.length,
+    );
+
   return allResults
+    .filter(
+      (match) =>
+        match.matchedTerms.length >=
+        minimumMatchedTerms,
+    )
     .sort(
       (a, b) => {
         const scoreDifference =

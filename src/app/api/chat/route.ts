@@ -32,13 +32,13 @@ import {
 } from "@/lib/userProfileContext";
 
 import {
-  buildLivePgChatContext,
-  type LivePgSource,
-} from "@/lib/patristics/build-live-pg-chat-context";
+  buildPatristicResearchContext,
+  type PatristicResearchSource,
+} from "@/lib/patristics/build-patristic-research-context";
 
-
-function formatPgSources(
-  sources: LivePgSource[],
+function formatPatristicSources(
+  sources:
+    PatristicResearchSource[],
 ) {
   if (
     sources.length === 0
@@ -46,24 +46,24 @@ function formatPgSources(
     return "";
   }
 
-
   const seen =
     new Set<string>();
 
   const lines:
     string[] = [];
 
-
   for (
     const source of sources
   ) {
-    const key =
-      [
-        source.pgVolume,
-        source.scanPage,
-        source.pageImageUrl,
-      ].join(":");
+    const preferredUrl =
+      source.scanUrl ??
+      source.sourceUrl;
 
+    const key = [
+      source.provider,
+      preferredUrl,
+      source.reference ?? "",
+    ].join(":");
 
     if (
       seen.has(key)
@@ -71,21 +71,24 @@ function formatPgSources(
       continue;
     }
 
-
     seen.add(key);
 
-
-    const reference =
-      source.pgReference
-        ? source.pgReference
-        : `PG ${source.pgVolume}, digital scan page ${source.scanPage}`;
-
+    const heading = [
+      source.authorName,
+      source.workTitle,
+      source.reference,
+    ]
+      .filter(Boolean)
+      .join(" — ");
 
     lines.push(
-      `${reference}\n${source.pageImageUrl}`,
+      [
+        heading ||
+          source.provider,
+        preferredUrl,
+      ].join("\n"),
     );
   }
-
 
   if (
     lines.length === 0
@@ -93,24 +96,14 @@ function formatPgSources(
     return "";
   }
 
-
-  /*
-   * Остављамо URL као чист URL.
-   *
-   * То значи да чак и ако frontend
-   * тренутно нема Markdown renderer,
-   * корисник ипак види стварни
-   * директни source URL.
-   */
   return [
     "",
     "",
-    "Sources — Patrologia Graeca:",
+    "Sources:",
     "",
     ...lines,
   ].join("\n");
 }
-
 
 export async function POST(
   req: Request,
@@ -118,7 +111,6 @@ export async function POST(
   try {
     const user =
       await getCurrentUser();
-
 
     if (!user) {
       return NextResponse.json(
@@ -132,10 +124,8 @@ export async function POST(
       );
     }
 
-
     const body =
       await req.json();
-
 
     const message =
       body.message as
@@ -151,7 +141,6 @@ export async function POST(
       body.extraContext as
         | string
         | undefined;
-
 
     if (
       !message ||
@@ -170,16 +159,13 @@ export async function POST(
       );
     }
 
-
     const normalizedMessage =
       message.trim();
-
 
     const permission =
       await canUseChat(
         user,
       );
-
 
     if (
       !permission.allowed
@@ -198,12 +184,6 @@ export async function POST(
       );
     }
 
-
-    /*
-     * ------------------------------------------------
-     * 1. Сачувај корисничко питање
-     * ------------------------------------------------
-     */
     await prisma.chatMessage.create({
       data: {
         userId:
@@ -221,42 +201,23 @@ export async function POST(
       },
     });
 
-
-    /*
-     * ------------------------------------------------
-     * 2. Кориснички профил
-     * ------------------------------------------------
-     */
     const userProfileContext =
       await getUserProfileContext(
         user.id,
       );
 
-
     /*
-     * ------------------------------------------------
-     * 3. LIVE PG RETRIEVAL
-     * ------------------------------------------------
+     * Central patristic research router.
      *
-     * Ово је веза која је недостајала.
-     *
-     * Исти retrieval који смо
-     * тестирали преко pg-general-test
-     * сада ради директно из /chat.
-     *
-     * Ако питање нема конкретног
-     * PG аутора, searchPgPassages
-     * ће вратити празан резултат.
-     *
-     * Ако PG retrieval падне,
-     * helper враћа null и обични
-     * chat наставља да ради.
+     * The chat API no longer knows whether evidence
+     * comes from the verified database, PG, or future
+     * corpus providers. It receives one normalized
+     * research context plus structured source metadata.
      */
-    const livePg =
-      await buildLivePgChatContext(
+    const patristicResearch =
+      await buildPatristicResearchContext(
         normalizedMessage,
       );
-
 
     const combinedExtraContext = `
 ${userProfileContext}
@@ -265,12 +226,6 @@ Page or feature extra context:
 ${extraContext ?? "No additional page context provided."}
     `.trim();
 
-
-    /*
-     * ------------------------------------------------
-     * 4. Генериши одговор
-     * ------------------------------------------------
-     */
     const result =
       await generateOrthodoxAnswer({
         userMessage:
@@ -284,7 +239,8 @@ ${extraContext ?? "No additional page context provided."}
           combinedExtraContext,
 
         patristicContext:
-          livePg?.context ??
+          patristicResearch
+            ?.context ??
           null,
 
         isPro:
@@ -293,35 +249,21 @@ ${extraContext ?? "No additional page context provided."}
           ),
       });
 
-
     /*
-     * ------------------------------------------------
-     * 5. Изворе додајемо ДЕТЕРМИНИСТИЧКИ
-     * ------------------------------------------------
-     *
-     * Не препуштамо AI-ју да
-     * измишља или преписује URL.
-     *
-     * Линкови долазе директно
-     * из retrieval резултата.
+     * Source URLs are appended deterministically
+     * from retrieval metadata. The language model
+     * does not create or rewrite them.
      */
     const sourceBlock =
-      livePg
-        ? formatPgSources(
-            livePg.sources,
+      patristicResearch
+        ? formatPatristicSources(
+            patristicResearch.sources,
           )
         : "";
-
 
     const finalAnswer =
       `${result.answer}${sourceBlock}`;
 
-
-    /*
-     * ------------------------------------------------
-     * 6. Сачувај assistant одговор
-     * ------------------------------------------------
-     */
     await prisma.chatMessage.create({
       data: {
         userId:
@@ -339,23 +281,11 @@ ${extraContext ?? "No additional page context provided."}
       },
     });
 
-
-    /*
-     * ------------------------------------------------
-     * 7. Usage
-     * ------------------------------------------------
-     */
     await logUsage(
       user.id,
       "chat",
     );
 
-
-    /*
-     * ------------------------------------------------
-     * 8. Response
-     * ------------------------------------------------
-     */
     return NextResponse.json({
       answer:
         finalAnswer,
@@ -366,20 +296,37 @@ ${extraContext ?? "No additional page context provided."}
       plan:
         user.plan,
 
-      /*
-       * Корисно и за каснији
-       * frontend source-card UI.
-       */
       patristicSources:
-        livePg?.sources ??
+        patristicResearch
+          ?.sources ??
         [],
 
-      usedLivePg:
+      usedPatristicResearch:
         Boolean(
-          livePg &&
-          livePg.sources.length >
+          patristicResearch &&
+          patristicResearch
+            .sources.length >
             0,
         ),
+
+      /*
+       * Kept for compatibility with any existing
+       * client code that still expects this flag.
+       */
+      usedLivePg:
+        Boolean(
+          patristicResearch
+            ?.sources.some(
+              (source) =>
+                source.provider ===
+                "PATROLOGIA_GRAECA",
+            ),
+        ),
+
+      patristicProviders:
+        patristicResearch
+          ?.providersSucceeded ??
+        [],
     });
 
   } catch (
@@ -389,7 +336,6 @@ ${extraContext ?? "No additional page context provided."}
       "CHAT_API_ERROR:",
       error,
     );
-
 
     return NextResponse.json(
       {
