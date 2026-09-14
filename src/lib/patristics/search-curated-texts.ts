@@ -11,6 +11,10 @@ import {
   type CuratedPatristicDocument,
 } from "./curated-text-sources";
 
+import {
+  searchWikisourceCollection,
+} from "./search-wikisource-collection";
+
 export type CuratedTextEvidence = {
   authorName: string;
 
@@ -280,6 +284,69 @@ export async function searchCuratedPatristicTexts(
     }
 
     try {
+      /*
+       * Large scanned editions are not downloaded
+       * and parsed inside a chat request. When a
+       * curated work has a Wikisource collection,
+       * search only that fixed work and fetch the
+       * relevant homily pages.
+       */
+      if (
+        document.wikisourceTitlePrefix
+      ) {
+        const pages =
+          await searchWikisourceCollection(
+            document,
+            terms,
+          );
+
+        for (
+          const page of pages
+        ) {
+          const ranked =
+            rankWindows(
+              page.text,
+              terms,
+            );
+
+          for (
+            const item of
+            ranked.slice(0, 2)
+          ) {
+            evidence.push({
+              authorName:
+                document.authorName,
+
+              workTitle:
+                `${document.workTitle} — ${page.title.replace(document.wikisourceTitlePrefix, "")}`,
+
+              originalLanguage:
+                document.sourceLanguage,
+
+              sourceUrl:
+                page.url,
+
+              sourceName:
+                document.sourceName,
+
+              documentType:
+                document.documentType,
+
+              verificationStatus:
+                document.verificationStatus,
+
+              excerpt:
+                item.excerpt,
+
+              matchedTerms:
+                item.matchedTerms,
+            });
+          }
+        }
+
+        continue;
+      }
+
       const source =
         await fetchSourceText(
           document.sourceUrl,
