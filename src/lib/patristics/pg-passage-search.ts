@@ -16,6 +16,7 @@ import {
   mapPgColumnsToScanRange,
   parsePgColumnRange,
   type PgScanRange,
+  type PgWorkColumnRange,
 } from "./pg-work-range";
 
 
@@ -467,9 +468,7 @@ export async function searchPgPassages(
           .filter(
             (
               range,
-            ): range is NonNullable<
-              typeof range
-            > =>
+            ): range is PgWorkColumnRange =>
               Boolean(range),
           );
 
@@ -496,6 +495,16 @@ export async function searchPgPassages(
       if (
         scanRanges.length > 0
       ) {
+        console.log(
+          "PATRISTIC_PG_WORK_RANGES:",
+          {
+            volume,
+            workColumns:
+              volumeWorkRanges,
+            scanRanges,
+          },
+        );
+
         rawMatches =
           rawMatches.filter(
             (match) =>
