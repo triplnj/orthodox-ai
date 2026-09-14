@@ -541,6 +541,7 @@ export async function searchPgPassages(
     greekSearch.concepts.length;
 
   const minimumMatchedTerms =
+    plan.hasSpecificWorks ||
     conceptCount <= 1
       ? 1
       : Math.min(
