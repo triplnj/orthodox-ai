@@ -300,8 +300,9 @@ export async function searchCuratedPatristicTexts(
                 ? 1
                 : 2,
             )
-          : source.text
-              .trim()
+          : terms.length === 0 &&
+              source.text
+                .trim()
             ? [
                 {
                   excerpt:
