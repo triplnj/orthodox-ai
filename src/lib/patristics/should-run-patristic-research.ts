@@ -3,13 +3,13 @@ import {
 } from "./corpus-index";
 
 const NAMED_FATHER_PATTERN =
-  /\b(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+[\p{L}][\p{L}.'’\-]{2,}/iu;
+  /(?:^|[^\p{L}\p{N}_])(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+[\p{L}][\p{L}.'’\-]{2,}/iu;
 
 const PATRISTIC_WORK_PATTERN =
-  /\b(?:ascetical homilies|ascetical works|homilies|homilije|ambigua|mystagogia|ladder of divine ascent|lestvica|лествица|аскетске беседе|подвижничке беседе|patrologia graeca|philokalia|филокалија)\b/iu;
+  /(?:^|[^\p{L}\p{N}_])(?:ascetical homilies|ascetical works|homilies|homilije|ambigua|mystagogia|ladder of divine ascent|lestvica|лествица|аскетске беседе|подвижничке беседе|patrologia graeca|philokalia|филокалија)(?=$|[^\p{L}\p{N}_])/iu;
 
 const GENERIC_PATRISTIC_PATTERN =
-  /\b(?:church fathers|holy fathers|sveti oci|sveti otci|свети оци|свети отци|patristic|patristics|patrologia|philokalia|филокалија)\b/iu;
+  /(?:^|[^\p{L}\p{N}_])(?:church fathers|holy fathers|sveti oci|sveti otci|свети оци|свети отци|patristic|patristics|patrologia|philokalia|филокалија)(?=$|[^\p{L}\p{N}_])/iu;
 
 export function isGenericPatristicResearchQuery(
   query: string,
