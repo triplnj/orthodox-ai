@@ -97,7 +97,7 @@ function mapPgSources(
         source.authorName,
 
       workTitle:
-        null,
+        source.workTitle,
 
       reference:
         source.pgReference ??

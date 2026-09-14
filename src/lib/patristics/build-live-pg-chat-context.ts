@@ -7,6 +7,8 @@
 export type LivePgSource = {
   authorName: string;
 
+  workTitle: string | null;
+
   pgVolume: number;
 
   scanPage: number;
@@ -88,6 +90,11 @@ function uniqueSources(
     result.push({
       authorName:
         match.authorName,
+
+      workTitle:
+        match.candidateWorkTitles.length === 1
+          ? match.candidateWorkTitles[0]
+          : null,
 
       pgVolume:
         match.pgVolume,

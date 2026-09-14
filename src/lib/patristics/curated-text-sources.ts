@@ -541,6 +541,11 @@ export function findCuratedPatristicDocuments(
   const normalizedQuery =
     normalize(query);
 
+  const explicitNamedFather =
+    /(?:^|[^\p{L}\p{N}_])(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+[\p{L}][\p{L}.'’\-]{2,}/iu.test(
+      query,
+    );
+
   const scored = CURATED_PATRISTIC_DOCUMENTS.map(
     (document) => {
       const authorMatch =
@@ -589,6 +594,20 @@ export function findCuratedPatristicDocuments(
     scored.some(
       (item) => item.authorMatch,
     );
+
+  /*
+   * Critical attribution guard:
+   * if the user explicitly names a Father but that
+   * Father is not represented in curated documents,
+   * subject-only matches from OTHER Fathers must not
+   * be used as evidence.
+   */
+  if (
+    explicitNamedFather &&
+    !hasAuthorMatch
+  ) {
+    return [];
+  }
 
   return scored
     .filter(

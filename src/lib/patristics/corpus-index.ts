@@ -681,6 +681,78 @@ function normalize(
 }
 
 
+function tokenMatches(
+  queryToken: string,
+  aliasToken: string,
+) {
+  if (
+    queryToken ===
+    aliasToken
+  ) {
+    return true;
+  }
+
+  const cyrillic =
+    /\p{Script=Cyrillic}/u.test(
+      queryToken,
+    ) &&
+    /\p{Script=Cyrillic}/u.test(
+      aliasToken,
+    );
+
+  if (
+    !cyrillic ||
+    queryToken.length < 5 ||
+    aliasToken.length < 5
+  ) {
+    return false;
+  }
+
+  return (
+    queryToken.slice(0, 4) ===
+    aliasToken.slice(0, 4)
+  );
+}
+
+
+function phraseMatches(
+  normalizedQuery: string,
+  alias: string,
+) {
+  const normalizedAlias =
+    normalize(alias);
+
+  if (
+    normalizedQuery.includes(
+      normalizedAlias,
+    )
+  ) {
+    return true;
+  }
+
+  const queryTokens =
+    normalizedQuery
+      .split(" ")
+      .filter(Boolean);
+
+  const aliasTokens =
+    normalizedAlias
+      .split(" ")
+      .filter(Boolean);
+
+  return aliasTokens.every(
+    (aliasToken) =>
+      queryTokens.some(
+        (queryToken) =>
+          tokenMatches(
+            queryToken,
+            aliasToken,
+          ),
+      ),
+  );
+}
+
+
 export function findPatristicAuthor(
   query: string,
 ) {
@@ -692,8 +764,9 @@ export function findPatristicAuthor(
       (author) =>
         author.aliases.some(
           (alias) =>
-            normalizedQuery.includes(
-              normalize(alias),
+            phraseMatches(
+              normalizedQuery,
+              alias,
             ),
         ),
     ) ?? null

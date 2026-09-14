@@ -10,6 +10,10 @@ import type {
   ResolvedPgAuthor,
 } from "./resolve-pg-author";
 
+import {
+  resolvePgCatalogVolumes,
+} from "./resolve-pg-catalog-volumes";
+
 
 export type VerifiedPgAuthorCandidate = {
   canonicalName: string;
@@ -222,7 +226,38 @@ export async function verifyPgAuthorCandidate(
    * Zato ne koristimo AI PG
    * brojeve za produkcioni routing.
    */
-  if (!catalogEntry) {
+  let pgVolumes =
+    catalogEntry
+      ? uniqueNumbers(
+          catalogEntry.pgVolumes,
+        )
+      : [];
+
+
+  /*
+   * Static aliases are only a fast cache. When an
+   * author is not listed there, consult the public
+   * Patrologia Graeca author index deterministically.
+   *
+   * AI may propose the canonical/Latin/Greek name,
+   * but the author -> PG volume relationship is
+   * accepted only when the public catalogue confirms
+   * that name.
+   */
+  if (
+    pgVolumes.length === 0
+  ) {
+    pgVolumes =
+      await resolvePgCatalogVolumes([
+        candidate.canonicalName,
+        candidate.latinName ?? "",
+      ]);
+  }
+
+
+  if (
+    pgVolumes.length === 0
+  ) {
     return {
       canonicalName:
         candidate.canonicalName,
@@ -253,20 +288,6 @@ export async function verifyPgAuthorCandidate(
 
   /*
    * ------------------------------------------------
-   * 3. Autor je pronađen u katalogu
-   * ------------------------------------------------
-   *
-   * Ovo su sada bibliografski
-   * potvrđeni PG tomovi.
-   */
-  const pgVolumes =
-    uniqueNumbers(
-      catalogEntry.pgVolumes,
-    );
-
-
-  /*
-   * ------------------------------------------------
    * 4. Digitalna dostupnost
    * ------------------------------------------------
    *
@@ -285,7 +306,8 @@ export async function verifyPgAuthorCandidate(
 
   return {
     canonicalName:
-      catalogEntry.canonicalName,
+      catalogEntry?.canonicalName ??
+      candidate.canonicalName,
 
     latinName:
       candidate.latinName,
