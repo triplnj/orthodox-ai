@@ -189,6 +189,117 @@ export const CURATED_PATRISTIC_DOCUMENTS:
 
     {
       key:
+        "john-damascus-holy-images-greek",
+
+      authorName:
+        "St. John of Damascus",
+
+      authorAliases: [
+        "john of damascus",
+        "john damascene",
+        "st john of damascus",
+        "saint john of damascus",
+        "jovan damaskin",
+        "sveti jovan damaskin",
+        "јован дамаскин",
+        "свети јован дамаскин",
+        "johannes von damaskus",
+        "heiliger johannes von damaskus",
+      ],
+
+      workTitle:
+        "Περὶ εἰκόνων / Apologetic Treatises against those who decry the holy images",
+
+      workAliases: [
+        "икона",
+        "иконе",
+        "иконама",
+        "теологија иконе",
+        "icon",
+        "icons",
+        "image",
+        "images",
+        "holy images",
+        "divine images",
+        "peri eikonon",
+        "περι εικονων",
+        "περὶ εἰκόνων",
+        "иконоборство",
+        "iconoclasm",
+      ],
+
+      sourceUrl:
+        "https://www.vlioras.gr/Philologia/History/Byzantine/Texts/Damaskinos_Peri_Eikonon.htm",
+
+      sourceName:
+        "Greek primary text — John of Damascus, Περὶ εἰκόνων",
+
+      sourceLanguage:
+        "Greek",
+
+      documentType:
+        "PRIMARY_TEXT",
+
+      verificationStatus:
+        "CURATED_PRIMARY_TEXT",
+    },
+
+    {
+      key:
+        "john-damascus-holy-images-gutenberg",
+
+      authorName:
+        "St. John of Damascus",
+
+      authorAliases: [
+        "john of damascus",
+        "john damascene",
+        "st john of damascus",
+        "saint john of damascus",
+        "jovan damaskin",
+        "sveti jovan damaskin",
+        "јован дамаскин",
+        "свети јован дамаскин",
+        "johannes von damaskus",
+        "heiliger johannes von damaskus",
+      ],
+
+      workTitle:
+        "St John Damascene on Holy Images",
+
+      workAliases: [
+        "икона",
+        "иконе",
+        "иконама",
+        "теологија иконе",
+        "icon",
+        "icons",
+        "image",
+        "images",
+        "holy images",
+        "divine images",
+        "иконоборство",
+        "iconoclasm",
+      ],
+
+      sourceUrl:
+        "https://www.gutenberg.org/cache/epub/49917/pg49917-images.html",
+
+      sourceName:
+        "Project Gutenberg — Mary H. Allies, St John Damascene on Holy Images (1898)",
+
+      sourceLanguage:
+        "English",
+
+      documentType:
+        "TRANSLATION",
+
+      verificationStatus:
+        "CURATED_PUBLIC_DOMAIN_EDITION",
+    },
+
+    {
+      key:
         "john-damascus-orthodox-faith-book-iv",
 
       authorName:
