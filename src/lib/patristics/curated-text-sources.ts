@@ -9,6 +9,8 @@ export type CuratedPatristicDocument = {
 
   workAliases: string[];
 
+  subjects?: string[];
+
   sourceUrl: string;
 
   sourceName: string;
