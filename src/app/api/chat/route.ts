@@ -33,77 +33,7 @@ import {
 
 import {
   buildPatristicResearchContext,
-  type PatristicResearchSource,
 } from "@/lib/patristics/build-patristic-research-context";
-
-function formatPatristicSources(
-  sources:
-    PatristicResearchSource[],
-) {
-  if (
-    sources.length === 0
-  ) {
-    return "";
-  }
-
-  const seen =
-    new Set<string>();
-
-  const lines:
-    string[] = [];
-
-  for (
-    const source of sources
-  ) {
-    const preferredUrl =
-      source.scanUrl ??
-      source.sourceUrl;
-
-    const key = [
-      source.provider,
-      preferredUrl,
-      source.reference ?? "",
-    ].join(":");
-
-    if (
-      seen.has(key)
-    ) {
-      continue;
-    }
-
-    seen.add(key);
-
-    const heading = [
-      source.authorName,
-      source.workTitle,
-      source.reference,
-    ]
-      .filter(Boolean)
-      .join(" — ");
-
-    lines.push(
-      [
-        heading ||
-          source.provider,
-        preferredUrl,
-      ].join("\n"),
-    );
-  }
-
-  if (
-    lines.length === 0
-  ) {
-    return "";
-  }
-
-  return [
-    "",
-    "",
-    "Sources:",
-    "",
-    ...lines,
-  ].join("\n");
-}
 
 export async function POST(
   req: Request,
@@ -250,19 +180,12 @@ ${extraContext ?? "No additional page context provided."}
       });
 
     /*
-     * Source URLs are appended deterministically
-     * from retrieval metadata. The language model
-     * does not create or rewrite them.
+     * Source URLs are returned as structured metadata
+     * and rendered by the chat UI as clickable cards.
+     * Do not duplicate them inside the answer text.
      */
-    const sourceBlock =
-      patristicResearch
-        ? formatPatristicSources(
-            patristicResearch.sources,
-          )
-        : "";
-
     const finalAnswer =
-      `${result.answer}${sourceBlock}`;
+      result.answer;
 
     await prisma.chatMessage.create({
       data: {
