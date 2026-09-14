@@ -537,11 +537,16 @@ export async function searchPgPassages(
   }
 
 
+  const conceptCount =
+    greekSearch.concepts.length;
+
   const minimumMatchedTerms =
-    Math.min(
-      2,
-      terms.length,
-    );
+    conceptCount <= 1
+      ? 1
+      : Math.min(
+          2,
+          terms.length,
+        );
 
   return allResults
     .filter(
