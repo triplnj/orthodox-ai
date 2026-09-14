@@ -67,7 +67,7 @@ const DETERMINISTIC_CONCEPT_RULES:
       pattern: /тројиц|trojic|trinity|dreifalt|triad/i,
       concept: "Trinity",
       greekTerms: ["τριάς"],
-      greekStems: ["τριαδ"],
+      greekStems: ["τριαδ", "τριασ"],
     },
     {
       pattern: /свети дух|sveti duh|holy spirit|heiliger geist/i,
