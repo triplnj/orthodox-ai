@@ -330,6 +330,9 @@ export const PATRISTIC_CORPUS_INDEX:
           pgVolume:
             32,
 
+          pgColumns:
+            "68–217",
+
           topics: [
             "суштина",
             "ousia",
@@ -363,6 +366,9 @@ export const PATRISTIC_CORPUS_INDEX:
 
           pgVolume:
             32,
+
+          pgColumns:
+            "220–1112",
 
           topics: [
             "суштина",
@@ -604,6 +610,9 @@ export const PATRISTIC_CORPUS_INDEX:
 
           pgVolume:
             94,
+
+          pgColumns:
+            "1231–1420",
 
           topics: [
             "икона",
