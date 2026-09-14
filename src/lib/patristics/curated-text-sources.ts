@@ -127,6 +127,55 @@ export const CURATED_PATRISTIC_DOCUMENTS:
 
     {
       key:
+        "isaac-nineveh-gorgias-bibliography",
+
+      authorName:
+        "St. Isaac the Syrian",
+
+      authorAliases: [
+        "isaac the syrian",
+        "st isaac the syrian",
+        "saint isaac the syrian",
+        "isaac of nineveh",
+        "isak sirin",
+        "sveti isak sirin",
+        "исак сирин",
+        "свети исак сирин",
+        "isaak der syrer",
+        "heiliger isaak der syrer",
+      ],
+
+      workTitle:
+        "The Ascetical Homilies of Mar Isaac of Nineveh",
+
+      workAliases: [
+        "ascetical homilies",
+        "ascetical discourses",
+        "ascetical works",
+        "mystic treatises",
+        "аскетске беседе",
+        "подвижничке беседе",
+        "asketische homilien",
+      ],
+
+      sourceUrl:
+        "https://www.gorgiaspress.com/the-ascetical-homilies-of-mar-isaac-of-nineveh",
+
+      sourceName:
+        "Gorgias Press — The Ascetical Homilies of Mar Isaac of Nineveh",
+
+      sourceLanguage:
+        "English",
+
+      documentType:
+        "BIBLIOGRAPHIC",
+
+      verificationStatus:
+        "CURATED_SCHOLARLY_BIBLIOGRAPHY",
+    },
+
+    {
+      key:
         "john-damascus-orthodox-faith-book-iv",
 
       authorName:
