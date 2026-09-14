@@ -319,6 +319,72 @@ export const PATRISTIC_CORPUS_INDEX:
       works: [
         {
           titleSr:
+            "О Светом Духу",
+
+          titleEn:
+            "On the Holy Spirit",
+
+          titleOriginal:
+            "De Spiritu Sancto",
+
+          pgVolume:
+            32,
+
+          topics: [
+            "суштина",
+            "ousia",
+            "usia",
+            "ουσια",
+            "ипостас",
+            "hypostasis",
+            "личност",
+            "лице",
+            "prosopon",
+            "просопон",
+            "тројица",
+            "trinity",
+            "свети дух",
+            "holy spirit",
+          ],
+
+          directUrl:
+            pgVolumeUrl(32),
+        },
+
+        {
+          titleSr:
+            "Писма",
+
+          titleEn:
+            "Letters",
+
+          titleOriginal:
+            "Epistulae",
+
+          pgVolume:
+            32,
+
+          topics: [
+            "суштина",
+            "ousia",
+            "usia",
+            "ουσια",
+            "ипостас",
+            "hypostasis",
+            "личност",
+            "лице",
+            "prosopon",
+            "просопон",
+            "тројица",
+            "trinity",
+          ],
+
+          directUrl:
+            pgVolumeUrl(32),
+        },
+
+        {
+          titleSr:
             "Шестоднев",
 
           titleEn:
@@ -526,6 +592,40 @@ export const PATRISTIC_CORPUS_INDEX:
         false,
 
       works: [
+        {
+          titleSr:
+            "Три слова против оних који одбацују свете иконе",
+
+          titleEn:
+            "Three Treatises on the Divine Images",
+
+          titleOriginal:
+            "Contra imaginum calumniatores",
+
+          pgVolume:
+            94,
+
+          topics: [
+            "икона",
+            "иконе",
+            "иконама",
+            "icon",
+            "icons",
+            "image",
+            "images",
+            "слика",
+            "поштовање",
+            "veneration",
+            "проскинеза",
+            "proskynesis",
+            "иконоборство",
+            "iconoclasm",
+          ],
+
+          directUrl:
+            pgVolumeUrl(94),
+        },
+
         {
           titleSr:
             "Тачно изложење православне вере",
