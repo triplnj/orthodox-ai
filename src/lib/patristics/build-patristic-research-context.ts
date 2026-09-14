@@ -22,6 +22,7 @@ import {
 } from "./detect-author";
 
 import {
+  isGenericPatristicResearchQuery,
   shouldRunPatristicResearch,
 } from "./should-run-patristic-research";
 
@@ -382,7 +383,12 @@ export async function buildPatristicResearchContext(
     );
   }
 
-  if (verifiedDbAuthor) {
+  if (
+    verifiedDbAuthor ||
+    isGenericPatristicResearchQuery(
+      query,
+    )
+  ) {
     providersAttempted.push(
       "VERIFIED_DB",
     );
