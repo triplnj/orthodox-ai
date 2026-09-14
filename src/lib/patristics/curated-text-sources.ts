@@ -9,6 +9,8 @@ export type CuratedPatristicDocument = {
 
   workAliases: string[];
 
+  subjects?: string[];
+
   sourceUrl: string;
 
   sourceName: string;
@@ -345,6 +347,34 @@ export const CURATED_PATRISTIC_DOCUMENTS:
       verificationStatus:
         "CURATED_PATRISTIC_TEXT_REPOSITORY",
     },
+    {
+      key: "basil-letter-38",
+      authorName: "St. Basil the Great",
+      authorAliases: ["basil the great", "basil of caesarea", "vasilije veliki", "sveti vasilije veliki", "василије велики", "свети василије велики"],
+      workTitle: "Letter 38",
+      workAliases: ["letter 38", "epistle 38", "писмо 38"],
+      subjects: ["ousia", "οὐσία", "essence", "суштина", "hypostasis", "ὑπόστασις", "ипостас", "ипостаси", "trinity", "trojica", "тројица"],
+      sourceUrl: "https://www.newadvent.org/fathers/3202038.htm",
+      sourceName: "New Advent - Basil of Caesarea, Letter 38",
+      sourceLanguage: "English",
+      documentType: "TRANSLATION",
+      verificationStatus: "CURATED_PATRISTIC_TEXT_REPOSITORY",
+    },
+
+    {
+      key: "gregory-nazianzen-theological-orations",
+      authorName: "St. Gregory Nazianzen",
+      authorAliases: ["gregory nazianzen", "gregory of nazianzus", "gregory the theologian", "grigorije bogoslov", "sveti grigorije bogoslov", "григорије богослов", "свети григорије богослов"],
+      workTitle: "Theological Orations 27-31",
+      workAliases: ["theological orations", "orations 27 31", "теолошке беседе", "богословске беседе"],
+      subjects: ["trinity", "holy trinity", "trojica", "sveta trojica", "тројица", "света тројица", "godhead", "son", "holy spirit", "свети дух"],
+      sourceUrl: "https://www.newadvent.org/fathers/3102.htm",
+      sourceName: "New Advent - Gregory Nazianzen, Theological Orations",
+      sourceLanguage: "English",
+      documentType: "TRANSLATION",
+      verificationStatus: "CURATED_PATRISTIC_TEXT_REPOSITORY",
+    },
+
   ];
 
 function normalize(
@@ -497,7 +527,7 @@ export function findCuratedPatristicDocuments(
   const normalizedQuery =
     normalize(query);
 
-  return CURATED_PATRISTIC_DOCUMENTS.filter(
+  const scored = CURATED_PATRISTIC_DOCUMENTS.map(
     (document) => {
       const authorMatch =
         document.authorAliases.some(
@@ -517,10 +547,46 @@ export function findCuratedPatristicDocuments(
             ),
         );
 
-      return (
-        authorMatch ||
-        workMatch
-      );
+      const subjectMatches =
+        (document.subjects ?? [])
+          .filter(
+            (subject) =>
+              phraseMatches(
+                normalizedQuery,
+                subject,
+              ),
+          )
+          .length;
+
+      return {
+        document,
+        authorMatch,
+        score:
+          (authorMatch ? 100 : 0) +
+          (workMatch ? 50 : 0) +
+          subjectMatches * 20,
+      };
     },
+  ).filter(
+    (item) => item.score > 0,
   );
+
+  const hasAuthorMatch =
+    scored.some(
+      (item) => item.authorMatch,
+    );
+
+  return scored
+    .filter(
+      (item) =>
+        !hasAuthorMatch ||
+        item.authorMatch,
+    )
+    .sort(
+      (a, b) =>
+        b.score - a.score,
+    )
+    .map(
+      (item) => item.document,
+    );
 }
