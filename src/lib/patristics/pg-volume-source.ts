@@ -214,6 +214,216 @@ function uniqueStrings(
 }
 
 
+type ArchiveSearchDoc = {
+  identifier?: string;
+  title?: string;
+  description?: string;
+};
+
+
+function textContainsPgVolume(
+  value: string,
+  volume: number,
+) {
+  const normalized =
+    value.toLowerCase();
+
+  const patterns = [
+    `vol. ${volume}`,
+    `vol ${volume}`,
+    `volume ${volume}`,
+    `tomus ${volume}`,
+    `tome ${volume}`,
+    `t. ${volume}`,
+  ];
+
+  return patterns.some(
+    (pattern) =>
+      normalized.includes(
+        pattern,
+      ),
+  );
+}
+
+
+async function discoverArchiveIdentifiers(
+  volume: number,
+): Promise<string[]> {
+  const queries = [
+    `"Patrologia Graeca" AND "${volume}" AND mediatype:texts`,
+    `"Patrologiae cursus completus" AND "Series Graeca" AND "${volume}" AND mediatype:texts`,
+    `"Migne" AND "Patrologia" AND "${volume}" AND mediatype:texts`,
+  ];
+
+  const identifiers: string[] =
+    [];
+
+  for (const query of queries) {
+    try {
+      const url =
+        new URL(
+          "https://archive.org/advancedsearch.php",
+        );
+
+      url.searchParams.set(
+        "q",
+        query,
+      );
+      url.searchParams.append(
+        "fl[]",
+        "identifier",
+      );
+      url.searchParams.append(
+        "fl[]",
+        "title",
+      );
+      url.searchParams.append(
+        "fl[]",
+        "description",
+      );
+      url.searchParams.set(
+        "rows",
+        "50",
+      );
+      url.searchParams.set(
+        "page",
+        "1",
+      );
+      url.searchParams.set(
+        "output",
+        "json",
+      );
+
+      const response =
+        await fetch(
+          url,
+          {
+            headers: {
+              "User-Agent":
+                "OrthodoxAI-Patristics/1.0 (+https://orthodoxai.app)",
+            },
+
+            next: {
+              revalidate:
+                60 * 60 * 24 * 30,
+            },
+          },
+        );
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const data =
+        await response.json() as {
+          response?: {
+            docs?: ArchiveSearchDoc[];
+          };
+        };
+
+      for (
+        const doc of
+        data.response?.docs ?? []
+      ) {
+        if (!doc.identifier) {
+          continue;
+        }
+
+        const searchable =
+          [
+            doc.title ?? "",
+            doc.description ?? "",
+            doc.identifier,
+          ].join(" ");
+
+        if (
+          textContainsPgVolume(
+            searchable,
+            volume,
+          )
+        ) {
+          identifiers.push(
+            doc.identifier,
+          );
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return uniqueStrings(
+    identifiers,
+  );
+}
+
+
+async function sourceHasDjvuXml(
+  volume: number,
+  identifier: string,
+): Promise<
+  PgVolumeSource | null
+> {
+  try {
+    const metadataResponse =
+      await fetch(
+        `https://archive.org/metadata/${identifier}`,
+        {
+          headers: {
+            "User-Agent":
+              "OrthodoxAI-Patristics/1.0 (+https://orthodoxai.app)",
+          },
+
+          next: {
+            revalidate:
+              60 * 60 * 24 * 30,
+          },
+        },
+      );
+
+    if (!metadataResponse.ok) {
+      return null;
+    }
+
+    const metadata =
+      await metadataResponse.json() as {
+        files?: Array<{
+          name?: string;
+          format?: string;
+        }>;
+      };
+
+    const djvuXml =
+      metadata.files?.find(
+        (file) =>
+          Boolean(
+            file.name?.endsWith(
+              "_djvu.xml",
+            ),
+          ) ||
+          file.format ===
+            "DjVu XML",
+      );
+
+    if (!djvuXml?.name) {
+      return null;
+    }
+
+    return {
+      volume,
+      archiveIdentifier:
+        identifier,
+      djvuXmlUrl:
+        `https://archive.org/download/${identifier}/${encodeURIComponent(djvuXml.name)}`,
+      detailsUrl:
+        `https://archive.org/details/${identifier}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+
 export async function resolvePgVolumeSource(
   volume: number,
 ): Promise<
@@ -259,10 +469,9 @@ export async function resolvePgVolumeSource(
 
   /*
    * 2.
-   * Tek nakon toga probamo
-   * generičke fallback obrasce.
+   * Probamo poznate i generičke identifikatore.
    */
-  const identifiers =
+  const initialIdentifiers =
     uniqueStrings([
       ...catalogCandidates.map(
         (candidate) =>
@@ -277,7 +486,7 @@ export async function resolvePgVolumeSource(
 
   for (
     const identifier of
-    identifiers
+    initialIdentifiers
   ) {
     const source =
       buildSource(
@@ -293,6 +502,43 @@ export async function resolvePgVolumeSource(
 
 
     if (exists) {
+      sourceCache.set(
+        volume,
+        source,
+      );
+
+
+      return source;
+    }
+  }
+
+
+  /*
+   * 3.
+   * Ako poznati obrasci ne rade, dinamički
+   * pretražujemo Internet Archive metadata.
+   *
+   * Kandidat prihvatamo samo ako metadata API
+   * potvrdi da item stvarno ima DjVu XML OCR.
+   */
+  const discoveredIdentifiers =
+    await discoverArchiveIdentifiers(
+      volume,
+    );
+
+
+  for (
+    const identifier of
+    discoveredIdentifiers
+  ) {
+    const source =
+      await sourceHasDjvuXml(
+        volume,
+        identifier,
+      );
+
+
+    if (source) {
       sourceCache.set(
         volume,
         source,
