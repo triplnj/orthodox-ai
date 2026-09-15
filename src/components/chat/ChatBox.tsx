@@ -318,6 +318,20 @@ export function ChatBox({
           {subtitle}
         </p>
 
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700">
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-gray-500"
+            />
+            Patristic Research
+          </span>
+
+          <span>
+            Church Fathers · primary sources · verified references
+          </span>
+        </div>
+
         {remaining !== null && (
           <p className="mt-3 text-sm text-gray-500">
             Free questions remaining today:{" "}
