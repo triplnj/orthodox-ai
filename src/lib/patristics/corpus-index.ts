@@ -692,19 +692,55 @@ function tokenMatches(
     return true;
   }
 
-  const cyrillic =
+  if (
+    queryToken.length < 5 ||
+    aliasToken.length < 5
+  ) {
+    return false;
+  }
+
+  /*
+   * Serbian names are commonly inflected in both
+   * Cyrillic and Latin script:
+   *
+   * Maksim -> Maksima
+   * Ispovednik -> Ispovednika
+   *
+   * The old matcher allowed this only for Cyrillic,
+   * so a Serbian-Latin query missed an otherwise
+   * indexed Father and unnecessarily fell through to
+   * the AI resolver.
+   *
+   * Keep the match conservative: same script family
+   * and the first four characters must agree.
+   */
+  const queryCyrillic =
     /\p{Script=Cyrillic}/u.test(
       queryToken,
-    ) &&
+    );
+
+  const aliasCyrillic =
     /\p{Script=Cyrillic}/u.test(
       aliasToken,
     );
 
-  if (
-    !cyrillic ||
-    queryToken.length < 5 ||
-    aliasToken.length < 5
-  ) {
+  const queryLatin =
+    /\p{Script=Latin}/u.test(
+      queryToken,
+    );
+
+  const aliasLatin =
+    /\p{Script=Latin}/u.test(
+      aliasToken,
+    );
+
+  const sameScriptFamily =
+    (queryCyrillic &&
+      aliasCyrillic) ||
+    (queryLatin &&
+      aliasLatin);
+
+  if (!sameScriptFamily) {
     return false;
   }
 
