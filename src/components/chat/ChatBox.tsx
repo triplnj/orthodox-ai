@@ -318,7 +318,10 @@ export function ChatBox({
           {subtitle}
         </p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+        <div
+          aria-label="Patristic research capability"
+          className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500"
+        >
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700">
             <span
               aria-hidden="true"
