@@ -116,13 +116,18 @@ async function fetchPgDjvuXml(
             "OrthodoxAI-Patristics/1.0 (+https://orthodoxai.app)",
         },
 
-        next: {
-          revalidate:
-            60 *
-            60 *
-            24 *
-            30,
-        },
+        /*
+         * DjVu XML for a PG volume can be tens of MB.
+         * Never put it in the Next.js Data Cache: Vercel's
+         * cache item limit is much smaller than these files.
+         * We fetch it only for the current serverless request.
+         */
+        cache: "no-store",
+
+        signal:
+          AbortSignal.timeout(
+            20_000,
+          ),
       },
     );
 
