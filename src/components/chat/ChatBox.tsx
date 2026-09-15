@@ -12,7 +12,8 @@ type PatristicSource = {
   provider:
     | "VERIFIED_DB"
     | "CURATED_TEXT"
-    | "PATROLOGIA_GRAECA";
+    | "PATROLOGIA_GRAECA"
+    | "WEB_RESEARCH";
 
   authorName:
     | string
@@ -90,6 +91,13 @@ function sourceLabel(
     "VERIFIED_DB"
   ) {
     return "Verified patristic source";
+  }
+
+  if (
+    source.provider ===
+    "WEB_RESEARCH"
+  ) {
+    return "Live patristic research source";
   }
 
   return "Patristic source";
