@@ -51,6 +51,10 @@ export type PgPassageMatch = {
 };
 
 
+const MAX_BROAD_PG_VOLUMES = 4;
+const MAX_PG_SEARCH_MS = 60_000;
+
+
 function normalizeGreek(
   value: string,
 ) {
@@ -384,6 +388,34 @@ export async function searchPgPassages(
   }
 
 
+  /*
+   * A broad author-level PG search can become enormous for prolific
+   * Fathers (for example, Chrysostom spans many PG volumes and each OCR
+   * XML file can be tens of megabytes). In an interactive chat request,
+   * blindly scanning a large author range is both slow and less precise.
+   *
+   * Keep live PG retrieval for focused work-level searches and compact
+   * author ranges. When the plan is broad and large, return no PG result
+   * so the universal web-research provider can answer from targeted,
+   * reputable primary-text repositories instead of timing out the chat.
+   */
+  if (
+    !plan.hasSpecificWorks &&
+    plan.pgVolumes.length > MAX_BROAD_PG_VOLUMES
+  ) {
+    console.warn(
+      "PATRISTIC_PG_SKIPPED_BROAD_RANGE:",
+      {
+        authorName: plan.authorName,
+        pgVolumeCount: plan.pgVolumes.length,
+        maxBroadVolumes: MAX_BROAD_PG_VOLUMES,
+      },
+    );
+
+    return [];
+  }
+
+
   const greekSearch =
     await buildGreekSearchTerms(
       query,
@@ -423,11 +455,31 @@ export async function searchPgPassages(
     PgPassageMatch[] =
       [];
 
+  const searchStartedAt =
+    Date.now();
+
 
   for (
     const volume of
     plan.pgVolumes
   ) {
+    if (
+      Date.now() - searchStartedAt >
+      MAX_PG_SEARCH_MS
+    ) {
+      console.warn(
+        "PATRISTIC_PG_TIME_BUDGET_EXCEEDED:",
+        {
+          authorName: plan.authorName,
+          elapsedMs:
+            Date.now() - searchStartedAt,
+          collectedMatches: allResults.length,
+        },
+      );
+
+      break;
+    }
+
     let fetched:
       Awaited<
         ReturnType<
