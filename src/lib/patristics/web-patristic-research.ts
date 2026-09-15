@@ -288,9 +288,28 @@ ATTRIBUTION RULES:
 - Never invent PG/PL columns, chapter numbers, homily numbers, or quotations.
 - If exact wording cannot be securely established, provide a careful paraphrase and say that it is a paraphrase.
 - Search across language variants of the author's name and relevant theological terminology when needed.
-- Return a compact research dossier that includes: identified author, relevant works/passages, what each passage supports, source provenance, and direct source URLs.
-- Keep quotations short; the downstream answer model will synthesize the final response.
-- If evidence is weak or contradictory, state that explicitly.`;
+- If a work's authenticity or attribution is disputed, uncertain, pseudonymous, interpolated, or only traditionally attributed, state that explicitly.
+- Do not silently use a disputed or pseudo-epigraphic text as evidence for the named Father's own teaching.
+
+CLAIM-EVIDENCE LEDGER:
+- Organize the useful findings as a compact evidence ledger, with one substantive claim per entry.
+- For every claim include all of the following fields:
+  CLAIM: the narrow proposition the source actually supports.
+  EVIDENCE_TYPE: PRIMARY_TEXT, PRIMARY_TRANSLATION, SECONDARY_SCHOLARSHIP, or ATTRIBUTED_OR_DISPUTED.
+  WORK: the exact work title supported by the source.
+  PASSAGE_OR_REFERENCE: the exact homily, chapter, catechesis, section, PG/PL reference, or other locator only when it is actually established by the source; otherwise write "not securely established".
+  SUPPORT_SCOPE: one sentence explaining exactly what the passage/source supports and what should not be inferred beyond it.
+  SOURCE_URL: the direct source URL actually used.
+- Do not include a claim in the ledger unless at least one cited source directly supports it.
+- Do not turn general background knowledge into a source-backed claim.
+- Do not infer a second doctrine from a passage that only establishes the first.
+- Keep claims narrow enough that the downstream answer model can safely trace each final statement to evidence.
+- If the evidence is secondary only, say so in EVIDENCE_TYPE and SUPPORT_SCOPE.
+- If authenticity is disputed, use ATTRIBUTED_OR_DISPUTED and explain the uncertainty in SUPPORT_SCOPE.
+
+Return a compact dossier containing the identified author, the claim-evidence ledger, source provenance, and direct source URLs.
+Keep quotations short; the downstream answer model will synthesize the final response.
+If evidence is weak or contradictory, state that explicitly.`;
 
 async function runResearch(
   query: string,
@@ -380,6 +399,7 @@ export async function researchPatristicQuestionOnWeb(
       "",
       "This material was gathered at request time with web search.",
       "A source-quality gate has already removed blocked and low-provenance evidence URLs.",
+      "The dossier is organized for claim-level grounding: final claims should stay within the SUPPORT_SCOPE of the corresponding evidence entry.",
       "Treat this as research evidence, not as automatically verified primary-source text.",
       "Prefer primary-source passages and source provenance over secondary summaries.",
       "Do not invent references not present in this dossier.",
