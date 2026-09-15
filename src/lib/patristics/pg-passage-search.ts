@@ -363,6 +363,17 @@ export async function searchPgPassages(
       query,
     );
 
+  console.log(
+    "PATRISTIC_PG_PLAN:",
+    {
+      authorName: plan.authorName,
+      pgVolumes: plan.pgVolumes,
+      hasSpecificWorks: plan.hasSpecificWorks,
+      routingVerified: plan.routingVerified,
+      authorSource: plan.authorSource,
+    },
+  );
+
 
   if (
     !plan.hasSpecificAuthor ||
@@ -391,6 +402,14 @@ export async function searchPgPassages(
       ),
     ]);
 
+
+  console.log(
+    "PATRISTIC_PG_TERMS:",
+    {
+      concepts: greekSearch.concepts,
+      terms,
+    },
+  );
 
   if (
     terms.length === 0 ||
@@ -422,14 +441,39 @@ export async function searchPgPassages(
         await fetchPgDjvuXml(
           volume,
         );
-    } catch {
+    } catch (error) {
+      console.error(
+        "PATRISTIC_PG_FETCH_ERROR:",
+        {
+          volume,
+          error:
+            error instanceof Error
+              ? error.message
+              : String(error),
+        },
+      );
       continue;
     }
 
 
     if (!fetched) {
+      console.warn(
+        "PATRISTIC_PG_NO_SOURCE:",
+        { volume },
+      );
       continue;
     }
+
+    console.log(
+      "PATRISTIC_PG_FETCH_OK:",
+      {
+        volume,
+        archiveIdentifier:
+          fetched.archiveIdentifier,
+        xmlChars:
+          fetched.xml.length,
+      },
+    );
 
 
     const {
@@ -445,6 +489,22 @@ export async function searchPgPassages(
         xml,
         terms,
       );
+
+    console.log(
+      "PATRISTIC_PG_RAW_MATCHES:",
+      {
+        volume,
+        count: rawMatches.length,
+        sample:
+          rawMatches.slice(0, 3).map(
+            (match) => ({
+              scanPage: match.scanPage,
+              matchedTerms:
+                match.matchedTerms,
+            }),
+          ),
+      },
+    );
 
 
     /*
@@ -629,6 +689,11 @@ export async function searchPgPassages(
     }
   }
 
+
+  console.log(
+    "PATRISTIC_PG_TOTAL_BEFORE_FILTER:",
+    { count: allResults.length },
+  );
 
   const conceptCount =
     greekSearch.concepts.length;
