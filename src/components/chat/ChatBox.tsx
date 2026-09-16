@@ -318,6 +318,7 @@ export function ChatBox({
           {subtitle}
         </p>
 
+        {/* Quietly surfaces the app's patristic research capability. */}
         <div
           aria-label="Patristic research capability"
           className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500"
