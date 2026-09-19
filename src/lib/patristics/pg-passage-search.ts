@@ -750,14 +750,24 @@ export async function searchPgPassages(
   const conceptCount =
     greekSearch.concepts.length;
 
+  const isTrinitySearch =
+    greekSearch.concepts.includes(
+      "Trinity",
+    );
+
   const minimumMatchedTerms =
-    plan.hasSpecificWorks ||
-    conceptCount <= 1
-      ? 1
-      : Math.min(
+    isTrinitySearch
+      ? Math.min(
           2,
           terms.length,
-        );
+        )
+      : plan.hasSpecificWorks ||
+          conceptCount <= 1
+        ? 1
+        : Math.min(
+            2,
+            terms.length,
+          );
 
   return allResults
     .filter(
