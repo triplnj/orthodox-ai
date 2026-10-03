@@ -27,21 +27,12 @@ export type PatristicDiscoveryCandidate = {
  * discovery.
  */
 export async function discoverPatristicSources(
-  request:
-    PatristicDiscoveryRequest,
-): Promise<
-  PatristicDiscoveryCandidate[]
-> {
-  console.log(
-    "PATRISTIC_WEB_DISCOVERY_DISABLED:",
-    {
-      query:
-        request.query,
-
-      language:
-        request.language,
-    },
-  );
+  request: PatristicDiscoveryRequest,
+): Promise<PatristicDiscoveryCandidate[]> {
+  console.log("PATRISTIC_WEB_DISCOVERY_DISABLED:", {
+    query: request.query,
+    language: request.language,
+  });
 
   return [];
 }
