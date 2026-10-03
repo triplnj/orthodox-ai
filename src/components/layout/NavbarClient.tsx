@@ -42,15 +42,13 @@ const primaryNavItems = [
     href: "/scripture",
     label: "Scripture",
   },
-  { href: "/blog", 
-    label: "Blog" }
+  {
+    href: "/blog",
+    label: "Blog",
+  },
 ];
 
 const secondaryNavItems = [
-    {
-  href: "/confession",
-  label: "Confession",
-},
   {
     href: "/journal",
     label: "Journal",
@@ -66,7 +64,7 @@ const secondaryNavItems = [
   {
     href: "/settings",
     label: "Settings",
-    },
+  },
   {
     href: "/pricing",
     label: "Pricing",
@@ -136,13 +134,13 @@ export function NavbarClient({ user, isPro }: NavbarClientProps) {
             )}
 
             {!isPro && (
-            <Link
-              href="/pricing"
-              className="rounded-lg bg-gray-950 px-4 py-2 text-sm font-semibold text-white"
-            >
-              Full Access
-            </Link>
-          )}
+              <Link
+                href="/pricing"
+                className="rounded-lg bg-gray-950 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Full Access
+              </Link>
+            )}
           </div>
 
           <button
