@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getBlogAdminUser } from "@/lib/blogAdmin";
 import { slugify } from "@/lib/slugify";
+import { BlogContentEditor } from "@/components/blog/BlogContentEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +146,7 @@ export default async function EditBlogPostPage({
         Edit blog post
       </h1>
 
-      <form action={updateBlogPost} className="mt-10 space-y-6">
+      <form action={updateBlogPost} className="mt-10 space-y-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
         <input type="hidden" name="id" value={post.id} />
 
         <div>
@@ -156,7 +157,7 @@ export default async function EditBlogPostPage({
             name="title"
             required
             defaultValue={post.title}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-950"
+            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
           />
         </div>
 
@@ -168,7 +169,7 @@ export default async function EditBlogPostPage({
             name="slug"
             required
             defaultValue={post.slug}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-950"
+            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
           />
         </div>
 
@@ -179,7 +180,7 @@ export default async function EditBlogPostPage({
           <input
             name="category"
             defaultValue={post.category ?? ""}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-950"
+            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
           />
         </div>
 
@@ -191,7 +192,7 @@ export default async function EditBlogPostPage({
             name="excerpt"
             rows={3}
             defaultValue={post.excerpt ?? ""}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-950"
+            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
           />
         </div>
 
@@ -199,13 +200,10 @@ export default async function EditBlogPostPage({
           <label className="block text-sm font-semibold text-gray-800">
             Content
           </label>
-          <textarea
-            name="content"
-            required
-            rows={18}
-            defaultValue={post.content}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm leading-6 outline-none focus:border-gray-950"
-          />
+          <p className="mt-1 text-xs leading-5 text-gray-500">
+            Paste from Word or Google Docs here. Basic formatting such as headings, paragraphs, lists, bold and italic text will be kept.
+          </p>
+          <BlogContentEditor name="content" defaultValue={post.content} />
         </div>
 
         <div>
@@ -215,7 +213,7 @@ export default async function EditBlogPostPage({
           <select
             name="status"
             defaultValue={post.status}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-950"
+            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
           >
             <option value="DRAFT">Draft</option>
             <option value="PUBLISHED">Published</option>
