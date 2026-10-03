@@ -68,7 +68,7 @@ export default async function NewBlogPostPage() {
         ← Back to blog admin
       </Link>
 
-      <h1 className="mt-6 text-4xl font-bold tracking-tight text-white">
+      <h1 className="mt-6 text-4xl font-bold tracking-tight text-gray-950">
         New blog post
       </h1>
 
