@@ -1,4 +1,6 @@
+import { getWorkflowMetadata } from "workflow";
 import { prisma } from "@/lib/prisma";
+import { claimPatristicJob, finishPatristicJob } from "@/lib/patristics/job-claims";
 
 import {
   discoverPatristicSourceUrls,
@@ -234,71 +236,10 @@ export async function patristicDiscoveryWorkflow(
 }
 
 
-async function markJobProcessingStep(
-  jobId: string,
-) {
+async function markJobProcessingStep(jobId: string) {
   "use step";
-
-  const job =
-    await prisma
-      .patristicDiscoveryJob
-      .findUnique({
-        where: {
-          id: jobId,
-        },
-      });
-
-
-  if (!job) {
-    return false;
-  }
-
-
-  if (
-    job.status ===
-      "COMPLETED" ||
-    job.status ===
-      "FAILED"
-  ) {
-    return false;
-  }
-
-
-  if (
-    job.status ===
-    "PENDING"
-  ) {
-    await prisma
-      .patristicDiscoveryJob
-      .update({
-        where: {
-          id: jobId,
-        },
-
-        data: {
-          status:
-            "PROCESSING",
-
-          attempts: {
-            increment: 1,
-          },
-
-          startedAt:
-            new Date(),
-
-          finishedAt:
-            null,
-
-          error:
-            null,
-        },
-      });
-  }
-
-
-  return true;
+  return claimPatristicJob(jobId, getWorkflowMetadata().workflowRunId, true);
 }
-
 
 async function discoverSourcesStep(
   jobId: string,
@@ -707,60 +648,12 @@ async function embedQuoteStep(
 }
 
 
-async function markJobCompletedStep(
-  jobId: string,
-) {
+async function markJobCompletedStep(jobId: string) {
   "use step";
-
-  await prisma
-    .patristicDiscoveryJob
-    .update({
-      where: {
-        id: jobId,
-      },
-
-      data: {
-        status:
-          "COMPLETED",
-
-        finishedAt:
-          new Date(),
-
-        error:
-          null,
-      },
-    });
+  await finishPatristicJob(jobId, getWorkflowMetadata().workflowRunId);
 }
 
-
-async function markJobFailedStep(
-  jobId: string,
-  error: string,
-) {
+async function markJobFailedStep(jobId: string, error: string) {
   "use step";
-
-  await prisma
-    .patristicDiscoveryJob
-    .updateMany({
-      where: {
-        id: jobId,
-
-        status: {
-          in: [
-            "PENDING",
-            "PROCESSING",
-          ],
-        },
-      },
-
-      data: {
-        status:
-          "FAILED",
-
-        error,
-
-        finishedAt:
-          new Date(),
-      },
-    });
+  await finishPatristicJob(jobId, getWorkflowMetadata().workflowRunId, error);
 }

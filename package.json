@@ -10,6 +10,7 @@
     "test:blog-security": "node --test tests/blog-security.test.mjs",
     "test:openai-initialization": "node --test tests/openai-initialization.test.mjs",
     "test:stripe-initialization": "node --test tests/stripe-initialization.test.mjs",
+    "test:phase2-security": "node --test --test-timeout=30000 --test-concurrency=1 tests/phase2-security.test.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

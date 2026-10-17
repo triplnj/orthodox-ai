@@ -1,3 +1,5 @@
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
 import { NextResponse } from "next/server";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import type { ChatContextKey } from "@/lib/ai/chatContexts";
@@ -12,7 +14,7 @@ function isValidReviewToken(token: string | null) {
   return token === expectedToken;
 }
 
-export async function POST(req: Request) {
+async function handleAiRequest(req: Request) {
   try {
     const body = await req.json();
 
@@ -56,6 +58,8 @@ Answer as OrthodoxAI normally would, but be especially careful to demonstrate:
       answer: result.answer,
     });
   } catch (error) {
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
     console.error("REVIEW_CHAT_API_ERROR:", error);
 
     return NextResponse.json(
@@ -64,3 +68,4 @@ Answer as OrthodoxAI normally would, but be especially careful to demonstrate:
     );
   }
 }
+export const POST = secureAiRoute(handleAiRequest, "review");

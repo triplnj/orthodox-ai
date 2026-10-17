@@ -1,5 +1,5 @@
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import {
-  NextRequest,
   NextResponse,
 } from "next/server";
 
@@ -8,28 +8,8 @@ import {
 } from "@/lib/patristics/repair-corrupted-quotes";
 
 
-export async function POST(
-  request: NextRequest,
-) {
-  const secret =
-    request.headers.get(
-      "x-patristics-secret",
-    );
-
-  if (
-    secret !==
-    process.env.PATRISTICS_SECRET
+async function handleResearch(
   ) {
-    return NextResponse.json(
-      {
-        error:
-          "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
 
 
   try {
@@ -58,3 +38,4 @@ export async function POST(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch);

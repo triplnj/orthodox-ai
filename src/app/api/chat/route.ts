@@ -1,3 +1,5 @@
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
 import {
   NextResponse,
 } from "next/server";
@@ -10,10 +12,6 @@ import {
   generateOrthodoxAnswer,
 } from "@/lib/ai/chatService";
 
-import {
-  canUseChat,
-  logUsage,
-} from "@/lib/usage";
 
 import {
   isProUser,
@@ -35,8 +33,9 @@ import {
   buildPatristicResearchContext,
 } from "@/lib/patristics/build-patristic-research-context";
 
-export async function POST(
+async function handleAiRequest(
   req: Request,
+  reservation: { id: string; remaining: number },
 ) {
   try {
     const user =
@@ -91,28 +90,6 @@ export async function POST(
 
     const normalizedMessage =
       message.trim();
-
-    const permission =
-      await canUseChat(
-        user,
-      );
-
-    if (
-      !permission.allowed
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            permission.reason,
-
-          upgradeRequired:
-            true,
-        },
-        {
-          status: 403,
-        },
-      );
-    }
 
     await prisma.chatMessage.create({
       data: {
@@ -204,17 +181,12 @@ ${extraContext ?? "No additional page context provided."}
       },
     });
 
-    await logUsage(
-      user.id,
-      "chat",
-    );
-
     return NextResponse.json({
       answer:
         finalAnswer,
 
       remaining:
-        permission.remaining,
+        reservation.remaining,
 
       plan:
         user.plan,
@@ -255,6 +227,8 @@ ${extraContext ?? "No additional page context provided."}
   } catch (
     error
   ) {
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
     console.error(
       "CHAT_API_ERROR:",
       error,
@@ -271,3 +245,5 @@ ${extraContext ?? "No additional page context provided."}
     );
   }
 }
+
+export const POST = secureAiRoute(handleAiRequest, "chat");

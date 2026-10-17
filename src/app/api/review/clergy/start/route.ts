@@ -1,3 +1,5 @@
+import { withAiOperation } from "@/lib/ai/operationLimits";
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/session";
@@ -23,43 +25,47 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const reviewEmail =
-      process.env.REVIEW_CLERGY_USER_EMAIL ?? "clergy-review@orthodoxai.app";
+    return await withAiOperation("review:clergy-start", "review", undefined, async () => {
+      const reviewEmail =
+        process.env.REVIEW_CLERGY_USER_EMAIL ?? "clergy-review@orthodoxai.app";
 
-    const reviewUser = await prisma.user.upsert({
-      where: {
-        email: reviewEmail,
-      },
-      update: {
-        name: "Clergy Review",
-        plan: "PRO",
-        subscriptionStatus: "active",
-        emailVerified: new Date(),
-        onboardingCompleted: true,
-        spiritualGoal: "review OrthodoxAI for theological and pastoral safety",
-        experienceLevel: "advanced",
-        dailyTime: "15 minutes",
-      },
-      create: {
-        email: reviewEmail,
-        name: "Clergy Review",
-        plan: "PRO",
-        subscriptionStatus: "active",
-        emailVerified: new Date(),
-        onboardingCompleted: true,
-        spiritualGoal: "review OrthodoxAI for theological and pastoral safety",
-        experienceLevel: "advanced",
-        dailyTime: "15 minutes",
-      },
-      select: {
-        id: true,
-      },
+      const reviewUser = await prisma.user.upsert({
+        where: {
+          email: reviewEmail,
+        },
+        update: {
+          name: "Clergy Review",
+          plan: "PRO",
+          subscriptionStatus: "active",
+          emailVerified: new Date(),
+          onboardingCompleted: true,
+          spiritualGoal: "review OrthodoxAI for theological and pastoral safety",
+          experienceLevel: "advanced",
+          dailyTime: "15 minutes",
+        },
+        create: {
+          email: reviewEmail,
+          name: "Clergy Review",
+          plan: "PRO",
+          subscriptionStatus: "active",
+          emailVerified: new Date(),
+          onboardingCompleted: true,
+          spiritualGoal: "review OrthodoxAI for theological and pastoral safety",
+          experienceLevel: "advanced",
+          dailyTime: "15 minutes",
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      await createSession(reviewUser.id);
+
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     });
-
-    await createSession(reviewUser.id);
-
-    return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error) {
+    const response = aiSecurityResponse(error);
+    if (response) return response;
     console.error("CLERGY_REVIEW_START_ERROR:", error);
 
     return NextResponse.json(

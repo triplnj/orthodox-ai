@@ -1,10 +1,12 @@
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
 import { NextResponse } from "next/server";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 
-export async function POST(req: Request) {
+async function handleAiRequest(req: Request) {
   try {
     const user = await getCurrentUser();
 
@@ -61,6 +63,8 @@ Requirements:
       plan: result.answer,
     });
   } catch (error) {
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
     console.error("SCRIPTURE_PLAN_API_ERROR:", error);
 
     return NextResponse.json(
@@ -69,3 +73,4 @@ Requirements:
     );
   }
 }
+export const POST = secureAiRoute(handleAiRequest, "scripture-plan");

@@ -44,6 +44,7 @@ function harness({ failConstruction = false } = {}) {
     "server-only": {},
     openai: { __esModule: true, default: MockOpenAI },
     "@/lib/prisma": { prisma: database },
+    "@/lib/session": { getSessionUser: async () => null },
     // PDF parsing is unrelated to initialization and must not load native workers.
     "pdf-parse": { PDFParse: class {} },
     "pdf-parse/worker": { CanvasFactory: class {} },

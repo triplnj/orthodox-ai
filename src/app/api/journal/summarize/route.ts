@@ -1,10 +1,13 @@
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
+import { AiInputError } from "@/lib/ai/requestSecurity";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 
-export async function POST(req: Request) {
+async function handleAiRequest(req: Request) {
   try {
     const user = await getCurrentUser();
 
@@ -49,6 +52,8 @@ export async function POST(req: Request) {
       );
     }
 
+    if (entry.content.length > 40_000) throw new AiInputError("Journal entry is too long to summarize.", 413);
+
     const prompt = `
 Help organize this Orthodox Christian journal entry.
 
@@ -91,6 +96,8 @@ Important:
       summary: result.answer,
     });
   } catch (error) {
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
     console.error("JOURNAL_SUMMARY_ERROR:", error);
 
     return NextResponse.json(
@@ -99,3 +106,4 @@ Important:
     );
   }
 }
+export const POST = secureAiRoute(handleAiRequest, "journal-summary");

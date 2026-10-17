@@ -1,3 +1,4 @@
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import {
   NextRequest,
   NextResponse,
@@ -9,28 +10,9 @@ import {
 
 export const runtime = "nodejs";
 
-export async function POST(
+async function handleResearch(
   request: NextRequest,
 ) {
-  const secret =
-    request.headers.get(
-      "x-patristics-secret",
-    );
-
-  if (
-    !process.env.PATRISTICS_SECRET ||
-    secret !==
-      process.env.PATRISTICS_SECRET
-  ) {
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
 
   const body =
     await request.json();
@@ -83,3 +65,4 @@ export async function POST(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch);

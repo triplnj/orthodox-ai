@@ -61,6 +61,7 @@ model UsageLog {
   @@index([userId])
   @@index([feature])
   @@index([createdAt])
+  @@index([userId, feature, createdAt])
   @@map("usage_logs")
 }
 
@@ -187,8 +188,23 @@ model PatristicDiscoveryJob {
   createdAt  DateTime                    @default(now())
   startedAt  DateTime?
   finishedAt DateTime?
+  claimToken String?
+  dispatchedAt DateTime?
 
   @@index([status, createdAt])
+}
+
+model AiReservation {
+  id         String   @id @default(cuid())
+  subject    String
+  feature    String
+  status     String   @default("RUNNING")
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  finishedAt DateTime?
+
+  @@index([subject, createdAt])
+  @@index([subject, status, expiresAt])
 }
 
 enum Plan {

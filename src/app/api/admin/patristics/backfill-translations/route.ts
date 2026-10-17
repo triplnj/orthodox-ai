@@ -1,25 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
+import { NextResponse } from "next/server";
 
 import { backfillPatristicTranslations } from "@/lib/patristics/backfill-translations";
 
-export async function POST(request: NextRequest) {
-  const secret = request.headers.get(
-    "x-patristics-secret",
-  );
-
-  if (
-    !process.env.PATRISTICS_SECRET ||
-    secret !== process.env.PATRISTICS_SECRET
-  ) {
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
+async function handleResearch() {
 
   try {
     const result =
@@ -42,3 +26,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch);

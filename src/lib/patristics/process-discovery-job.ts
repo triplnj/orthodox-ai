@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { claimPatristicJob, finishPatristicJob } from "./job-claims";
 import { prisma } from "@/lib/prisma";
 
 import { discoverAndSavePatristicQuotes } from "./discover-and-save";
@@ -21,31 +23,9 @@ export async function processPatristicDiscoveryJob(
     };
   }
 
-  if (
-    job.status !== "PENDING" &&
-    job.status !== "PROCESSING"
-  ) {
-    return {
-      processed: false,
-      reason: "JOB_NOT_PROCESSABLE",
-      status: job.status,
-    };
-  }
-
-  if (job.status === "PENDING") {
-    await prisma.patristicDiscoveryJob.update({
-      where: {
-        id: job.id,
-      },
-      data: {
-        status: "PROCESSING",
-        attempts: {
-          increment: 1,
-        },
-        startedAt: new Date(),
-        error: null,
-      },
-    });
+  const owner = randomUUID();
+  if (!(await claimPatristicJob(jobId, owner))) {
+    return { processed: false, reason: "JOB_NOT_PROCESSABLE" };
   }
 
   try {
@@ -88,15 +68,7 @@ export async function processPatristicDiscoveryJob(
       }
     }
 
-    await prisma.patristicDiscoveryJob.update({
-      where: {
-        id: job.id,
-      },
-      data: {
-        status: "COMPLETED",
-        finishedAt: new Date(),
-      },
-    });
+    await finishPatristicJob(job.id, owner);
 
     return {
       processed: true,
@@ -112,16 +84,7 @@ export async function processPatristicDiscoveryJob(
         ? error.message
         : "Unknown discovery error.";
 
-    await prisma.patristicDiscoveryJob.update({
-      where: {
-        id: job.id,
-      },
-      data: {
-        status: "FAILED",
-        error: message,
-        finishedAt: new Date(),
-      },
-    });
+    await finishPatristicJob(job.id, owner, message);
 
     throw error;
   }

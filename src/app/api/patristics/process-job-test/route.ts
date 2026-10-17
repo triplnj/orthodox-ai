@@ -1,19 +1,10 @@
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import { NextResponse } from "next/server";
-
-import { getCurrentUser } from "@/lib/auth";
 import { processPatristicDiscoveryJob } from "@/lib/patristics/process-discovery-job";
 
-export async function POST(
+async function handleResearch(
   request: Request,
 ) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized." },
-      { status: 401 },
-    );
-  }
 
   try {
     const body = await request.json();
@@ -57,3 +48,4 @@ export async function POST(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch, true);

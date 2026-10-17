@@ -1,18 +1,9 @@
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import { NextResponse } from "next/server";
-
-import { getCurrentUser } from "@/lib/auth";
 import { detectPatristicLanguage } from "@/lib/patristics/detect-language";
 import { enqueuePatristicDiscovery } from "@/lib/patristics/enqueue-discovery";
 
-export async function POST(req: Request) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized." },
-      { status: 401 },
-    );
-  }
+async function handleResearch(req: Request) {
 
   const body = await req.json();
 
@@ -42,3 +33,4 @@ export async function POST(req: Request) {
     job,
   });
 }
+export const POST = secureResearchRoute(handleResearch, true);
