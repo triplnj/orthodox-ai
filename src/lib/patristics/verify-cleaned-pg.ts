@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
 import type {
   CleanedPgPassage,
@@ -9,11 +9,7 @@ import {
 } from "./pg-page-image";
 
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env.OPENAI_API_KEY,
-  });
+
 
 
 const PG_ARCHIVE_IDENTIFIERS: Record<
@@ -124,7 +120,7 @@ async function verifyOne(
 
 
   const response =
-    await openai.responses.create({
+    await getOpenAI().responses.create({
       model: "gpt-4.1",
 
       input: [

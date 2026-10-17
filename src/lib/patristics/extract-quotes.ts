@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 import { zodTextFormat } from "openai/helpers/zod";
 
 import {
@@ -6,9 +6,7 @@ import {
   type ExtractedQuote,
 } from "./types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 export async function extractPatristicQuotes(
   sourceText: string,
@@ -27,7 +25,7 @@ export async function extractPatristicQuotes(
     sourceText.slice(0, 120_000);
 
   const response =
-    await openai.responses.parse({
+    await getOpenAI().responses.parse({
       model,
 
       input: [
@@ -130,7 +128,7 @@ export async function extractRelevantPatristicQuotes(
     sourceText.slice(0, 120_000);
 
   const response =
-    await openai.responses.parse({
+    await getOpenAI().responses.parse({
       model,
 
       input: [

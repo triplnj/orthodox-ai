@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 
@@ -33,9 +33,7 @@ import type {
 } from "./verify-discovery";
 
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 
 const ParallelWitnessSchema = z.object({
@@ -127,7 +125,7 @@ async function verifyParallelWitness(
 
 
   const response =
-    await openai.responses.parse({
+    await getOpenAI().responses.parse({
       model,
 
       input: [

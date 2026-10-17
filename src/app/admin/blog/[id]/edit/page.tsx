@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getBlogAdminUser } from "@/lib/blogAdmin";
-import { slugify } from "@/lib/slugify";
+import { renderBlogContent } from "@/lib/blogContent";
+import { updateBlogPost, deleteBlogPost } from "../../actions";
 import { BlogContentEditor } from "@/components/blog/BlogContentEditor";
 
 export const dynamic = "force-dynamic";
@@ -13,89 +14,8 @@ type EditBlogPostPageProps = {
   }>;
 };
 
-async function updateBlogPost(formData: FormData) {
-  "use server";
-
-  const adminUser = await getBlogAdminUser();
-
-  if (!adminUser) {
-    redirect("/login");
-  }
-
-  const id = String(formData.get("id") ?? "");
-  const title = String(formData.get("title") ?? "").trim();
-  const rawSlug = String(formData.get("slug") ?? "").trim();
-  const excerpt = String(formData.get("excerpt") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
-  const status = String(formData.get("status") ?? "DRAFT");
-
-  if (!id || !title || !content) {
-    throw new Error("Missing required fields.");
-  }
-
-  const existingPost = await prisma.blogPost.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      publishedAt: true,
-    },
-  });
-
-  if (!existingPost) {
-    throw new Error("Blog post not found.");
-  }
-
-  const slug = rawSlug ? slugify(rawSlug) : slugify(title);
-
-  await prisma.blogPost.update({
-    where: {
-      id,
-    },
-    data: {
-      title,
-      slug,
-      excerpt: excerpt || null,
-      category: category || null,
-      content,
-      status: status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
-      publishedAt:
-        status === "PUBLISHED"
-          ? existingPost.publishedAt ?? new Date()
-          : null,
-      authorEmail: adminUser.email,
-    },
-  });
-
-  redirect("/admin/blog");
-}
-
-async function deleteBlogPost(formData: FormData) {
-  "use server";
-
-  const adminUser = await getBlogAdminUser();
-
-  if (!adminUser) {
-    redirect("/login");
-  }
-
-  const id = String(formData.get("id") ?? "");
-
-  if (!id) {
-    throw new Error("Missing blog post id.");
-  }
-
-  await prisma.blogPost.delete({
-    where: {
-      id,
-    },
-  });
-
-  redirect("/admin/blog");
-}
-
 export async function generateMetadata({ params }: EditBlogPostPageProps) {
+  if (!(await getBlogAdminUser())) redirect("/login");
   const { id } = await params;
 
   const post = await prisma.blogPost.findUnique({
@@ -203,7 +123,7 @@ export default async function EditBlogPostPage({
           <p className="mt-1 text-xs leading-5 text-gray-500">
             Paste from Word or Google Docs here. Basic formatting such as headings, paragraphs, lists, bold and italic text will be kept.
           </p>
-          <BlogContentEditor name="content" defaultValue={post.content} />
+          <BlogContentEditor name="content" defaultValue={renderBlogContent(post.content)} />
         </div>
 
         <div>

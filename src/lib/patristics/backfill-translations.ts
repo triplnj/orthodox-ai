@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 import { zodTextFormat } from "openai/helpers/zod";
 
 import { prisma } from "@/lib/prisma";
@@ -7,9 +7,7 @@ import {
   type BackfillTranslation,
 } from "./types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 export async function translateQuote(
   originalText: string,
@@ -23,7 +21,7 @@ export async function translateQuote(
     );
   }
 
-  const response = await openai.responses.parse({
+  const response = await getOpenAI().responses.parse({
     model,
 
     input: [

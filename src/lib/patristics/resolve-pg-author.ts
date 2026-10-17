@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
 import {
   findPatristicAuthor,
@@ -6,9 +6,7 @@ import {
 } from "./corpus-index";
 
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 
 export type ResolvedPgAuthor = {
@@ -137,7 +135,7 @@ export async function resolvePgAuthor(
    * samo zato što ih je AI naveo.
    */
   const response =
-    await openai.chat.completions.create({
+    await getOpenAI().chat.completions.create({
       model:
         "gpt-4.1-mini",
 

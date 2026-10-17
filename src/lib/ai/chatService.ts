@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
 import {
   orthodoxSystemPrompt,
@@ -9,12 +9,7 @@ import {
   type ChatContextKey,
 } from "./chatContexts";
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env
-        .OPENAI_API_KEY,
-  });
+
 
 type GenerateOrthodoxAnswerInput = {
   userMessage: string;
@@ -119,7 +114,7 @@ STRICT RULES:
         `.trim();
 
   const completion =
-    await openai.chat.completions.create({
+    await getOpenAI().chat.completions.create({
       model:
         "gpt-4.1-mini",
 

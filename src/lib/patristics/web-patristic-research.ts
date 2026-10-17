@@ -1,8 +1,6 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 export type WebPatristicResearchSource = {
   sourceUrl: string;
@@ -315,7 +313,7 @@ async function runResearch(
   query: string,
   allowedDomains?: string[],
 ) {
-  return openai.responses.create({
+  return getOpenAI().responses.create({
     model: "gpt-5-mini",
     tools: [
       {

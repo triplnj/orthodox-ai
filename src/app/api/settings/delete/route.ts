@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { destroySession } from "@/lib/session";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export async function DELETE(req: Request) {
   try {
@@ -47,7 +47,7 @@ export async function DELETE(req: Request) {
 
     if (dbUser.subscriptionId) {
       try {
-        const subscription = await stripe.subscriptions.retrieve(
+        const subscription = await getStripe().subscriptions.retrieve(
           dbUser.subscriptionId
         );
 
@@ -60,7 +60,7 @@ export async function DELETE(req: Request) {
         ];
 
         if (cancellableStatuses.includes(subscription.status)) {
-          await stripe.subscriptions.cancel(dbUser.subscriptionId);
+          await getStripe().subscriptions.cancel(dbUser.subscriptionId);
         }
       } catch (stripeError) {
         console.error("STRIPE_CANCEL_BEFORE_DELETE_ERROR:", stripeError);

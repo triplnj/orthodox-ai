@@ -1,20 +1,22 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/session";
 
 export async function getBlogAdminUser() {
-  const currentUser = await getCurrentUser();
+  // Read the current database user on every request/action. Never authorize
+  // from a submitted email, an email allowlist, or a cached session role.
+  const currentUser = await getSessionUser();
 
-  if (!currentUser?.email) {
+  if (!currentUser?.emailVerified) {
     return null;
   }
 
-  const adminEmails = (process.env.BLOG_ADMIN_EMAILS ?? "")
+  const adminUserIds = (process.env.BLOG_ADMIN_USER_IDS ?? "")
     .split(",")
-    .map((email) => email.trim().toLowerCase())
+    .map((id) => id.trim())
     .filter(Boolean);
 
-  if (!adminEmails.includes(currentUser.email.toLowerCase())) {
+  if (!adminUserIds.includes(currentUser.id)) {
     return null;
   }
 
-  return currentUser;
+  return { id: currentUser.id, email: currentUser.email };
 }

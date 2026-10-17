@@ -1,53 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getBlogAdminUser } from "@/lib/blogAdmin";
-import { slugify } from "@/lib/slugify";
+import { createBlogPost } from "../actions";
 import { BlogContentEditor } from "@/components/blog/BlogContentEditor";
 
 export const dynamic = "force-dynamic";
-
-async function createBlogPost(formData: FormData) {
-  "use server";
-
-  const adminUser = await getBlogAdminUser();
-
-  if (!adminUser) {
-    redirect("/login");
-  }
-
-  const title = String(formData.get("title") ?? "").trim();
-  const rawSlug = String(formData.get("slug") ?? "").trim();
-  const excerpt = String(formData.get("excerpt") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
-  const status = String(formData.get("status") ?? "DRAFT");
-
-  if (!title || !content) {
-    throw new Error("Title and content are required.");
-  }
-
-  const slug = rawSlug ? slugify(rawSlug) : slugify(title);
-
-  if (!slug) {
-    throw new Error("Slug could not be generated.");
-  }
-
-  await prisma.blogPost.create({
-    data: {
-      title,
-      slug,
-      excerpt: excerpt || null,
-      category: category || null,
-      content,
-      status: status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
-      publishedAt: status === "PUBLISHED" ? new Date() : null,
-      authorEmail: adminUser.email,
-    },
-  });
-
-  redirect("/admin/blog");
-}
 
 export const metadata = {
   title: "New Blog Post | OrthodoxAI",

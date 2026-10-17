@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { sanitizeBlogPaste } from "@/app/admin/blog/actions";
 
 type BlogContentEditorProps = {
   name: string;
@@ -13,6 +14,7 @@ export function BlogContentEditor({
 }: BlogContentEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [html, setHtml] = useState(defaultValue ?? "");
+  const [pasteError, setPasteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (editorRef.current && defaultValue) {
@@ -28,6 +30,31 @@ export function BlogContentEditor({
     document.execCommand(command, false, value);
     syncHtml();
     editorRef.current?.focus();
+  }
+
+  async function handlePaste(event: React.ClipboardEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setPasteError(null);
+    const richText = event.clipboardData.getData("text/html");
+    const plainText = event.clipboardData.getData("text/plain");
+    const selection = window.getSelection();
+    const range = selection?.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
+
+    try {
+      const safeHtml = richText ? await sanitizeBlogPaste(richText) : null;
+      if (!editorRef.current || !range || !editorRef.current.contains(range.commonAncestorContainer)) return;
+      editorRef.current.focus();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      if (safeHtml !== null) {
+        document.execCommand("insertHTML", false, safeHtml);
+      } else {
+        document.execCommand("insertText", false, plainText);
+      }
+      syncHtml();
+    } catch {
+      setPasteError("Could not safely paste this content. Please try again.");
+    }
   }
 
   return (
@@ -90,11 +117,17 @@ export function BlogContentEditor({
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
+        role="textbox"
+        aria-label="Blog content"
+        aria-multiline="true"
+        onPaste={handlePaste}
+        onDrop={(event) => event.preventDefault()}
         onInput={syncHtml}
         onBlur={syncHtml}
         className="min-h-[420px] w-full bg-white px-5 py-4 text-base leading-8 text-gray-900 outline-none prose-content-editor"
         data-placeholder="Paste or write your blog post here. Formatting from Word or Google Docs will be preserved where the browser allows it."
       />
+      {pasteError && <p role="alert" className="px-5 py-2 text-sm text-red-700">{pasteError}</p>}
     </div>
   );
 }

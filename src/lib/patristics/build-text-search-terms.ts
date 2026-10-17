@@ -1,11 +1,6 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env
-        .OPENAI_API_KEY,
-  });
+
 
 export type TextSearchTermsResult = {
   terms: string[];
@@ -38,7 +33,7 @@ export async function buildTextSearchTerms(
   TextSearchTermsResult
 > {
   const response =
-    await openai.responses.create({
+    await getOpenAI().responses.create({
       model:
         "gpt-4.1-mini",
 
