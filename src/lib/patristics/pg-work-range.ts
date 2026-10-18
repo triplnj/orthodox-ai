@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import * as cheerio from "cheerio";
 
 export type PgWorkColumnRange = {
@@ -220,7 +221,7 @@ export async function mapPgColumnsToScanRange(
 
   try {
     const response =
-      await fetch(
+      await safeSourceFetch(
         scandataUrl,
         {
           headers: {

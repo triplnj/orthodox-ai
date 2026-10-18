@@ -79,6 +79,7 @@ function VerifyEmailContent() {
         )}
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link href="/login?next=/onboarding" className="rounded-lg bg-gray-950 px-5 py-3 text-center text-sm font-semibold text-white">Sign in</Link>
           <Link
             href="/dashboard"
             className="rounded-lg bg-gray-950 px-5 py-3 text-center text-sm font-semibold text-white"

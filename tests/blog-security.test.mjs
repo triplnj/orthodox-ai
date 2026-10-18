@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createLoader } from "./helpers/load-ts.mjs";
+import { authHarness } from "./helpers/auth-harness.mjs";
 
 const { sanitizeBlogHtml, renderBlogContent, plainTextToSafeHtml } =
   createLoader()("src/lib/blogContent.ts");
@@ -203,70 +204,40 @@ test("draft creation and unpublishing retain the original blog behavior", async 
 });
 
 test("self-registration ignores submitted admin identity and verification fields", async () => {
-  let created;
-  const load = createLoader({
-    "next/server": { NextResponse: { json: (data, options) => Response.json(data, options) } },
-    "bcryptjs": { hash: async () => "test-password-hash" },
-    "@/lib/prisma": { prisma: {
-      user: {
-        findUnique: async () => null,
-        create: async ({ data }) => {
-          created = { ...data, id: "server-generated-user-id", emailVerified: null };
-          return created;
-        },
-      },
-      emailVerificationToken: { create: async () => ({}) },
-    } },
-    "@/lib/session": { createSession: async () => {}, getSessionUser: async () => created },
-    "@/lib/email": { sendEmailVerification: async () => {} },
-  }, { BLOG_ADMIN_USER_IDS: verifiedAdmin.id, BLOG_ADMIN_EMAILS: verifiedAdmin.email, NODE_ENV: "production" });
-  const response = await load("src/app/api/auth/register/route.ts").POST(new Request("https://example.com/api/auth/register", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: verifiedAdmin.email, password: "test-password", name: "Name",
-      id: verifiedAdmin.id, role: "ADMIN", emailVerified: "2026-01-01", plan: "PRO" }),
-  }));
-  assert.equal(response.status, 200);
-  assert.equal(created.id, "server-generated-user-id");
+  const h = authHarness({ env: { BLOG_ADMIN_USER_IDS: verifiedAdmin.id } });
+  const response = await h.request("auth/register", { email: verifiedAdmin.email, password: "test-password", name: "Name",
+    id: verifiedAdmin.id, role: "ADMIN", emailVerified: "2026-01-01", plan: "PRO" });
+  assert.equal(response.status, 202);
+  const created = h.state.users[0];
+  assert.notEqual(created.id, verifiedAdmin.id);
   assert.equal(created.emailVerified, null);
   assert.equal(created.plan, "FREE");
   assert.equal(created.role, undefined);
-  assert.equal(await load("src/lib/blogAdmin.ts").getBlogAdminUser(), null);
+  assert.equal(h.state.sessions.length, 0);
+  assert.equal(await h.load("src/lib/blogAdmin.ts").getBlogAdminUser(), null);
 });
 
 test("ordinary login does not promote an unverified provisioned account", async () => {
-  const user = { ...verifiedAdmin, emailVerified: null };
-  let sessionUserId;
-  const load = createLoader({
-    "next/server": { NextResponse: { json: (data, options) => Response.json(data, options) } },
-    "bcryptjs": { compare: async () => true },
-    "@/lib/prisma": { prisma: { user: { findUnique: async () => user } } },
-    "@/lib/session": {
-      createSession: async (id) => { sessionUserId = id; },
-      getSessionUser: async () => user,
-    },
-  }, { BLOG_ADMIN_USER_IDS: verifiedAdmin.id });
-  const response = await load("src/app/api/auth/login/route.ts").POST(new Request("https://example.com/api/auth/login", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: user.email, password: "test-password", role: "ADMIN", emailVerified: true }),
-  }));
+  const h = authHarness({ env: { BLOG_ADMIN_USER_IDS: verifiedAdmin.id } });
+  h.addUser({ ...verifiedAdmin, emailVerified: null, passwordHash: "hash:test-password" });
+  const response = await h.request("auth/login", { email: verifiedAdmin.email, password: "test-password", role: "ADMIN", emailVerified: true });
   assert.equal(response.status, 200);
-  assert.equal(sessionUserId, user.id);
-  assert.equal(await load("src/lib/blogAdmin.ts").getBlogAdminUser(), null);
+  assert.equal(h.state.sessions[0].userId, verifiedAdmin.id);
+  assert.equal(await h.load("src/lib/blogAdmin.ts").getBlogAdminUser(), null);
 });
-
 for (const state of ["missing", "invalid", "expired", "valid"]) {
   test(`${state} database session is respected by the real admin authorization helper`, async () => {
     const deleted = [];
     const load = createLoader({
       "next/headers": { cookies: async () => ({
-        get: () => state === "missing" ? undefined : { value: "test-session-token" },
+        get: () => state === "missing" ? undefined : { value: "a".repeat(64) },
       }) },
       "@/lib/prisma": { prisma: { session: {
         findUnique: async () => state === "invalid" ? null : {
           id: "session-id", user: verifiedAdmin,
           expiresAt: new Date(Date.now() + (state === "expired" ? -60000 : 60000)),
         },
-        delete: async (args) => { deleted.push(args); },
+        deleteMany: async (args) => { deleted.push(args); },
       } } },
     }, { BLOG_ADMIN_USER_IDS: verifiedAdmin.id });
     const result = await load("src/lib/blogAdmin.ts").getBlogAdminUser();

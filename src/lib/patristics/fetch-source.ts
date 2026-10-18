@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import * as cheerio from "cheerio";
 import { CanvasFactory } from "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
@@ -204,7 +205,7 @@ export async function fetchSourceText(
   url: string,
 ) {
   const response =
-    await fetch(
+    await safeSourceFetch(
       url,
       {
         headers: {

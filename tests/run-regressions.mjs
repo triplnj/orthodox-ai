@@ -4,9 +4,9 @@ import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const suites = process.argv.slice(2);
-if (!suites.length) suites.push("blog-security", "openai-initialization", "stripe-initialization", "phase2-security", "phase3-billing");
+if (!suites.length) suites.push("blog-security", "openai-initialization", "stripe-initialization", "phase2-security", "phase3-billing", "phase4-auth", "phase4-ssrf");
 const env = { ...process.env };
-for (const key of Object.keys(env)) if (/OPENAI|STRIPE|LEMONSQUEEZY|DATABASE|DIRECT_URL|PGPASSWORD|PGHOST|PGUSER/i.test(key)) delete env[key];
+for (const key of Object.keys(env)) if (/OPENAI|STRIPE|LEMONSQUEEZY|RESEND|DATABASE|DIRECT_URL|PGPASSWORD|PGHOST|PGUSER/i.test(key)) delete env[key];
 let failed = false;
 const results = [];
 for (const suite of suites) {

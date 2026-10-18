@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import { getOpenAI } from "@/lib/ai/openaiClient";
 
 import type {
@@ -48,7 +49,7 @@ async function imageUrlToDataUrl(
   imageUrl: string,
 ) {
   const response =
-    await fetch(
+    await safeSourceFetch(
       imageUrl,
       {
         redirect: "follow",

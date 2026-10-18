@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import * as cheerio from "cheerio";
 
 import {
@@ -112,7 +113,7 @@ async function fetchPgDjvuXml(
 
 
   const response =
-    await fetch(
+    await safeSourceFetch(
       source.djvuXmlUrl,
       {
         headers: {

@@ -158,7 +158,9 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordMessage("Password changed successfully.");
+      setPasswordMessage("Password changed. Please sign in again.");
+      router.replace("/login");
+      router.refresh();
     } catch {
       setPasswordError("Network error while changing password.");
     } finally {

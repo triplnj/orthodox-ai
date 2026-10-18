@@ -20,7 +20,6 @@ const protectedRoutes = [
   
 ];
 
-const authRoutes = ["/login", "/register"];
 
 function isProtectedRoute(pathname: string) {
   return protectedRoutes.some(
@@ -28,11 +27,6 @@ function isProtectedRoute(pathname: string) {
   );
 }
 
-function isAuthRoute(pathname: string) {
-  return authRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-}
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -46,9 +40,8 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthRoute(pathname) && sessionToken) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+  // Cookie presence is not authentication. Login/register validate the session
+  // server-side; redirecting here would loop for expired or revoked cookies.
 
   return NextResponse.next();
 }

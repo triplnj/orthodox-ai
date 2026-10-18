@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 export type PgVolumeSource = {
   volume: number;
 
@@ -116,7 +117,7 @@ async function sourceExists(
    */
   try {
     const headResponse =
-      await fetch(
+      await safeSourceFetch(
         source.djvuXmlUrl,
         {
           method: "HEAD",
@@ -147,7 +148,7 @@ async function sourceExists(
 
   try {
     const response =
-      await fetch(
+      await safeSourceFetch(
         source.djvuXmlUrl,
         {
           method: "GET",
@@ -302,7 +303,7 @@ async function discoverArchiveIdentifiers(
       );
 
       const response =
-        await fetch(
+        await safeSourceFetch(
           url,
           {
             headers: {
@@ -373,7 +374,7 @@ async function sourceHasDjvuXml(
 > {
   try {
     const metadataResponse =
-      await fetch(
+      await safeSourceFetch(
         `https://archive.org/metadata/${identifier}`,
         {
           headers: {

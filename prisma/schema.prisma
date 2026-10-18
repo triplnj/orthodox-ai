@@ -267,6 +267,35 @@ model BillingCheckoutAttempt {
   @@index([userId])
 }
 
+model AuthRateLimitBucket {
+  key String @id
+  count Int @default(0)
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+
+model PatristicSourceDomain {
+  hostname String @id
+  enabled Boolean @default(true)
+  redirectHosts String[]
+  verifiedAt DateTime
+  verifiedBy String
+  verificationNote String
+  updatedAt DateTime @updatedAt
+}
+
+model PatristicSourceDomainAudit {
+  id String @id @default(cuid())
+  hostname String
+  actorId String
+  action String
+  reason String
+  addresses String[]
+  redirectHosts String[]
+  createdAt DateTime @default(now())
+  @@index([hostname, createdAt])
+}
+
 enum Plan {
   FREE
   PRO

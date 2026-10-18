@@ -13,12 +13,7 @@ export async function sendPasswordResetEmail({
   to,
   resetUrl,
 }: SendPasswordResetEmailInput) {
-  if (!resend) {
-  if (process.env.NODE_ENV !== "production") {
-  console.log("Password reset link:", resetUrl);
-}
-    return;
-  }
+  if (!resend) throw new Error("Email delivery is not configured.");
 
   const from = process.env.EMAIL_FROM ?? "OrthodoxAI <onboarding@resend.dev>";
 
@@ -69,7 +64,6 @@ export async function sendPasswordResetEmail({
   });
 
   if (error) {
-    console.error("RESEND_PASSWORD_RESET_EMAIL_ERROR:", error);
     throw new Error("Could not send password reset email.");
   }
 
@@ -85,12 +79,7 @@ export async function sendEmailVerification({
   to,
   verifyUrl,
 }: SendEmailVerificationInput) {
-  if (!resend) {
-    if (process.env.NODE_ENV !== "production") {
-  console.log("Email verification link:", verifyUrl);
-}
-    return;
-  }
+  if (!resend) throw new Error("Email delivery is not configured.");
 
   const from = process.env.EMAIL_FROM ?? "OrthodoxAI <onboarding@resend.dev>";
 
@@ -137,7 +126,6 @@ export async function sendEmailVerification({
   });
 
   if (error) {
-    console.error("RESEND_EMAIL_VERIFICATION_ERROR:", error);
     throw new Error("Could not send email verification email.");
   }
 

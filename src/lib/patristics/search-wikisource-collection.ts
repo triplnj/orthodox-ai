@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import * as cheerio from "cheerio";
 
 import type {
@@ -60,7 +61,7 @@ async function searchTitles(
       });
 
     const response =
-      await fetch(
+      await safeSourceFetch(
         `https://en.wikisource.org/w/api.php?${params.toString()}`,
         {
           headers: {
@@ -117,7 +118,7 @@ async function fetchPageText(
     });
 
   const response =
-    await fetch(
+    await safeSourceFetch(
       `https://en.wikisource.org/w/api.php?${params.toString()}`,
       {
         headers: {
