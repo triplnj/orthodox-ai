@@ -25,6 +25,7 @@ export async function GET() {
         emailVerified: true,
         plan: true,
         subscriptionStatus: true,
+        billingAccessUntil: true,
         subscriptionId: true,
         stripeCustomerId: true,
         createdAt: true,
@@ -65,13 +66,7 @@ export async function GET() {
 
     return NextResponse.json({
       user: dbUser,
-      isPro: isProUser({
-        id: dbUser.id,
-        email: dbUser.email,
-        name: dbUser.name,
-        plan: dbUser.plan,
-        subscriptionStatus: dbUser.subscriptionStatus,
-      }),
+      isPro: isProUser(user),
       stats: {
         chatCount,
         journalCount,

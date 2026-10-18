@@ -1,126 +1,39 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-
-async function updateUserFromSubscription(subscription: Stripe.Subscription) {
-  const stripeCustomerId = subscription.customer as string;
-  const subscriptionId = subscription.id;
-  const subscriptionStatus = subscription.status;
-
-  const isActive =
-    subscriptionStatus === "active" || subscriptionStatus === "trialing";
-
-  await prisma.user.updateMany({
-    where: {
-      stripeCustomerId,
-    },
-    data: {
-      plan: isActive ? "PRO" : "FREE",
-      subscriptionStatus,
-      subscriptionId,
-    },
-  });
-}
+import { webhook } from "@/lib/billing/service";
+import { billingFailure } from "@/lib/billing/http";
 
 export async function POST(req: Request) {
-  const body = await req.text();
-
+  const rawBody = await req.text();
   const signature = req.headers.get("stripe-signature");
-
-  if (!signature) {
-    return NextResponse.json(
-      { error: "Missing Stripe signature." },
-      { status: 400 }
-    );
-  }
-
+  if (!signature) return NextResponse.json({ error: "Missing Stripe signature." }, { status: 400 });
   let event: Stripe.Event;
-
   try {
-    event = getStripe().webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (error) {
-    console.error("STRIPE_WEBHOOK_SIGNATURE_ERROR:", error);
-
-    return NextResponse.json(
-      { error: "Invalid Stripe webhook signature." },
-      { status: 400 }
-    );
-  }
-
+    const secret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!secret) throw new Error("Webhook configuration unavailable");
+    event = getStripe().webhooks.constructEvent(rawBody, signature, secret);
+  } catch { return NextResponse.json({ error: "Invalid Stripe webhook signature." }, { status: 400 }); }
   try {
-    switch (event.type) {
-      case "customer.subscription.created":
-      case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
-        await updateUserFromSubscription(subscription);
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-
-        await prisma.user.updateMany({
-          where: {
-            stripeCustomerId: subscription.customer as string,
-          },
-          data: {
-            plan: "FREE",
-            subscriptionStatus: subscription.status,
-            subscriptionId: null,
-          },
-        });
-
-        break;
-      }
-
-      case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-
-        const userId = session.metadata?.userId;
-        const stripeCustomerId = session.customer as string | null;
-        const subscriptionId = session.subscription as string | null;
-
-        if (userId && stripeCustomerId) {
-          await prisma.user.update({
-            where: {
-              id: userId,
-            },
-            data: {
-              stripeCustomerId,
-              subscriptionId,
-            },
-          });
-        }
-
-        if (subscriptionId) {
-          const subscription = await getStripe().subscriptions.retrieve(
-            subscriptionId
-          );
-
-          await updateUserFromSubscription(subscription);
-        }
-
-        break;
-      }
-
-      default:
-        break;
+    let subscriptionId: string | undefined;
+    let customerId: string | undefined;
+    let userId: string | undefined;
+    let attemptId: string | undefined;
+    if (event.type.startsWith("customer.subscription.")) {
+      const s = event.data.object as Stripe.Subscription;
+      subscriptionId = s.id;
+      customerId = typeof s.customer === "string" ? s.customer : s.customer.id;
+      userId = s.metadata?.userId;
+      attemptId = s.metadata?.billingAttemptId;
+    } else if (event.type === "checkout.session.completed") {
+      const s = event.data.object as Stripe.Checkout.Session;
+      subscriptionId = typeof s.subscription === "string" ? s.subscription : s.subscription?.id;
+      customerId = typeof s.customer === "string" ? s.customer : s.customer?.id;
+      userId = s.metadata?.userId;
+      attemptId = s.metadata?.billingAttemptId;
     }
-
-    return NextResponse.json({
-      received: true,
-    });
-  } catch (error) {
-    console.error("STRIPE_WEBHOOK_HANDLER_ERROR:", error);
-
-    return NextResponse.json(
-      { error: "Webhook handler failed." },
-      { status: 500 }
-    );
-  }
+    if (subscriptionId) await webhook({ provider: "STRIPE", eventId: event.id, eventType: event.type,
+      subscriptionId, customerId, userId, attemptId, rawBody, occurredAt: new Date(event.created * 1000) });
+    return NextResponse.json({ received: true });
+  } catch (error) { return billingFailure(error); }
 }

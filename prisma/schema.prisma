@@ -28,6 +28,12 @@ model User {
   lemonSqueezyOrderId        String?
   lemonSqueezySubscriptionId String?
   lemonSqueezyVariantId      String?
+  billingDeletionRequestedAt DateTime?
+  billingRecoveryLog         Json?
+  billingAccessUntil         DateTime?
+  billingGraceUntil          DateTime?
+  billingSubscriptions       BillingSubscription[]
+  billingCheckoutAttempts    BillingCheckoutAttempt[]
   messages                   ChatMessage[]
   emailVerificationTokens    EmailVerificationToken[]
   journalEntries             JournalEntry[]
@@ -205,6 +211,60 @@ model AiReservation {
 
   @@index([subject, createdAt])
   @@index([subject, status, expiresAt])
+}
+
+model BillingSubscription {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider String
+  providerSubscriptionId String
+  providerCustomerId String?
+  providerProductId String?
+  status String @default("unverified_legacy")
+  legacySnapshotStatus String?
+  trialEndsAt DateTime?
+  currentPeriodEndsAt DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  providerUpdatedAt DateTime?
+  lastVerifiedAt DateTime?
+  paidVerified Boolean @default(false)
+  retainedUntil DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([provider, providerSubscriptionId], map: "BillingSubscription_provider_subscription_key")
+  @@index([userId])
+}
+
+model BillingWebhookEvent {
+  id String @id @default(cuid())
+  provider String
+  eventId String
+  eventType String
+  providerSubscriptionId String?
+  payloadDigest String
+  occurredAt DateTime?
+  status String @default("RECEIVED")
+  receivedAt DateTime @default(now())
+  processedAt DateTime?
+  errorCode String?
+  @@unique([provider, eventId], map: "BillingWebhookEvent_provider_event_key")
+}
+
+model BillingCheckoutAttempt {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider String
+  status String @default("CREATING")
+  providerCheckoutId String?
+  checkoutUrl String?
+  expiresAt DateTime?
+  recoveryLog Json?
+  retainedUntil DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
 }
 
 enum Plan {
