@@ -1,0 +1,57 @@
+name: OrthodoxAI hardening checks
+
+on:
+  push:
+    branches:
+      - audit/orthodoxai-hardening
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orthodoxai-hardening-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Tests, types, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DEBUG: ""
+      NODE_DEBUG: ""
+      OPENAI_LOG: "off"
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+      OPENAI_API_KEY: ""
+      STRIPE_SECRET_KEY: ""
+      STRIPE_WEBHOOK_SECRET: ""
+      LEMONSQUEEZY_API_KEY: ""
+      LEMONSQUEEZY_WEBHOOK_SECRET: ""
+      RESEND_API_KEY: ""
+    steps:
+      - name: Checkout this branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install exact lockfile dependencies
+        run: npm ci
+      - name: Verify TypeScript
+        run: npx tsc --noEmit
+      - name: Verify ESLint
+        run: npx eslint .
+      - name: Run isolated mocked regressions
+        run: node tests/run-regressions.mjs
+      - name: Build without provider credentials
+        run: node node_modules/next/dist/bin/next build
