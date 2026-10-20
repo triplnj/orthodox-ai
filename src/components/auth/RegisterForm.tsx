@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 
 export default function RegisterForm() {
@@ -9,12 +9,15 @@ export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
 
     setIsSubmitting(true);
     setError(null);
@@ -44,6 +47,7 @@ export default function RegisterForm() {
     } catch {
       setError("Network error while creating account.");
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   }
@@ -65,7 +69,7 @@ export default function RegisterForm() {
         </p>
 
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div id="form-error-1" role="alert" tabIndex={-1} className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -75,7 +79,7 @@ export default function RegisterForm() {
           <div>
             <label htmlFor="register-name" className="text-sm font-medium text-gray-700">Name</label>
 
-            <input
+            <input aria-describedby={error ? "form-error-1" : undefined}
               id="register-name"
               autoComplete="name"
               maxLength={200}
@@ -89,10 +93,10 @@ export default function RegisterForm() {
           <div>
             <label htmlFor="register-email" className="text-sm font-medium text-gray-700">Email</label>
 
-            <input
+            <input aria-describedby={error ? "form-error-1" : undefined}
               id="register-email"
               autoComplete="email"
-              type="email"
+              type="email"  maxLength={254}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -106,7 +110,7 @@ export default function RegisterForm() {
               Password
             </label>
 
-            <input
+            <input aria-describedby={error ? "form-error-1" : undefined}
               id="register-password"
               autoComplete="new-password"
               minLength={8}

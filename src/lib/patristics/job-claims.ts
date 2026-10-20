@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { persistedResearchFailure } from "@/lib/diagnostics";
 
 /** Only the same durable workflow owner may resume an existing claim. */
 export async function claimPatristicJob(jobId: string, owner: string, resume = false) {
@@ -18,6 +19,6 @@ export async function claimPatristicJob(jobId: string, owner: string, resume = f
 export async function finishPatristicJob(jobId: string, owner: string, error?: string) {
   await prisma.patristicDiscoveryJob.updateMany({
     where: { id: jobId, status: "PROCESSING", claimToken: owner },
-    data: { status: error === undefined ? "COMPLETED" : "FAILED", finishedAt: new Date(), error: error ?? null },
+    data: { status: error === undefined ? "COMPLETED" : "FAILED", finishedAt: new Date(), error: error === undefined ? null : persistedResearchFailure(error) },
   });
 }

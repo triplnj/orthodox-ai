@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { safeLoginPath } from "@/lib/security/redirect";
@@ -11,11 +11,14 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
 
     setIsSubmitting(true);
     setError(null);
@@ -47,6 +50,7 @@ export default function LoginForm() {
     } catch {
       setError("Network error while signing in.");
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   }
@@ -67,7 +71,7 @@ export default function LoginForm() {
         </p>
 
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div id="form-error-0" role="alert" tabIndex={-1} className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -78,10 +82,10 @@ export default function LoginForm() {
       Email
     </label>
 
-    <input
+    <input aria-describedby={error ? "form-error-0" : undefined}
       id="login-email"
       autoComplete="email"
-      type="email"
+      type="email" maxLength={254}
       value={email}
       onChange={(event) => setEmail(event.target.value)}
       className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -95,7 +99,7 @@ export default function LoginForm() {
       Password
     </label>
 
-    <input
+    <input aria-describedby={error ? "form-error-0" : undefined}
       id="login-password"
       autoComplete="current-password"
       type="password"

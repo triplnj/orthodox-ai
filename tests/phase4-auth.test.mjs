@@ -40,9 +40,9 @@ test("existing and new registrations return identical status/body and neither si
   assert.equal(first.status, second.status); assert.deepEqual(await first.json(), await second.json());
   assert.equal(a.jar.size, 0); assert.equal(b.jar.size, 0);
 });
-test("registration ignores attempted privilege and verification assignment", async () => {
-  const h = authHarness(); await h.request("auth/register", { ...signup, plan: "PRO", emailVerified: true, role: "ADMIN" });
-  assert.equal(h.state.users[0].plan, "FREE"); assert.equal(h.state.users[0].emailVerified, null); assert.equal(h.state.users[0].role, undefined);
+test("registration rejects attempted privilege and verification assignment", async () => {
+  const h = authHarness(); const response = await h.request("auth/register", { ...signup, plan: "PRO", emailVerified: true, role: "ADMIN" });
+  assert.equal(response.status, 400); assert.equal(h.state.users.length, 0); assert.equal(h.state.sessions.length, 0);
 });
 test("known and unknown reset requests have identical responses", async () => {
   const h = authHarness(); h.addUser();
@@ -186,7 +186,7 @@ test("integration: real registration and login form handlers complete the mocked
   let state = [], cursor = 0;
   const navigation = [];
   const h = authHarness({ extraMocks: {
-    react: { useState: initial => { const index = cursor++; if (!(index in state)) state[index] = initial; return [state[index], value => { state[index] = value; }]; } },
+    react: { useRef: initial => { const index = cursor++; if (!(index in state)) state[index] = { current: initial }; return state[index]; }, useState: initial => { const index = cursor++; if (!(index in state)) state[index] = initial; return [state[index], value => { state[index] = value; }]; } },
     "next/navigation": { useRouter: () => ({ push: path => navigation.push(path), refresh: () => {} }) },
   } });
   t.mock.method(globalThis, "fetch", async (path, init) => h.request(path.replace(/^\/api\//, ""), JSON.parse(init.body)));

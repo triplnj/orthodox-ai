@@ -15,6 +15,17 @@ export function BlogContentEditor({
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [html, setHtml] = useState(defaultValue ?? "");
   const [pasteError, setPasteError] = useState<string | null>(null);
+  useEffect(() => {
+    const form = editorRef.current?.closest("form");
+    const validate = (event: Event) => {
+      const content = editorRef.current?.innerHTML ?? "";
+      if (new TextEncoder().encode(content).length > 524288 || !editorRef.current?.textContent?.trim()) {
+        event.preventDefault(); setPasteError("Blog content is required and must fit within 512 KiB. Please shorten the post before saving.");
+      }
+    };
+    form?.addEventListener("submit", validate);
+    return () => form?.removeEventListener("submit", validate);
+  }, []);
 
   useEffect(() => {
     if (editorRef.current && defaultValue) {
@@ -61,7 +72,7 @@ export function BlogContentEditor({
     <div className="mt-2 overflow-hidden rounded-xl border border-gray-300 bg-white">
       <input type="hidden" name={name} value={html} />
 
-      <div className="flex flex-wrap gap-2 border-b border-gray-200 bg-gray-50 p-3">
+      <div role="group" aria-label="Text formatting" className="flex flex-wrap gap-2 border-b border-gray-200 bg-gray-50 p-3">
         <button
           type="button"
           onClick={() => runCommand("formatBlock", "h2")}
@@ -114,11 +125,14 @@ export function BlogContentEditor({
       </div>
 
       <div
+        id="blog-content-editor"
+        aria-describedby="blog-editor-help"
+        aria-invalid={Boolean(pasteError)}
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
         role="textbox"
-        aria-label="Blog content"
+        aria-labelledby="blog-content-label"
         aria-multiline="true"
         onPaste={handlePaste}
         onDrop={(event) => event.preventDefault()}
@@ -127,6 +141,7 @@ export function BlogContentEditor({
         className="min-h-[420px] w-full bg-white px-5 py-4 text-base leading-8 text-gray-900 outline-none prose-content-editor"
         data-placeholder="Paste or write your blog post here. Formatting from Word or Google Docs will be preserved where the browser allows it."
       />
+      <p id="blog-editor-help" className="px-5 py-2 text-sm text-gray-600">Formatting from Word and Google Docs is preserved where supported. Content is sanitized for safety.</p>
       {pasteError && <p role="alert" className="px-5 py-2 text-sm text-red-700">{pasteError}</p>}
     </div>
   );

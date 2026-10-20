@@ -99,7 +99,7 @@ export default function ConfessionPage() {
             Preparation
           </p>
 
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white-950">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">
             Prepare with honesty, simplicity, and hope.
           </h2>
 
@@ -149,7 +149,7 @@ export default function ConfessionPage() {
           Self-examination
         </p>
 
-        <h2 className="mt-3 text-3xl font-bold tracking-tight text-white-950">
+        <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">
           Questions for quiet reflection
         </h2>
 

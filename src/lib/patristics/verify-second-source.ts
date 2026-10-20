@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import { getOpenAI } from "@/lib/ai/openaiClient";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -404,11 +405,7 @@ ${quote.sources
 
     } catch (error) {
 
-      console.error(
-        "SECOND_SOURCE_DISCOVERY_ERROR",
-        quote.id,
-        error,
-      );
+      diagnostic("operation_failed", { operation: "verification", failure: failureCategory(error) });
 
       discoveryErrors++;
 
@@ -493,13 +490,7 @@ ${quote.sources
 
       } catch (error) {
 
-        console.warn(
-          "SECOND_SOURCE_FETCH_SKIPPED",
-          candidate.sourceUrl,
-          error instanceof Error
-            ? error.message
-            : "Unknown fetch error",
-        );
+        diagnostic("operation_skipped", { operation: "verification", failure: failureCategory(error) });
 
         continue;
       }
@@ -539,13 +530,7 @@ Do not return merely a thematically similar passage.
 
       } catch (error) {
 
-        console.warn(
-          "SECOND_SOURCE_EXTRACTION_SKIPPED",
-          candidate.sourceUrl,
-          error instanceof Error
-            ? error.message
-            : "Unknown extraction error",
-        );
+        diagnostic("operation_skipped", { operation: "verification", failure: failureCategory(error) });
 
         continue;
       }
@@ -706,29 +691,7 @@ Do not return merely a thematically similar passage.
           );
 
 
-        console.log(
-          "SECOND_SOURCE_PARALLEL_CHECK:",
-          {
-            quoteId:
-              quote.id,
-
-            sourceUrl:
-              candidate.sourceUrl,
-
-            samePassage:
-              parallel.samePassage,
-confidence:
-  parallel.confidence,
-
-normalizedConfidence:
-  parallel.confidence <= 1
-    ? parallel.confidence * 100
-    : parallel.confidence,
-
-            reason:
-              parallel.reason,
-          },
-        );
+        diagnostic("operation_completed", { operation: "verification" });
 
 
         /*

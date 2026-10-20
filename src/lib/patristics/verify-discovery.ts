@@ -1,3 +1,4 @@
+import { diagnostic, safeResearchFailure } from "@/lib/diagnostics";
 import {
   fetchSourceText,
 } from "./fetch-source";
@@ -35,25 +36,7 @@ export async function verifyDiscoveryCandidates(
       findTrustedPatristicSource(
         candidate.sourceUrl,
       );
-      console.log(
-  "PATRISTIC_TRUST_CHECK:",
-  JSON.stringify({
-    url: candidate.sourceUrl,
-    hostname: (() => {
-      try {
-        return new URL(
-          candidate.sourceUrl,
-        )
-          .hostname
-          .toLowerCase()
-          .replace(/^www\./, "");
-      } catch {
-        return null;
-      }
-    })(),
-    trustedSource,
-  }),
-);
+    diagnostic("operation_started", { operation: "verification" });
 
     try {
       const source =
@@ -98,10 +81,7 @@ export async function verifyDiscoveryCandidates(
         trustedSourceType:
           trustedSource?.sourceType ?? null,
 
-        verificationError:
-          error instanceof Error
-            ? error.message
-            : "Unknown verification error.",
+        verificationError: safeResearchFailure(error),
       });
     }
   }

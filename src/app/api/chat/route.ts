@@ -1,249 +1,77 @@
-import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
-import { secureAiRoute } from "@/lib/ai/secureRoute";
-import {
-  NextResponse,
-} from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { randomUUID } from "node:crypto";
+import { getCurrentUser } from "@/lib/auth";
+import { isProUser } from "@/lib/subscription";
+import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
+import { withAiOperation, quotaSnapshot } from "@/lib/ai/operationLimits";
+import { apiFailure, queryInput } from "@/lib/api/validation";
+import { aiSecurityResponse, readAiJson, validateAiStrings, AiInputError } from "@/lib/ai/requestSecurity";
+import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
+import { getUserProfileContext } from "@/lib/userProfileContext";
+import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
+import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
+import { checkQuestion, selectHistory } from "@/lib/chat/context";
+import { snapshotSources } from "@/lib/chat/provenance";
+import { visibleMessages } from "@/lib/chat/history";
 
-import {
-  prisma,
-} from "@/lib/prisma";
-
-import {
-  generateOrthodoxAnswer,
-} from "@/lib/ai/chatService";
-
-
-import {
-  isProUser,
-} from "@/lib/subscription";
-
-import {
-  getCurrentUser,
-} from "@/lib/auth";
-
-import type {
-  ChatContextKey,
-} from "@/lib/ai/chatContexts";
-
-import {
-  getUserProfileContext,
-} from "@/lib/userProfileContext";
-
-import {
-  buildPatristicResearchContext,
-} from "@/lib/patristics/build-patristic-research-context";
-
-async function handleAiRequest(
-  req: Request,
-  reservation: { id: string; remaining: number },
-) {
+export async function POST(request: Request) {
+  let attempt: TurnAttempt | undefined;
   try {
-    const user =
-      await getCurrentUser();
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          error:
-            "You must be signed in to use OrthodoxAI.",
-        },
-        {
-          status: 401,
-        },
-      );
+    const user = await getCurrentUser();
+    if (!user) return apiJson({ error: "You must be signed in." }, { status: 401 });
+    queryInput(request);
+    const body = await readAiJson(request);
+    validateAiStrings(body);
+    if (typeof body.message !== "string" || !body.message.trim()) throw new AiInputError("Message is required.");
+    if (Object.keys(body).some(key => !["message", "contextKey", "extraContext", "conversationId", "requestId"].includes(key))) throw new AiInputError("Unsupported chat input.");
+    const contextKey = (body.contextKey || "general") as ChatContextKey;
+    if (!Object.hasOwn(chatContexts, contextKey)) throw new AiInputError("Invalid chat context.");
+    for (const key of ["conversationId", "requestId"]) {
+      if (body[key] !== undefined && (typeof body[key] !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(body[key]))) throw new AiInputError(`Invalid ${key}.`);
     }
-
-    const body =
-      await req.json();
-
-    const message =
-      body.message as
-        | string
-        | undefined;
-
-    const contextKey =
-      body.contextKey as
-        | ChatContextKey
-        | undefined;
-
-    const extraContext =
-      body.extraContext as
-        | string
-        | undefined;
-
-    if (
-      !message ||
-      typeof message !==
-        "string" ||
-      !message.trim()
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Message is required.",
-        },
-        {
-          status: 400,
-        },
-      );
+    const message = body.message.trim();
+    checkQuestion(message);
+    const begun = await beginTurn(user.id, { message, contextKey, extraContext: body.extraContext as string | undefined,
+      conversationId: body.conversationId as string | undefined, requestId: body.requestId as string || randomUUID() });
+    if (begun.replay) {
+      if (!(await visibleMessages(user)).some(message => message.turnId === begun.turn.id && message.role === "assistant")) {
+        throw new AiInputError("The saved answer is outside your plan's recent history window.", 403);
+      }
+      const quota = await quotaSnapshot(user.id, "chat", user);
+      return apiJson({ ...(begun.replay as Record<string, unknown>), plan: user.plan, replayed: true, remaining: quota.remaining, quota });
     }
-
-    const normalizedMessage =
-      message.trim();
-
-    await prisma.chatMessage.create({
-      data: {
-        userId:
-          user.id,
-
-        role:
-          "user",
-
-        content:
-          normalizedMessage,
-
-        category:
-          contextKey ??
-          "general",
-      },
+    attempt = begun.turn;
+    const turn = attempt;
+    return await withAiOperation(user.id, "chat", user, async reservation => {
+      await dispatchTurn(turn);
+      const turns = await memoryForTurn(turn);
+      const history = selectHistory(turns);
+      const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message);
+      const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).join("\n");
+      const query = followUp && priorQuestions ? `${priorQuestions}\nFollow-up question: ${message}` : message;
+      const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
+      const result = await generateOrthodoxAnswer({ userMessage: message, contextKey,
+        extraContext: `${profile}\n\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
+        patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns } });
+      const sources = snapshotSources(research?.sources ?? [], true);
+      const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
+        conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,
+        patristicSources: sources, usedPatristicResearch: sources.length > 0,
+        usedLivePg: sources.some(source => source.provider === "PATROLOGIA_GRAECA"), patristicProviders: research?.providersSucceeded ?? [] };
+      await completeTurn(turn, contextKey, response, sources, research?.context ?? null, result.budget ?? {});
+      const quota = await quotaSnapshot(user.id, "chat", user);
+      return apiJson({ ...response, quota, remaining: quota.remaining });
     });
-
-    const userProfileContext =
-      await getUserProfileContext(
-        user.id,
-      );
-
-    /*
-     * Central patristic research router.
-     *
-     * The chat API no longer knows whether evidence
-     * comes from the verified database, PG, or future
-     * corpus providers. It receives one normalized
-     * research context plus structured source metadata.
-     */
-    const patristicResearch =
-      await buildPatristicResearchContext(
-        normalizedMessage,
-      );
-
-    const combinedExtraContext = `
-${userProfileContext}
-
-Page or feature extra context:
-${extraContext ?? "No additional page context provided."}
-    `.trim();
-
-    const result =
-      await generateOrthodoxAnswer({
-        userMessage:
-          normalizedMessage,
-
-        contextKey:
-          contextKey ??
-          "general",
-
-        extraContext:
-          combinedExtraContext,
-
-        patristicContext:
-          patristicResearch
-            ?.context ??
-          null,
-
-        isPro:
-          isProUser(
-            user,
-          ),
-      });
-
-    /*
-     * Source URLs are returned as structured metadata
-     * and rendered by the chat UI as clickable cards.
-     * Do not duplicate them inside the answer text.
-     */
-    const finalAnswer =
-      result.answer;
-
-    await prisma.chatMessage.create({
-      data: {
-        userId:
-          user.id,
-
-        role:
-          "assistant",
-
-        content:
-          finalAnswer,
-
-        category:
-          contextKey ??
-          "general",
-      },
-    });
-
-    return NextResponse.json({
-      answer:
-        finalAnswer,
-
-      remaining:
-        reservation.remaining,
-
-      plan:
-        user.plan,
-
-      patristicSources:
-        patristicResearch
-          ?.sources ??
-        [],
-
-      usedPatristicResearch:
-        Boolean(
-          patristicResearch &&
-          patristicResearch
-            .sources.length >
-            0,
-        ),
-
-      /*
-       * Kept for compatibility with any existing
-       * client code that still expects this flag.
-       */
-      usedLivePg:
-        Boolean(
-          patristicResearch
-            ?.sources.some(
-              (source) =>
-                source.provider ===
-                "PATROLOGIA_GRAECA",
-            ),
-        ),
-
-      patristicProviders:
-        patristicResearch
-          ?.providersSucceeded ??
-        [],
-    });
-
-  } catch (
-    error
-  ) {
-    const securityError = aiSecurityResponse(error);
-    if (securityError) return securityError;
-    console.error(
-      "CHAT_API_ERROR:",
-      error,
-    );
-
-    return NextResponse.json(
-      {
-        error:
-          "Something went wrong while generating the answer.",
-      },
-      {
-        status: 500,
-      },
-    );
+  } catch (error) {
+    if (attempt) {
+      try { await failTurn(attempt); } catch { diagnostic("operation_failed", { operation: "chat", failure: "database" }); }
+    }
+    const response = aiSecurityResponse(error);
+    const recovery = attempt ?? (error instanceof TurnConflict ? error : undefined);
+    if (response) return apiJson({ ...await response.json(), ...(recovery ? { conversationId: recovery.conversationId, turnId: recovery instanceof TurnConflict ? recovery.turnId : recovery.id } : {}) }, { status: response.status, headers: response.headers });
+    diagnostic("operation_failed", { operation: "chat", failure: failureCategory(error) });
+    return apiJson({ ...await apiFailure(error).json(), error: "The answer could not be saved. Reopen this conversation to recover or view its saved answer.",
+      ...(attempt ? { conversationId: attempt.conversationId, turnId: attempt.id } : {}) }, { status: 500 });
   }
 }
-
-export const POST = secureAiRoute(handleAiRequest, "chat");

@@ -1,33 +1,14 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { AiLimitError } from "./operationLimits";
+import { ApiError, apiFailure, readJson } from "@/lib/api/validation";
 
-export class AiInputError extends Error {
-  constructor(message: string, readonly status = 400) { super(message); }
+export class AiInputError extends ApiError {
+  constructor(message: string, status = 400) { super(message, status, ({ 401: "UNAUTHENTICATED", 403: "FORBIDDEN", 404: "NOT_FOUND", 409: "IDEMPOTENCY_CONFLICT", 413: "PAYLOAD_TOO_LARGE", 502: "AI_SERVICE_FAILED" } as Record<number, string>)[status] ?? "INVALID_INPUT"); }
 }
 
 export async function readAiJson(request: Request): Promise<Record<string, unknown>> {
-  const reader = request.body?.getReader();
-  if (!reader) throw new AiInputError("JSON body is required.");
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    while (true) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      size += chunk.value.length;
-      if (size > 65_536) {
-        await reader.cancel();
-        throw new AiInputError("Request is too large.", 413);
-      }
-      chunks.push(chunk.value);
-    }
-  } finally { reader.releaseLock(); }
-  let value: unknown;
-  try { value = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
-  catch { throw new AiInputError("Invalid JSON body."); }
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new AiInputError("JSON object is required.");
-  return value as Record<string, unknown>;
+  return readJson(request);
 }
 
 export function validateAiStrings(body: Record<string, unknown>) {
@@ -41,9 +22,10 @@ export function validateAiStrings(body: Record<string, unknown>) {
 export function aiSecurityResponse(error: unknown) {
   if (error instanceof AiLimitError) {
     return NextResponse.json({ error: error.message, limitType: error.limitType,
-      upgradeRequired: error.upgradeRequired }, { status: error.status,
-      headers: error.status === 429 ? { "Retry-After": "60" } : undefined });
+      code: error.limitType === "daily" ? "DAILY_QUOTA_EXHAUSTED" : error.limitType === "concurrency" ? "AI_OPERATION_IN_PROGRESS" : error.limitType === "rate" ? "RATE_LIMITED" : "FORBIDDEN",
+      upgradeRequired: error.upgradeRequired, quota: error.quota, remaining: error.quota?.remaining, retryAfterSeconds: error.retryAfterSeconds }, { status: error.status,
+      headers: error.retryAfterSeconds ? { "Retry-After": String(error.retryAfterSeconds) } : undefined });
   }
-  if (error instanceof AiInputError) return NextResponse.json({ error: error.message }, { status: error.status });
+  if (error instanceof ApiError) return apiFailure(error);
   return null;
 }

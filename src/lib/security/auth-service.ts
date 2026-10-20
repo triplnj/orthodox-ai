@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { createSessionRecord, setSessionCookie } from "@/lib/session";
 import { sendEmailVerification, sendPasswordResetEmail } from "@/lib/email";
 import { AuthError } from "./auth-input";
+import { isDedicatedReviewIdentity, isReservedReviewEmail } from "./review-identities";
 
 // A valid cost-12 bcrypt hash; used only for equal work on unknown accounts.
 const DUMMY_HASH = "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW";
@@ -22,7 +23,7 @@ export async function login(email: string, password: string) {
   const result = await authLock(found.id, async tx => {
     const user = await tx.user.findUnique({ where: { id: found.id } });
     const valid = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
-    if (!user?.passwordHash || !valid) throw new AuthError("Invalid email or password.", 401);
+    if (!user?.passwordHash || !valid || isDedicatedReviewIdentity(user.id)) throw new AuthError("Invalid email or password.", 401);
     const session = await createSessionRecord(tx, user.id);
     return { user, session };
   });
@@ -36,6 +37,7 @@ export async function register(email: string, name: string, password: string) {
   const passwordHash = await bcrypt.hash(password, 12);
   return prisma.$transaction(async tx => {
     await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`auth-register:${email}`}, 0))`;
+    if (isReservedReviewEmail(email)) return null;
     if (await tx.user.findUnique({ where: { email } })) return null;
     const user = await tx.user.create({ data: { email, name: name || null, passwordHash, plan: "FREE", subscriptionStatus: null } });
     return user.id;
@@ -44,7 +46,7 @@ export async function register(email: string, name: string, password: string) {
 export async function issueEmail(userId: string, kind: "verify" | "reset") {
   return authLock(userId, async tx => {
     const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user || (kind === "verify" && user.emailVerified)) return null;
+    if (!user || isDedicatedReviewIdentity(user.id) || (kind === "verify" && user.emailVerified)) return null;
     const rawToken = randomBytes(32).toString("hex");
     const data = { userId, tokenHash: hashToken(rawToken), expiresAt: new Date(Date.now() + (kind === "verify" ? 24 * 3600000 : 30 * 60000)) };
     if (kind === "verify") await tx.emailVerificationToken.create({ data });
@@ -69,6 +71,7 @@ export async function consumeToken(token: string, password?: string) {
   if (!found) throw new AuthError("Invalid or expired token.");
   const passwordHash = reset ? await bcrypt.hash(password!, 12) : undefined;
   await authLock(found.userId, async tx => {
+    if (isDedicatedReviewIdentity(found.userId)) throw new AuthError("Invalid or expired token.");
     const now = new Date();
     const claim = { where: { id: found.id, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } };
     const claimed = reset ? await tx.passwordResetToken.updateMany(claim) : await tx.emailVerificationToken.updateMany(claim);
@@ -84,7 +87,7 @@ export async function changePassword(userId: string, currentPassword: string, pa
   const passwordHash = await bcrypt.hash(password, 12);
   await authLock(userId, async tx => {
     const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user?.passwordHash || !await bcrypt.compare(currentPassword, user.passwordHash)) throw new AuthError("Current password is incorrect.", 401);
+    if (!user?.passwordHash || isDedicatedReviewIdentity(user.id) || !await bcrypt.compare(currentPassword, user.passwordHash)) throw new AuthError("Current password is incorrect.", 401);
     if (currentPassword === password) throw new AuthError("New password must be different from current password.");
     await tx.user.update({ where: { id: userId }, data: { passwordHash } });
     await tx.passwordResetToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } });

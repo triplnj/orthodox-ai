@@ -32,11 +32,11 @@ export default async function NewBlogPostPage() {
 
       <form action={createBlogPost} className="mt-10 space-y-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="new-page-field-1" className="block text-sm font-semibold text-gray-800">
             Title
           </label>
-          <input
-            name="title"
+          <input id="new-page-field-1"
+            name="title" maxLength={300}
             required
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
             placeholder="How to Begin Praying as an Orthodox Christian"
@@ -44,11 +44,11 @@ export default async function NewBlogPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="new-page-field-2" className="block text-sm font-semibold text-gray-800">
             Slug
           </label>
-          <input
-            name="slug"
+          <input id="new-page-field-2"
+            name="slug" maxLength={200}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
             placeholder="how-to-begin-praying-as-an-orthodox-christian"
           />
@@ -58,22 +58,22 @@ export default async function NewBlogPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="new-page-field-3" className="block text-sm font-semibold text-gray-800">
             Category
           </label>
-          <input
-            name="category"
+          <input id="new-page-field-3"
+            name="category" maxLength={100}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
             placeholder="Prayer"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="new-page-field-4" className="block text-sm font-semibold text-gray-800">
             Excerpt
           </label>
-          <textarea
-            name="excerpt"
+          <textarea id="new-page-field-4"
+            name="excerpt" maxLength={2000}
             rows={3}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
             placeholder="Short description shown on the blog list and SEO metadata."
@@ -81,9 +81,7 @@ export default async function NewBlogPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
-            Content
-          </label>
+          <p id="blog-content-label" className="block text-sm font-semibold text-gray-800">Content</p>
           <p className="mt-1 text-xs leading-5 text-gray-500">
             Paste from Word or Google Docs here. Basic formatting such as headings, paragraphs, lists, bold and italic text will be kept.
           </p>
@@ -91,10 +89,10 @@ export default async function NewBlogPostPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="new-page-field-5" className="block text-sm font-semibold text-gray-800">
             Status
           </label>
-          <select
+          <select id="new-page-field-5"
             name="status"
             defaultValue="DRAFT"
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"

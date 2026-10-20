@@ -17,5 +17,6 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     plan: user.plan,
     subscriptionStatus: user.subscriptionStatus,
     billingAccessUntil: user.billingAccessUntil,
+    reviewAccess: user.reviewAccess === true,
   };
 }

@@ -5,10 +5,10 @@ import {
   FULL_ACCESS_DAILY_CHAT_LIMIT,
 } from "@/lib/features";
 import { isProUser, type AppUser } from "@/lib/subscription";
+import { quotaDay } from "@/lib/ai/quotaClock";
 
 export async function getTodayUsage(userId: string, feature: string) {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  const startOfDay = quotaDay().start;
 
   return prisma.usageLog.count({
     where: {

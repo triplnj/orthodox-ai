@@ -1,4 +1,4 @@
-﻿-- APPROVED LOCAL MIGRATION. NOT EXECUTED. Review deployment procedure first.
+-- APPROVED LOCAL MIGRATION. NOT EXECUTED. Review deployment procedure first.
 -- Architecture approved; database execution requires separate authorization.
 -- Preserve existing user fields; do not infer ownership/status of dual-provider
 -- legacy accounts from the single shared subscriptionStatus column.

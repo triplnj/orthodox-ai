@@ -1,3 +1,4 @@
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 export const productCopy = {
   brandName: "OrthodoxAI",
 
@@ -28,9 +29,9 @@ export const productCopy = {
     price: "$7.99/month",
     yearlyPrice: "$69/year",
     description:
-      "For believers who want daily structure, deeper explanations, and unlimited use.",
+      `For believers who want daily structure, deeper explanations, and up to ${FULL_ACCESS_DAILY_CHAT_LIMIT} chat questions per day.`,
     features: [
-      "Unlimited AI questions",
+      `${FULL_ACCESS_DAILY_CHAT_LIMIT} AI questions per day`,
       "Personal prayer plan",
       "Scripture reading plan",
       "Spiritual journal",
@@ -41,5 +42,5 @@ export const productCopy = {
   },
 
   upgradeMessage:
-    "You have reached your daily Free limit. Upgrade to OrthodoxAI Pro for unlimited questions, personal prayer plans, Scripture reading plans, and a spiritual journal.",
+    `You have reached your daily Free limit. Upgrade to OrthodoxAI Pro for ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, personal prayer plans, Scripture reading plans, and a spiritual journal.`,
 };

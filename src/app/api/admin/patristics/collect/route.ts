@@ -1,5 +1,7 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import { NextRequest, NextResponse }
+import { NextRequest }
   from "next/server";
 
 import { collectFromSource }
@@ -21,7 +23,7 @@ async function handleResearch(
     if (
       !url.startsWith("https://")
     ) {
-      return NextResponse.json(
+      return apiJson(
         {
           error:
             "Valid HTTPS URL required",
@@ -35,17 +37,14 @@ async function handleResearch(
     const result =
       await collectFromSource(url);
 
-    return NextResponse.json(
+    return apiJson(
       result,
     );
   } catch (error) {
 
-    console.error(
-      "PATRISTICS_COLLECT_ERROR",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "extraction", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Patristic collection failed",

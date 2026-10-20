@@ -143,7 +143,7 @@ export default function ClergyReviewPage() {
     <Suspense
       fallback={
         <main className="mx-auto max-w-5xl px-6 py-12">
-          <p className="text-sm text-gray-600">Loading review page...</p>
+          <p role="status" className="text-sm text-gray-600">Loading review page...</p>
         </main>
       }
     >

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import Link from "next/link";
 
 type Message = {
@@ -16,6 +16,7 @@ function ReviewPageContent() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [contextKey, setContextKey] = useState("general");
+  const sending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,10 +25,11 @@ function ReviewPageContent() {
   async function sendMessage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!message.trim()) {
+    if (!message.trim() || sending.current) {
       return;
     }
 
+    sending.current = true;
     setIsLoading(true);
     setError("");
 
@@ -41,7 +43,7 @@ function ReviewPageContent() {
       },
     ]);
 
-    setMessage("");
+
 
     try {
       const response = await fetch("/api/review/chat", {
@@ -63,6 +65,7 @@ function ReviewPageContent() {
         return;
       }
 
+      setMessage("");
       setMessages((current) => [
         ...current,
         {
@@ -71,8 +74,9 @@ function ReviewPageContent() {
         },
       ]);
     } catch {
-      setError("Network error while contacting OrthodoxAI.");
+      setError("Could not confirm the result. Your question is preserved. A previous request may still be running; it has not been retried automatically.");
     } finally {
+      sending.current = false;
       setIsLoading(false);
     }
   }
@@ -172,11 +176,11 @@ function ReviewPageContent() {
             </p>
           </div>
 
-          <label className="mt-6 block text-sm font-medium text-gray-700">
+          <label htmlFor="fr-josiah-page-field-1" className="mt-6 block text-sm font-medium text-gray-700">
             Review context
           </label>
 
-          <select
+          <select disabled={isLoading} id="fr-josiah-page-field-1"
             value={contextKey}
             onChange={(event) => setContextKey(event.target.value)}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -237,20 +241,21 @@ function ReviewPageContent() {
             ))}
 
             {isLoading && (
-              <p className="text-sm text-gray-500">
+              <p role="status" className="text-sm text-gray-500">
                 OrthodoxAI is preparing an answer...
               </p>
             )}
           </div>
 
           {error && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           )}
 
           <form onSubmit={sendMessage} className="mt-5 space-y-3">
-            <textarea
+            <label htmlFor="review-question" className="block text-sm font-medium">Your review question</label>
+            <textarea id="review-question" disabled={isLoading} maxLength={20000}
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               rows={4}
@@ -277,7 +282,7 @@ export default function FrJosiahReviewPage() {
     <Suspense
       fallback={
         <main className="mx-auto max-w-6xl px-6 py-12">
-          <p className="text-sm text-gray-600">Loading review page...</p>
+          <p role="status" className="text-sm text-gray-600">Loading review page...</p>
         </main>
       }
     >

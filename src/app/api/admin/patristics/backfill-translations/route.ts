@@ -1,6 +1,6 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import { NextResponse } from "next/server";
-
 import { backfillPatristicTranslations } from "@/lib/patristics/backfill-translations";
 
 async function handleResearch() {
@@ -9,14 +9,11 @@ async function handleResearch() {
     const result =
       await backfillPatristicTranslations();
 
-    return NextResponse.json(result);
+    return apiJson(result);
   } catch (error) {
-    console.error(
-      "Patristic translation backfill failed:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "translation", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
         error: "Translation backfill failed.",
       },

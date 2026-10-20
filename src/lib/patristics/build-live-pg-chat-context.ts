@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
     import {
   searchPgPassages,
   type PgPassageMatch,
@@ -272,10 +273,7 @@ ${passages}
   } catch (
     error
   ) {
-    console.error(
-      "LIVE_PG_CHAT_CONTEXT_ERROR:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
 
     /*
      * PG retrieval не сме да

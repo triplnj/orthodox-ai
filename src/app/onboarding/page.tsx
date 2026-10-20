@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function OnboardingPage() {
@@ -10,11 +10,14 @@ export default function OnboardingPage() {
   const [experienceLevel, setExperienceLevel] = useState("beginner");
   const [dailyTime, setDailyTime] = useState("10 minutes");
 
+  const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function completeOnboarding(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
 
     setIsSubmitting(true);
     setError(null);
@@ -44,6 +47,7 @@ export default function OnboardingPage() {
     } catch {
       setError("Network error while saving onboarding.");
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   }
@@ -65,16 +69,16 @@ export default function OnboardingPage() {
         </p>
 
         {error && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div id="form-error-4" role="alert" tabIndex={-1} className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
 
         <form onSubmit={completeOnboarding} className="mt-8 space-y-6">
-          <div>
-            <label className="text-sm font-semibold text-gray-800">
+          <fieldset>
+            <legend className="text-sm font-semibold text-gray-800">
               What is your main goal right now?
-            </label>
+            </legend>
 
             <div className="mt-3 grid gap-3">
               {[
@@ -107,7 +111,7 @@ export default function OnboardingPage() {
                       : "cursor-pointer rounded-xl border border-gray-200 bg-white p-4 text-sm font-medium text-gray-700 hover:border-gray-400"
                   }
                 >
-                  <input
+                  <input aria-describedby={error ? "form-error-4" : undefined}
                     type="radio"
                     name="spiritualGoal"
                     value={option.value}
@@ -119,14 +123,14 @@ export default function OnboardingPage() {
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           <div>
-            <label className="text-sm font-semibold text-gray-800">
+            <label htmlFor="onboarding-page-field-1" className="text-sm font-semibold text-gray-800">
               Experience level
             </label>
 
-            <select
+            <select aria-describedby={error ? "form-error-4" : undefined} id="onboarding-page-field-1"
               value={experienceLevel}
               onChange={(event) => setExperienceLevel(event.target.value)}
               className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -141,11 +145,11 @@ export default function OnboardingPage() {
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-gray-800">
+            <label htmlFor="onboarding-page-field-2" className="text-sm font-semibold text-gray-800">
               How much time can you realistically give each day?
             </label>
 
-            <select
+            <select aria-describedby={error ? "form-error-4" : undefined} id="onboarding-page-field-2"
               value={dailyTime}
               onChange={(event) => setDailyTime(event.target.value)}
               className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"

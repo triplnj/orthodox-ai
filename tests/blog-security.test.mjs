@@ -27,6 +27,7 @@ function harness(user, env = {}) {
       return operation === "findMany" ? [post] : post;
     }]));
   const load = createLoader({
+    "server-only": {},
     "@/lib/session": { getSessionUser: async () => currentUser },
     "@/lib/prisma": { prisma: { blogPost } },
     "next/navigation": {
@@ -118,7 +119,8 @@ test("authorized create/update sanitize stored HTML and preserve slug/status/pub
     if (call.operation === "update") assert.equal(call.args.data.publishedAt, post.publishedAt);
   }
   assert.equal(await actions.sanitizeBlogPaste('<p onclick="evil()">Safe</p>'), "<p>Safe</p>");
-  await assert.rejects(actions.deleteBlogPost(postForm()), { location: "/admin/blog" });
+  const deletion = new FormData(); deletion.set("id", "post-id");
+  await assert.rejects(actions.deleteBlogPost(deletion), { location: "/admin/blog" });
   assert.deepEqual(calls.at(-1), { operation: "delete", args: { where: { id: "post-id" } } });
 });
 
@@ -203,16 +205,12 @@ test("draft creation and unpublishing retain the original blog behavior", async 
   }
 });
 
-test("self-registration ignores submitted admin identity and verification fields", async () => {
+test("self-registration rejects submitted admin identity and verification fields", async () => {
   const h = authHarness({ env: { BLOG_ADMIN_USER_IDS: verifiedAdmin.id } });
   const response = await h.request("auth/register", { email: verifiedAdmin.email, password: "test-password", name: "Name",
     id: verifiedAdmin.id, role: "ADMIN", emailVerified: "2026-01-01", plan: "PRO" });
-  assert.equal(response.status, 202);
-  const created = h.state.users[0];
-  assert.notEqual(created.id, verifiedAdmin.id);
-  assert.equal(created.emailVerified, null);
-  assert.equal(created.plan, "FREE");
-  assert.equal(created.role, undefined);
+  assert.equal(response.status, 400);
+  assert.equal(h.state.users.length, 0);
   assert.equal(h.state.sessions.length, 0);
   assert.equal(await h.load("src/lib/blogAdmin.ts").getBlogAdminUser(), null);
 });
@@ -221,8 +219,9 @@ test("ordinary login does not promote an unverified provisioned account", async 
   const h = authHarness({ env: { BLOG_ADMIN_USER_IDS: verifiedAdmin.id } });
   h.addUser({ ...verifiedAdmin, emailVerified: null, passwordHash: "hash:test-password" });
   const response = await h.request("auth/login", { email: verifiedAdmin.email, password: "test-password", role: "ADMIN", emailVerified: true });
-  assert.equal(response.status, 200);
-  assert.equal(h.state.sessions[0].userId, verifiedAdmin.id);
+  assert.equal(response.status, 400);
+  assert.equal(h.state.sessions.length, 0);
+  assert.equal(h.state.users[0].emailVerified, null);
   assert.equal(await h.load("src/lib/blogAdmin.ts").getBlogAdminUser(), null);
 });
 for (const state of ["missing", "invalid", "expired", "valid"]) {

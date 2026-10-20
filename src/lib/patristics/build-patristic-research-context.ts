@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import {
   buildVerifiedPatristicContext,
   type PatristicLanguage,
@@ -44,6 +45,9 @@ export type PatristicResearchSource = {
   sourceUrl: string;
   scanUrl: string | null;
   verificationStatus: string;
+  webpageTitle?: string | null;
+  originalSourceUrl?: string;
+  metadata?: Record<string, unknown>;
 };
 
 export type PatristicResearchContext = {
@@ -76,6 +80,7 @@ function mapPgSources(sources: LivePgSource[]): PatristicResearchSource[] {
     sourceUrl: source.sourceUrl,
     scanUrl: source.pageImageUrl,
     verificationStatus: "PRIMARY_SOURCE_OCR",
+    metadata: { pgVolume: source.pgVolume, scanPage: source.scanPage, pgReference: source.pgReference },
   }));
 }
 
@@ -89,6 +94,7 @@ function mapCuratedSources(evidence: CuratedTextEvidence[]): PatristicResearchSo
     sourceUrl: item.sourceUrl,
     scanUrl: null,
     verificationStatus: item.verificationStatus,
+    metadata: { sourceName: item.sourceName, documentType: item.documentType, excerpt: item.excerpt },
   }));
 }
 
@@ -202,7 +208,7 @@ export async function buildPatristicResearchContext(
         sources.push(...mapCuratedSources(curated));
       }
     } catch (error) {
-      console.error("PATRISTIC_RESEARCH_CURATED_ERROR:", error);
+      diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
     }
   }
 
@@ -211,7 +217,7 @@ export async function buildPatristicResearchContext(
   try {
     verifiedDbAuthor = await detectPatristicAuthor(query);
   } catch (error) {
-    console.error("PATRISTIC_AUTHOR_DETECTION_ERROR:", error);
+    diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
   }
 
   if (verifiedDbAuthor || isGenericPatristicResearchQuery(query)) {
@@ -232,11 +238,12 @@ export async function buildPatristicResearchContext(
             sourceUrl: source.sourceUrl,
             scanUrl: null,
             verificationStatus: source.verificationStatus,
+            metadata: source.metadata,
           })),
         );
       }
     } catch (error) {
-      console.error("PATRISTIC_RESEARCH_VERIFIED_DB_ERROR:", error);
+      diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
     }
   }
 
@@ -250,7 +257,7 @@ export async function buildPatristicResearchContext(
       sources.push(...mapPgSources(livePg.sources));
     }
   } catch (error) {
-    console.error("PATRISTIC_RESEARCH_PG_ERROR:", error);
+    diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
   }
 
   /*
@@ -272,7 +279,9 @@ export async function buildPatristicResearchContext(
         ...webResearch.sources.map((source) => ({
           provider: "WEB_RESEARCH" as const,
           authorName: null,
-          workTitle: source.title,
+          workTitle: null,
+          webpageTitle: source.title,
+          originalSourceUrl: source.originalSourceUrl,
           reference: null,
           originalLanguage: null,
           sourceUrl: source.sourceUrl,
@@ -282,7 +291,7 @@ export async function buildPatristicResearchContext(
       );
     }
   } catch (error) {
-    console.error("PATRISTIC_RESEARCH_WEB_ERROR:", error);
+    diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
   }
 
   const result =
@@ -295,15 +304,7 @@ export async function buildPatristicResearchContext(
         )
       : null;
 
-  console.log("PATRISTIC_RESEARCH:", {
-    query,
-    language,
-    curatedMatch: curatedDocuments.length > 0,
-    verifiedDbAuthor: verifiedDbAuthor ?? null,
-    providersAttempted,
-    providersSucceeded,
-    sourceCount: result?.sources.length ?? 0,
-  });
+  diagnostic("operation_completed", { operation: "research", count: result?.sources.length ?? 0 });
 
   return result;
 }

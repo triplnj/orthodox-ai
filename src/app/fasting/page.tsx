@@ -59,7 +59,7 @@ export default async function FastingPage() {
           Fasting
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Understand Orthodox fasting without turning it into legalism or
           extremes.
         </h1>

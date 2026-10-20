@@ -61,19 +61,19 @@ function VerifyEmailContent() {
         </h1>
 
         {isLoading && (
-          <p className="mt-5 text-sm leading-6 text-gray-600">
+          <p role="status" className="mt-5 text-sm leading-6 text-gray-600">
             Verifying your email address...
           </p>
         )}
 
         {message && (
-          <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div role="status" className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -105,7 +105,7 @@ export default function VerifyEmailPage() {
       fallback={
         <main className="mx-auto max-w-md px-6 py-16">
           <section className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <p className="text-sm text-gray-600">Loading verification...</p>
+            <p role="status" className="text-sm text-gray-600">Loading verification...</p>
           </section>
         </main>
       }

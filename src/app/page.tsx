@@ -1,3 +1,4 @@
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 import Link from "next/link";
 import { productCopy } from "@/lib/productCopy";
 
@@ -25,7 +26,7 @@ const mainFeatures = [
 ];
 
 const proFeatures = [
-  "Unlimited AI questions",
+  `${FULL_ACCESS_DAILY_CHAT_LIMIT} AI questions per day`,
   "Personal prayer plans",
   "Scripture reading plans",
   "Spiritual journal",
@@ -118,7 +119,7 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="max-w-3xl">
-          <h2 className="text-3xl font-bold tracking-tight text-white-950">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-950">
             More than a chatbot
           </h2>
 
@@ -155,7 +156,7 @@ export default function HomePage() {
             </h2>
 
             <p className="mt-4 text-base leading-7 text-gray-300">
-              For believers who want unlimited access, personal prayer plans,
+              For believers who want {FULL_ACCESS_DAILY_CHAT_LIMIT} chat questions per day, personal prayer plans,
               reading structure, deeper explanations, and a spiritual journal.
             </p>
 

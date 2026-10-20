@@ -15,30 +15,30 @@ export function Footer() {
 
         </div>
 
-        <nav className="flex flex-wrap gap-4 text-xs font-medium">
-          <Link href="/pricing" className="hover:text-gray-950">
+        <nav aria-label="Footer" className="flex flex-wrap gap-4 text-xs font-medium">
+          <Link href="/pricing" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Pricing
           </Link>
 
-          <Link href="/account" className="hover:text-gray-950">
+          <Link href="/account" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Account
           </Link>
-          <Link href="/settings" className="hover:text-gray-950">
+          <Link href="/settings" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Settings
           </Link>
 
-          <Link href="/dashboard" className="hover:text-gray-950">
+          <Link href="/dashboard" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Dashboard
           </Link>
-           <Link href="/terms" className="hover:text-gray-950">
+           <Link href="/terms" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Terms
           </Link>
 
-          <Link href="/privacy" className="hover:text-gray-950">
+          <Link href="/privacy" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Privacy
           </Link>
 
-          <Link href="/disclaimer" className="hover:text-gray-950">
+          <Link href="/disclaimer" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Disclaimer
           </Link>
         </nav>

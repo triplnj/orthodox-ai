@@ -25,7 +25,7 @@ function harness({ initialUser = user(), subscriptions = [] } = {}) {
   const calls = [];
   let sequence = 0, queue = Promise.resolve();
   const remote = new Map(subscriptions.map(s => [`${s.provider}:${s.providerSubscriptionId}`, structuredClone(s)]));
-  const options = { outage: false, cancelFailure: null, cancellationIneffective: false, debt: false,
+  const options = { outage: false, providerOutage: null, cancelFailure: null, cancellationIneffective: false, debt: false,
     unknownCheckout: false, checkoutClosed: false, failReceipt: false, signedIn: true };
   function model(key) {
     return {
@@ -67,9 +67,9 @@ function harness({ initialUser = user(), subscriptions = [] } = {}) {
     try { return await work(prisma); } catch (error) { Object.assign(state, snapshot); throw error; } finally { release(); }
   };
   const providers = {
-    retrieve: async (provider, id) => { calls.push(`retrieve:${id}`); if (options.outage) throw new actual.BillingError("Provider unavailable", 503);
+    retrieve: async (provider, id) => { calls.push(`retrieve:${id}`); if (options.outage || options.providerOutage === provider) throw new actual.BillingError("Provider unavailable", 503);
       const s = remote.get(`${provider}:${id}`); if (!s) throw new Error("Unknown subscription"); return structuredClone(s); },
-    inventory: async (provider, customer) => { if (options.outage) throw new actual.BillingError("Provider unavailable", 503);
+    inventory: async (provider, customer) => { if (options.outage || options.providerOutage === provider) throw new actual.BillingError("Provider unavailable", 503);
       return structuredClone([...remote.values()].filter(s => s.provider === provider && s.providerCustomerId === customer)); },
     terminal: s => s.provider === "STRIPE" ? ["canceled", "incomplete_expired"].includes(s.status) : ["cancelled", "expired"].includes(s.status),
     cancel: async s => { calls.push(`cancel:${s.provider}`); if (options.cancelFailure === s.provider) throw new Error("Cancellation failed");
@@ -221,6 +221,7 @@ test("bounded outage grace preserves only previously verified paid PRO", async (
   const end = new Date(Date.now() - DAY), grace = new Date(+end + 3 * DAY);
   const initial = user({ plan: "PRO", subscriptionStatus: "active", billingAccessUntil: end, billingGraceUntil: grace, stripeCustomerId: "STRIPE-customer" });
   const h = harness({ initialUser: initial }); h.options.outage = true;
+  h.state.subscriptions.push({ ...sub("STRIPE", { currentPeriodEndsAt: end }), userId: "u", lastVerifiedAt: new Date(+end - DAY) });
   const result = await h.service.refreshAccess(initial); assert.equal(+result.billingAccessUntil, +grace);
   assert.equal(+h.state.users[0].billingAccessUntil, +end, "grace is not saved as another verification");
 });
@@ -239,10 +240,10 @@ test("healthy provider cancellation revokes access instead of using outage grace
   const s = sub("STRIPE", { status: "canceled" }), initial = associated(s, { plan: "PRO", subscriptionStatus: "active", billingAccessUntil: new Date(0), billingGraceUntil: new Date(Date.now() + DAY) });
   const h = harness({ initialUser: initial, subscriptions: [s] }); const refreshed = await h.service.refreshAccess(initial); assert.equal(refreshed.plan, "FREE");
 });
-test("unverified legacy rows do not blanket downgrade existing PRO", async () => {
+test("unverified legacy rows cannot override known provider cancellation", async () => {
   const s = sub("STRIPE", { status: "canceled" }), h = harness({ initialUser: associated(s, { plan: "PRO", subscriptionStatus: "active" }), subscriptions: [s] });
   h.state.subscriptions.push({ provider: "LEMONSQUEEZY", providerSubscriptionId: "legacy", userId: "u", lastVerifiedAt: null });
-  await h.service.webhook(notice(s)); assert.equal(h.state.users[0].plan, "PRO");
+  await h.service.webhook(notice(s)); assert.equal(h.state.users[0].plan, "FREE");
 });
 test("recovery requires explicit verified administrator provisioning", async () => {
   const h = harness(); await assert.rejects(h.service.recover("u", "u", "Investigated interrupted deletion"), /administrator/);
@@ -265,16 +266,16 @@ test("uncertain checkout without provider ID cannot be cleared; failed recovery 
 test("deletion without billing needs no provider initialization", async () => { const h = harness(); await h.service.deleteAccount("u"); assert.deepEqual(h.calls.filter(c => c.startsWith("retrieve:") || c.startsWith("cancel:")), []); });
 for (const path of ["account/delete", "settings/delete"]) {
   test(`${path}: unauthorized requests cannot delete`, async () => {
-    const h = harness(); h.options.signedIn = false; const req = new Request("https://example.test", { method: "DELETE", body: '{"confirmation":"DELETE"}' });
+    const h = harness(); h.options.signedIn = false; const req = new Request("https://example.test", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: '{"confirmation":"DELETE"}' });
     assert.equal((await h.load(`src/app/api/${path}/route.ts`).DELETE(req)).status, 401); assert.equal(h.calls.length, 0);
   });
   test(`${path}: successful deletion uses the authoritative service and clears cookie`, async () => {
-    const h = harness(); const req = new Request("https://example.test", { method: "DELETE", body: '{"confirmation":"DELETE"}' });
+    const h = harness(); const req = new Request("https://example.test", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: '{"confirmation":"DELETE"}' });
     const response = await h.load(`src/app/api/${path}/route.ts`).DELETE(req); assert.equal(response.status, 200); assert.match(response.headers.get("set-cookie"), /orthodoxai_session=;/);
   });
 }
 test("settings deletion retains confirmation requirement", async () => {
-  const h = harness(); const response = await h.load("src/app/api/settings/delete/route.ts").DELETE(new Request("https://example.test", { method: "DELETE", body: '{}' }));
+  const h = harness(); const response = await h.load("src/app/api/settings/delete/route.ts").DELETE(new Request("https://example.test", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: '{}' }));
   assert.equal(response.status, 400); assert.equal(h.calls.length, 0);
 });
 test("current Lemon portal URL supports legacy Stripe subscribers", async () => {
@@ -391,4 +392,58 @@ test("legacy trial access is reconciled from the provider rather than trusted fr
   const initial = associated(s, { plan: "PRO", subscriptionStatus: "on_trial" }), h = harness({ initialUser: initial, subscriptions: [s] });
   const verified = await h.service.refreshAccess(initial); assert.equal(verified.subscriptionStatus, "active");
   assert.equal(+verified.billingAccessUntil, +s.trialEndsAt); assert.equal(verified.billingGraceUntil, null);
+});
+
+test("legacy outage reconciliation never renews or persists the cutover deadline as paid evidence", async () => {
+  const deadline = new Date(Date.now() + DAY);
+  const initial = user({ plan: "PRO", subscriptionStatus: "active", subscriptionId: "legacy", legacyReconciliationDeadlineAt: deadline });
+  const h = harness({ initialUser: initial }); h.options.outage = true;
+  const results = await Promise.all(Array.from({ length: 12 }, () => h.service.refreshAccess(initial)));
+  assert.ok(results.every(result => result.plan === "PRO" && +result.billingAccessUntil === +deadline));
+  assert.equal(h.state.users[0].billingAccessUntil, null);
+  assert.equal(+h.state.users[0].legacyReconciliationDeadlineAt, +deadline);
+  h.state.users[0].legacyReconciliationDeadlineAt = new Date(0); // Synthetic already-expired cutover fixture.
+  assert.equal((await h.service.refreshAccess(initial)).plan, "FREE");
+});
+test("missing legacy deadline and new FREE snapshots cannot obtain outage access", async () => {
+  for (const fields of [{ plan: "PRO", subscriptionStatus: "active" },
+    { plan: "FREE", subscriptionStatus: "active", legacyReconciliationDeadlineAt: new Date(Date.now() + DAY) }]) {
+    const initial = user({ ...fields, subscriptionId: "legacy" }), h = harness({ initialUser: initial }); h.options.outage = true;
+    assert.equal((await h.service.refreshAccess(initial)).plan, "FREE");
+  }
+});
+test("verified Lemon access is retained while Stripe fails independently", async () => {
+  const lemon = sub("LEMONSQUEEZY"), initial = associated(lemon, { subscriptionId: "stripe-unknown" });
+  const h = harness({ initialUser: initial, subscriptions: [lemon] }); h.options.providerOutage = "STRIPE";
+  const result = await h.service.refreshAccess(initial);
+  assert.equal(result.plan, "PRO"); assert.equal(+result.billingAccessUntil, +lemon.currentPeriodEndsAt);
+  assert.equal(h.state.subscriptions.length, 1); assert.ok(h.state.subscriptions[0].lastVerifiedAt);
+});
+test("local conflicting customer mappings deny legacy access before an unavailable provider is called", async () => {
+  const s = sub(), initial = associated(s, { plan: "PRO", subscriptionStatus: "active", legacyReconciliationDeadlineAt: new Date(Date.now() + DAY) });
+  const h = harness({ initialUser: initial }); h.state.users[1].stripeCustomerId = s.providerCustomerId; h.options.outage = true;
+  const before = structuredClone(h.state.users);
+  assert.equal((await h.service.refreshAccess(initial)).plan, "FREE");
+  assert.deepEqual(h.state.users, before); assert.ok(!h.calls.some(call => call.startsWith("retrieve:")));
+});
+test("foreign and deleted subscription ownership cannot be hidden by provider outage", async () => {
+  for (const owner of ["admin", null]) {
+    const s = sub(), initial = associated(s, { plan: "PRO", subscriptionStatus: "active", legacyReconciliationDeadlineAt: new Date(Date.now() + DAY) });
+    const h = harness({ initialUser: initial }); h.state.subscriptions.push({ ...s, userId: owner, lastVerifiedAt: new Date() }); h.options.outage = true;
+    const before = structuredClone(h.state.subscriptions);
+    assert.equal((await h.service.refreshAccess(initial)).plan, "FREE"); assert.deepEqual(h.state.subscriptions, before);
+  }
+});
+test("independently verified provider survives another provider ownership conflict", async () => {
+  const lemon = sub("LEMONSQUEEZY"), stripe = sub();
+  const initial = associated(lemon, { subscriptionId: stripe.providerSubscriptionId, stripeCustomerId: stripe.providerCustomerId });
+  const h = harness({ initialUser: initial, subscriptions: [lemon, stripe] });
+  h.state.users[1].stripeCustomerId = stripe.providerCustomerId;
+  assert.equal((await h.service.refreshAccess(initial)).plan, "PRO");
+  assert.equal(h.state.subscriptions.length, 1); assert.equal(h.state.subscriptions[0].provider, "LEMONSQUEEZY");
+});
+test("database verification errors fail closed rather than returning raw stored PRO", async () => {
+  const initial = user({ plan: "PRO", subscriptionStatus: "active" }), h = harness({ initialUser: initial });
+  h.prisma.$transaction = async () => { throw new Error("PRIVATE_SQL SECRET_CONNECTION"); };
+  await assert.rejects(h.service.refreshAccess(initial), error => error.status === 503 && !/PRIVATE|SECRET/.test(error.message));
 });

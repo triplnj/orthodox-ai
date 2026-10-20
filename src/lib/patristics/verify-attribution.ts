@@ -1,3 +1,4 @@
+import { safeResearchFailure } from "@/lib/diagnostics";
 import { getOpenAI } from "@/lib/ai/openaiClient";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -284,10 +285,7 @@ export async function verifyCandidateAttribution(
       actualAuthorName:
         null,
 
-      reason:
-        error instanceof Error
-          ? `Could not load source for attribution verification: ${error.message}`
-          : "Could not load source for attribution verification.",
+      reason: safeResearchFailure(error),
     };
   }
 

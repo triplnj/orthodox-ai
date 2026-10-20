@@ -22,7 +22,7 @@ export default function TodayPage() {
           {todayData.dateLabel}
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           {todayData.spiritualFocus}
         </h1>
 

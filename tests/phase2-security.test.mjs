@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { mock, test } from "node:test";
 import { createLoader } from "./helpers/load-ts.mjs";
+import { addChatModels } from "./helpers/chat-models.mjs";
 
 mock.method(globalThis, "fetch", () => { throw new Error("Live network calls forbidden in Phase 2 tests"); });
 mock.method(console, "error", () => {});
-const pro = { id: "user-1", email: "user@example.com", plan: "PRO", subscriptionStatus: "active", emailVerified: new Date() };
+const pro = { id: "user-1", email: "user@example.com", plan: "PRO", subscriptionStatus: "active", emailVerified: new Date(), billingAccessUntil: new Date(Date.now() + 86400000) };
 const free = { ...pro, plan: "FREE", subscriptionStatus: null };
 
 function matches(record, where = {}) {
@@ -80,6 +81,7 @@ function harness({ user = pro, failModel = false, modelGate } = {}) {
       finally { release?.(); }
     },
   };
+  addChatModels(prisma, state);
   const load = createLoader({
     "server-only": {},
     "@/lib/prisma": { prisma },
@@ -87,6 +89,10 @@ function harness({ user = pro, failModel = false, modelGate } = {}) {
     "pdf-parse/worker": { CanvasFactory: class {} },
     "@/lib/auth": { getCurrentUser: async () => user },
     "@/lib/session": { getSessionUser: async () => user, createSession: async () => { state.sessionCalls++; } },
+    "@/lib/security/review-provisioning": {
+      validReviewAccessToken: (kind, token) => token === (kind === "clergy" ? "test-clergy-token" : "test-review-token"),
+      startReviewSession: async () => { state.sessionCalls++; },
+    },
     "@/lib/userProfileContext": { getUserProfileContext: async () => "Profile" },
     "@/lib/ai/chatService": { generateOrthodoxAnswer: async () => {
       state.modelCalls++;
@@ -267,7 +273,7 @@ for (const [review, token] of [["clergy", "test-clergy-token"], ["fr-josiah", "t
   test(`${review} review-session creation requires its token and has a shared rate limit`, async () => {
     const { load, state } = harness({ user: null });
     const route = load(`src/app/api/review/${review}/start/route.ts`);
-    const startRequest = (value) => ({ nextUrl: new URL(`https://example.com/review?token=${value}`), url: "https://example.com/review" });
+    const startRequest = (value) => ({ nextUrl: new URL(`https://example.com/review?token=${value}`), url: `https://example.com/review?token=${value}` });
     assert.equal((await route.GET(startRequest("wrong"))).status, 401);
     assert.equal(state.reservations.length, 0);
     assert.equal((await route.GET(startRequest(token))).status, 307);
@@ -355,7 +361,7 @@ test("trusted maintenance calls without a body retain their existing request con
   const { load, state } = harness({ user: null });
   load.environment.PATRISTICS_SECRET = "test-worker-secret";
   const route = load("src/lib/patristics/api-security.ts").secureResearchRoute(async () => Response.json({ ok: true }));
-  const response = await route(new Request("https://example.com/api/test", { method: "POST", headers: { "x-patristics-secret": "test-worker-secret" } }));
+  const response = await route(new Request("https://example.com/api/admin/patristics/embed", { method: "POST", headers: { "x-patristics-secret": "test-worker-secret" } }));
   assert.equal(response.status, 200);
   assert.equal(state.reservations.length, 1);
 });
@@ -401,7 +407,7 @@ test("failed job completion retains the owning claim and never permits automatic
   await claimPatristicJob("job", "owner");
   await finishPatristicJob("job", "owner", "provider failed");
   assert.equal(state.jobs[0].status, "FAILED");
-  assert.equal(state.jobs[0].error, "provider failed");
+  assert.equal(state.jobs[0].error, "RESEARCH_UNEXPECTED");
   assert.equal(await claimPatristicJob("job", "other"), false);
 });
 
@@ -431,7 +437,7 @@ test("direct processor performs discovery once and records failure under its own
     "./verify-second-source": {}, "./embed-quotes": {},
   });
   const { processPatristicDiscoveryJob } = load("src/lib/patristics/process-discovery-job.ts");
-  await assert.rejects(processPatristicDiscoveryJob("job"), /Provider failed/);
+  await assert.rejects(processPatristicDiscoveryJob("job"), /RESEARCH_UNEXPECTED/);
   const second = await processPatristicDiscoveryJob("job");
   assert.equal(second.processed, false);
   assert.equal(calls, 1);

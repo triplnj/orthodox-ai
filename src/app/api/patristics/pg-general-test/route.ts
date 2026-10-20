@@ -1,8 +1,6 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import {
-  NextResponse,
-} from "next/server";
-
 import {
   buildPgSearchPlan,
 } from "@/lib/patristics/build-pg-search-plan";
@@ -34,7 +32,7 @@ async function handleResearch(
     body =
       await request.json();
   } catch {
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Invalid JSON body.",
@@ -51,7 +49,7 @@ async function handleResearch(
 
 
   if (!query) {
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Query is required.",
@@ -146,7 +144,7 @@ async function handleResearch(
       );
 
 
-    return NextResponse.json({
+    return apiJson({
       query,
 
       plan: {
@@ -180,18 +178,12 @@ async function handleResearch(
       results,
     });
   } catch (error) {
-    console.error(
-      "General PG test failed:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
 
 
-    return NextResponse.json(
+    return apiJson(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "General PG test failed.",
+        error: "General PG test failed.",
       },
       {
         status: 500,

@@ -5,6 +5,7 @@ import { getOpenAI } from "@/lib/ai/openaiClient";
 export type WebPatristicResearchSource = {
   sourceUrl: string;
   title: string | null;
+  originalSourceUrl?: string;
 };
 
 export type WebPatristicResearchResult = {
@@ -130,7 +131,7 @@ function sourceScore(sourceUrl: string) {
 }
 
 function collectUrlCitations(response: unknown) {
-  const urls = new Map<string, string | null>();
+  const urls = new Map<string, { title: string | null; originalSourceUrl: string }>();
   const value = response as {
     output?: Array<{
       type?: string;
@@ -174,7 +175,7 @@ function collectUrlCitations(response: unknown) {
         : null;
 
       if (url) {
-        urls.set(url, title);
+        urls.set(url, { title, originalSourceUrl: rawUrl! });
       }
     }
 
@@ -184,15 +185,15 @@ function collectUrlCitations(response: unknown) {
         : null;
 
       if (url && !urls.has(url)) {
-        urls.set(url, null);
+        urls.set(url, { title: null, originalSourceUrl: source.url! });
       }
     }
   }
 
   return [...urls.entries()].map(
-    ([sourceUrl, title]) => ({
+    ([sourceUrl, metadata]) => ({
       sourceUrl,
-      title,
+      ...metadata,
     }),
   );
 }
@@ -201,16 +202,12 @@ function collectUrlsFromText(text: string) {
   const urls =
     text.match(/https?:\/\/[^\s)\]}>"']+/g) ?? [];
 
-  return [
-    ...new Set(
-      urls
-        .map(normalizeSourceUrl)
-        .filter((url): url is string => Boolean(url)),
-    ),
-  ].map((sourceUrl) => ({
-    sourceUrl,
+  return [...new Set(urls)].flatMap(originalSourceUrl => {
+    const sourceUrl = normalizeSourceUrl(originalSourceUrl);
+    return sourceUrl ? [{ sourceUrl, originalSourceUrl,
     title: null as string | null,
-  }));
+    }] : [];
+  });
 }
 
 function selectSources(
@@ -236,6 +233,7 @@ function selectSources(
       byUrl.set(normalized, {
         sourceUrl: normalized,
         title: source.title,
+        originalSourceUrl: source.originalSourceUrl ?? source.sourceUrl,
       });
     }
   }

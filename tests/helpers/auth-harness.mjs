@@ -10,7 +10,7 @@ export function matches(row, where = {}) {
   });
 }
 export function authHarness({ realBcrypt, extraMocks = {}, env = {} } = {}) {
-  const state = { users: [], sessions: [], resets: [], verifications: [], buckets: [], domains: [], audits: [] };
+  const state = { users: [], sessions: [], resets: [], verifications: [], buckets: [], domains: [], audits: [], billingSubscriptions: [], billingCheckouts: [] };
   const calls = [], delivered = [], pending = [], jar = new Map();
   const options = { emailFailure: false, updateFailure: false };
   let sequence = 0, queue = Promise.resolve();
@@ -21,6 +21,7 @@ export function authHarness({ realBcrypt, extraMocks = {}, env = {} } = {}) {
         return structuredClone({ ...row, ...(include?.user ? { user: state.users.find(user => user.id === row.userId) } : {}) });
       },
       findMany: async ({ where = {}, take } = {}) => structuredClone(state[key].filter(row => matches(row, where)).slice(0, take)),
+      findFirst: async ({ where = {} } = {}) => structuredClone(state[key].find(row => matches(row, where)) ?? null),
       create: async ({ data }) => {
         const row = { id: `${key}-${++sequence}`, passwordHash: null, plan: "FREE", emailVerified: null, usedAt: null,
           createdAt: new Date(), ...data }; state[key].push(row); return structuredClone(row);
@@ -43,6 +44,7 @@ export function authHarness({ realBcrypt, extraMocks = {}, env = {} } = {}) {
   const prisma = { user: model("users"), session: model("sessions"), passwordResetToken: model("resets"),
     emailVerificationToken: model("verifications"), authRateLimitBucket: model("buckets"),
     patristicSourceDomain: model("domains"), patristicSourceDomainAudit: model("audits"),
+    billingSubscription: model("billingSubscriptions"), billingCheckoutAttempt: model("billingCheckouts"),
     $queryRaw: async (...args) => { calls.push(args); return [{ locked: 1 }]; } };
   prisma.$transaction = async work => {
     const previous = queue; let release;

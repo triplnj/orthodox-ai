@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -81,11 +82,7 @@ export async function embedVerifiedQuotes(
 
     } catch (error) {
 
-      console.error(
-        "EMBED_QUOTE_ERROR",
-        quote.id,
-        error,
-      );
+      diagnostic("operation_failed", { operation: "embedding", failure: failureCategory(error) });
 
       failed++;
     }

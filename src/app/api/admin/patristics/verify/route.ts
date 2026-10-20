@@ -1,8 +1,6 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import {
-  NextResponse,
-} from "next/server";
-
 import {
   verifyQuotesAgainstPg,
 } from "@/lib/patristics/verify-second-source";
@@ -21,19 +19,16 @@ async function handleResearch(
       await verifyQuotesAgainstPg();
 
 
-    return NextResponse.json(
+    return apiJson(
       result,
     );
 
   } catch (error) {
 
-    console.error(
-      "PATRISTICS_PG_VERIFY_ERROR",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "verification", failure: failureCategory(error) });
 
 
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "PG verification failed",

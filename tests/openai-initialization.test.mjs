@@ -104,7 +104,7 @@ test("first use reads runtime configuration and caches one client shared by cons
     chat.generateOrthodoxAnswer({ userMessage: "Question", isPro: true }),
   ]);
   assert.equal(constructions.length, 1);
-  assert.deepEqual(constructions[0], { apiKey: mockCredential });
+  assert.deepEqual(constructions[0], { apiKey: mockCredential, logLevel: "off" });
   assert.deepEqual(vector, [0.1, 0.2]);
   assert.deepEqual(answer, { answer: "Mock answer" });
   assert.equal(requests.find((request) => request.kind === "embedding").args[0].model, "text-embedding-3-small");
@@ -115,7 +115,7 @@ test("existing admin-key fallback remains supported without an API key", () => {
   const { load, constructions } = harness();
   load.environment.OPENAI_ADMIN_KEY = Symbol("mock admin credential presence");
   assert.ok(load("src/lib/ai/openaiClient.ts").getOpenAI());
-  assert.deepEqual(constructions, [{ apiKey: undefined }]);
+  assert.deepEqual(constructions, [{ apiKey: undefined, logLevel: "off" }]);
 });
 
 test("SDK initialization failures are not cached", () => {

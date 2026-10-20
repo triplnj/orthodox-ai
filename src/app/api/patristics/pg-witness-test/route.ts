@@ -1,8 +1,6 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import {
-  NextResponse,
-} from "next/server";
-
 import {
   searchPgPassages,
 } from "@/lib/patristics/pg-passage-search";
@@ -45,7 +43,7 @@ async function handleResearch(
 
 
   if (!query) {
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Query is required.",
@@ -235,7 +233,7 @@ async function handleResearch(
     }
 
 
-    return NextResponse.json({
+    return apiJson({
       query,
 
       count:
@@ -244,18 +242,12 @@ async function handleResearch(
       results,
     });
   } catch (error) {
-    console.error(
-      "PG_WITNESS_TEST_ERROR:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "verification", failure: failureCategory(error) });
 
 
-    return NextResponse.json(
+    return apiJson(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "PG witness test failed.",
+        error: "PG witness test failed.",
       },
       {
         status: 500,

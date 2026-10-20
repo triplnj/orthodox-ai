@@ -1,8 +1,13 @@
 "use client";
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 
-import { useEffect, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
+import { ReadError } from "@/components/layout/ReadError";
 import { UpgradeBox } from "@/components/upgrade/UpgradeBox";
 import { productCopy } from "@/lib/productCopy";
+import { usePersonalOperation } from "@/components/pro/usePersonalOperation";
+import { errorMessage } from "@/lib/api/clientErrors";
 
 type JournalEntry = {
   id: string;
@@ -14,6 +19,7 @@ type JournalEntry = {
 };
 
 export default function JournalPage() {
+  const saving = useRef(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -22,14 +28,21 @@ export default function JournalPage() {
   const [summarizingId, setSummarizingId] = useState<string | null>(null);
   const [upgradeRequired, setUpgradeRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const summaryOperation = usePersonalOperation("journal-summary", data => {
+    const entry = data.entry as JournalEntry;
+    setEntries(current => current.map(existing => existing.id === entry.id && new Date(entry.updatedAt) >= new Date(existing.updatedAt) ? entry : existing));
+  });
 
  
 
   async function saveEntry() {
-    if (!content.trim() || isSaving) {
+    if (!content.trim() || saving.current) {
       return;
     }
 
+    saving.current = true;
     setIsSaving(true);
     setError(null);
 
@@ -48,6 +61,7 @@ export default function JournalPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        setAuthenticationRequired(response.status === 401);
         setError(data.error ?? "Could not save journal entry.");
 
         if (data.upgradeRequired) {
@@ -62,31 +76,26 @@ export default function JournalPage() {
       setEntries((current) => [data.entry, ...current]);
       setUpgradeRequired(false);
     } catch {
-      setError("Network error while saving journal entry.");
+      setError("Could not confirm the save. Your draft is preserved. Load your entries to check whether it was saved before saving again.");
     } finally {
+      saving.current = false;
       setIsSaving(false);
     }
   }
 
   async function summarizeEntry(entryId: string) {
+    if (summarizingId || summaryOperation.blocked) return;
     setSummarizingId(entryId);
     setError(null);
 
     try {
-      const response = await fetch("/api/journal/summarize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          entryId,
-        }),
-      });
+      const response = await summaryOperation.submit({ entryId });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error ?? "Could not summarize journal entry.");
+        setAuthenticationRequired(response.status === 401);
+        setError(errorMessage(data));
 
         if (data.upgradeRequired) {
           setUpgradeRequired(true);
@@ -97,7 +106,7 @@ export default function JournalPage() {
 
       setEntries((current) =>
         current.map((entry) =>
-          entry.id === entryId ? data.entry : entry
+          entry.id === entryId && new Date(data.entry.updatedAt) >= new Date(entry.updatedAt) ? data.entry : entry
         )
       );
     } catch {
@@ -117,6 +126,7 @@ useEffect(() => {
       const data = await response.json();
 
       if (!response.ok) {
+        setAuthenticationRequired(response.status === 401);
         setError(data.error ?? "Could not load journal entries.");
 
         if (data.upgradeRequired) {
@@ -136,7 +146,7 @@ useEffect(() => {
   }
 
   loadEntries();
-}, []);
+}, [loadAttempt]);
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <section>
@@ -144,7 +154,7 @@ useEffect(() => {
           Spiritual Journal
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Organize your reflections, questions, and daily spiritual notes.
         </h1>
 
@@ -160,15 +170,14 @@ useEffect(() => {
         <section className="mt-8">
           <UpgradeBox
             title="Pro feature: Spiritual Journal"
-            message="The Spiritual Journal is available with OrthodoxAI Pro. Pro gives you journal entries, AI summaries, personal prayer plans, Scripture reading plans, and unlimited questions."
+            message={`The Spiritual Journal is available with OrthodoxAI Pro. Pro gives you journal entries, AI summaries, personal prayer plans, Scripture reading plans, and ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day.`}
           />
         </section>
       )}
 
+      {summaryOperation.controls}
       {error && (
-        <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          {error}
-        </div>
+        <ReadError message={error} authenticationRequired={authenticationRequired} retry={() => setLoadAttempt(value => value + 1)} />
       )}
 
       {!upgradeRequired && (
@@ -180,11 +189,11 @@ useEffect(() => {
 
             <div className="mt-5 space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="journal-page-field-1" className="text-sm font-medium text-gray-700">
                   Title
                 </label>
 
-                <input
+                <input disabled={isSaving} maxLength={200} id="journal-page-field-1"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                
@@ -193,11 +202,11 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="journal-page-field-2" className="text-sm font-medium text-gray-700">
                   Reflection
                 </label>
 
-                <textarea
+                <textarea disabled={isSaving} maxLength={40000} id="journal-page-field-2"
                   value={content}
                   onChange={(event) => setContent(event.target.value)}
                
@@ -208,7 +217,7 @@ useEffect(() => {
               <button
                 type="button"
                 onClick={saveEntry}
-                disabled={isSaving || !content.trim()}
+                disabled={isSaving || isLoadingEntries || !content.trim()}
                 className="w-full rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save entry"}
@@ -222,12 +231,12 @@ useEffect(() => {
             </h2>
 
             {isLoadingEntries && (
-              <p className="mt-5 text-sm text-gray-500">
+              <p role="status" className="mt-5 text-sm text-gray-500">
                 Loading journal entries...
               </p>
             )}
 
-            {!isLoadingEntries && entries.length === 0 && (
+            {!isLoadingEntries && !error && entries.length === 0 && (
               <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-6 text-sm leading-6 text-gray-600 shadow-sm">
                 No journal entries yet. Write your first reflection on the left.
               </div>
@@ -253,7 +262,7 @@ useEffect(() => {
                     <button
                       type="button"
                       onClick={() => summarizeEntry(entry.id)}
-                      disabled={summarizingId === entry.id}
+                      disabled={Boolean(summarizingId) || summaryOperation.blocked}
                       className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {summarizingId === entry.id
@@ -262,7 +271,7 @@ useEffect(() => {
                     </button>
                   </div>
 
-                  <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                  <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
                     {entry.content}
                   </p>
 
@@ -272,7 +281,7 @@ useEffect(() => {
                         OrthodoxAI summary
                       </p>
 
-                      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                      <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
                         {entry.aiSummary}
                       </p>
                     </div>

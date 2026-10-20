@@ -1,6 +1,9 @@
 "use client";
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
+
 
 import { useEffect, useState } from "react";
+import { ReadError } from "@/components/layout/ReadError";
 import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { CustomerPortalButton } from "@/components/billing/CustomerPortalButton";
@@ -23,6 +26,7 @@ type AccountData = {
     chatCount: number;
     journalCount: number;
     todayUsage: number;
+    remainingQuestions?: number;
   };
 };
 
@@ -30,6 +34,8 @@ export default function AccountPage() {
   const [account, setAccount] = useState<AccountData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
  useEffect(() => {
   async function loadAccount() {
@@ -41,6 +47,7 @@ export default function AccountPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        setAuthenticationRequired(response.status === 401);
         setError(data.error ?? "Could not load account.");
         return;
       }
@@ -54,13 +61,13 @@ export default function AccountPage() {
   }
 
   loadAccount();
-}, []);
+}, [loadAttempt]);
 
   if (isLoading) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-12">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <p className="text-sm text-gray-600">Loading account...</p>
+          <p role="status" className="text-sm text-gray-600">Loading account...</p>
         </div>
       </main>
     );
@@ -72,7 +79,7 @@ export default function AccountPage() {
         <section className="rounded-2xl border border-red-200 bg-red-50 p-8">
           <h1 className="text-2xl font-bold text-red-950">Account error</h1>
 
-          <p className="mt-3 text-sm text-red-700">{error}</p>
+          <ReadError message={error} authenticationRequired={authenticationRequired} retry={() => setLoadAttempt(value => value + 1)} />
 
           <Link
             href="/login"
@@ -98,7 +105,7 @@ export default function AccountPage() {
           Account
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Manage your OrthodoxAI account.
         </h1>
 
@@ -143,7 +150,7 @@ export default function AccountPage() {
             }
           >
             {isPro
-              ? "Your Pro access is active. You can use unlimited questions, journal tools, prayer plans, Scripture plans, and extended history."
+              ? `Your Pro access is active. You can use ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, journal tools, prayer plans, Scripture plans, and extended history.`
               : "You are currently using the Free plan. You can ask 5 AI questions per day and access basic OrthodoxAI tools."}
           </p>
 
@@ -190,7 +197,7 @@ export default function AccountPage() {
             </div>
 
             <div className="flex justify-between gap-4 py-3">
-              <span className="text-gray-500">Stripe customer</span>
+              <span className="text-gray-500">Legacy Stripe connection</span>
               <span className="font-medium text-gray-950">
                 {user.stripeCustomerId ? "connected" : "not connected"}
               </span>
@@ -235,6 +242,7 @@ export default function AccountPage() {
           <p className="mt-3 text-3xl font-bold text-gray-950">
             {stats.todayUsage}
           </p>
+          {typeof stats.remainingQuestions === "number" && <p className="mt-2 text-sm text-gray-600">Questions remaining today: {stats.remainingQuestions}</p>}
         </div>
       </section>
 
@@ -248,7 +256,7 @@ export default function AccountPage() {
             href="/chat"
             className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm font-medium text-gray-800 hover:border-gray-950"
           >
-            Unlimited OrthodoxAI Chat
+            OrthodoxAI Chat
           </Link>
 
           <Link

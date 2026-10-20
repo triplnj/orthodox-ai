@@ -1,8 +1,7 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
+import { NextRequest } from "next/server";
 
 import {
   discoverAndSavePatristicQuotes,
@@ -28,7 +27,7 @@ async function handleResearch(
       : "en";
 
   if (!query) {
-    return NextResponse.json(
+    return apiJson(
       {
         error: "Missing query.",
       },
@@ -45,16 +44,13 @@ async function handleResearch(
         language,
       );
 
-    return NextResponse.json(
+    return apiJson(
       result,
     );
   } catch (error) {
-    console.error(
-      "PATRISTIC_DISCOVERY_ERROR",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "discovery", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Patristic discovery failed.",

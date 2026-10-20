@@ -58,7 +58,7 @@ export default async function ScripturePage() {
           Scripture
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Read Scripture with prayer, steadiness, and Orthodox sensitivity.
         </h1>
 

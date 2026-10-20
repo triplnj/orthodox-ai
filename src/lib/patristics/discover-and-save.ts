@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -167,14 +168,7 @@ export async function discoverAndSavePatristicQuotes(
           );
 
         if (!exactMatch) {
-          console.warn(
-            "PATRISTIC_LOCAL_EXTRACTION_REJECTED:",
-            JSON.stringify({
-              sourceUrl,
-              originalText:
-                candidate.originalText,
-            }),
-          );
+          diagnostic("operation_skipped", { operation: "extraction" });
 
           continue;
         }
@@ -190,11 +184,7 @@ export async function discoverAndSavePatristicQuotes(
         });
       }
     } catch (error) {
-      console.error(
-        "PATRISTIC_FETCHED_SOURCE_EXTRACTION_ERROR:",
-        sourceUrl,
-        error,
-      );
+      diagnostic("operation_failed", { operation: "extraction", failure: failureCategory(error) });
     }
   }
 
@@ -214,45 +204,7 @@ export async function discoverAndSavePatristicQuotes(
     );
 
 
-  /*
-   * Temporary diagnostics.
-   *
-   * Keep this while we are testing the new pipeline.
-   */
-  console.log(
-    "PATRISTIC_DISCOVERY_CANDIDATES_JSON:",
-    JSON.stringify(
-      verified.map(
-        (candidate) => ({
-          authorName:
-            candidate.authorName,
-
-          workTitle:
-            candidate.workTitle,
-
-          originalLanguage:
-            candidate.originalLanguage,
-
-          originalText:
-            candidate.originalText,
-
-          sourceUrl:
-            candidate.sourceUrl,
-
-          exactMatch:
-            candidate.exactMatch,
-
-          trustedSource:
-            candidate.trustedSource,
-
-          verificationError:
-            candidate.verificationError,
-        }),
-      ),
-      null,
-      2,
-    ),
-  );
+  diagnostic("operation_completed", { operation: "verification", count: verified.length });
 
 
   const exactMatches =
@@ -304,40 +256,13 @@ export async function discoverAndSavePatristicQuotes(
         }
 
         if (!candidate.authorName) {
-          console.warn(
-            "PATRISTIC_INCOMPLETE_CANDIDATE_SKIPPED:",
-            JSON.stringify({
-              reason:
-                "missing authorName",
-
-              sourceUrl:
-                candidate.sourceUrl,
-
-              originalText:
-                candidate.originalText,
-            }),
-          );
+          diagnostic("operation_skipped", { operation: "verification" });
 
           return false;
         }
 
         if (!candidate.workTitle) {
-          console.warn(
-            "PATRISTIC_INCOMPLETE_CANDIDATE_SKIPPED:",
-            JSON.stringify({
-              reason:
-                "missing workTitle",
-
-              authorName:
-                candidate.authorName,
-
-              sourceUrl:
-                candidate.sourceUrl,
-
-              originalText:
-                candidate.originalText,
-            }),
-          );
+          diagnostic("operation_skipped", { operation: "verification" });
 
           return false;
         }

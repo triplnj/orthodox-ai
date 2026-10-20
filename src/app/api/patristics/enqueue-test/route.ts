@@ -1,5 +1,5 @@
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import { NextResponse } from "next/server";
 import { detectPatristicLanguage } from "@/lib/patristics/detect-language";
 import { enqueuePatristicDiscovery } from "@/lib/patristics/enqueue-discovery";
 
@@ -13,7 +13,7 @@ async function handleResearch(req: Request) {
       : "";
 
   if (!query) {
-    return NextResponse.json(
+    return apiJson(
       { error: "Query is required." },
       { status: 400 },
     );
@@ -28,7 +28,7 @@ async function handleResearch(req: Request) {
       language,
     });
 
-  return NextResponse.json({
+  return apiJson({
     ok: true,
     job,
   });

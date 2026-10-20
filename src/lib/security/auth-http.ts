@@ -1,33 +1,38 @@
 import "server-only";
+import { diagnostic } from "@/lib/diagnostics";
 import { after, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { AuthError, authFailure, authJson, emailAddress, newPassword, text, tokenValue } from "./auth-input";
 import { authLimit, emailLimit } from "./auth-limits";
 import * as service from "./auth-service";
+import { queryInput } from "@/lib/api/validation";
 
 const registrationMessage = "If registration can proceed, check your email for the next steps. You can sign in to request another verification email.";
 const resetMessage = "If an account exists for this email, password reset instructions will be sent.";
 function queueEmail(mail: Awaited<ReturnType<typeof service.issueEmail>>) {
   if (mail) after(async () => {
     try { await service.deliverEmail(mail); }
-    catch { console.error("AUTH_EMAIL_DELIVERY_FAILED: delivery can be retried within normal limits."); }
+    catch { diagnostic("operation_failed", { operation: "auth", failure: "provider" }); }
   });
 }
 export async function authenticationResponse(req: Request, action: "login" | "register" | "forgot" | "verify" | "reset" | "resend" | "password") {
   try {
     await authLimit(req, action);
+    queryInput(req);
     if (action === "resend" || action === "password") {
       // Authentication-only reads must not invoke billing or AI services.
       const user = await getSessionUser();
       if (!user) throw new AuthError("You must be signed in.", 401);
       await authLimit(req, action, user.id, false);
       if (action === "resend") {
+        if (req.body && Object.keys(await authJson(req)).length) throw new AuthError("Unexpected verification request fields.");
         await emailLimit(user.email);
         queueEmail(await service.issueEmail(user.id, "verify"));
         return NextResponse.json({ message: "If verification is needed, an email will be sent. Please allow a minute before retrying." }, { status: 202 });
       }
       const body = await authJson(req);
+      if (Object.keys(body).some(key => !["currentPassword", "newPassword", "confirmPassword"].includes(key))) throw new AuthError("Unexpected password fields.");
       const current = text(body, "currentPassword", 1024);
       const password = newPassword(text(body, "newPassword"));
       if (password !== text(body, "confirmPassword")) throw new AuthError("Password and confirmation do not match.");
@@ -37,6 +42,8 @@ export async function authenticationResponse(req: Request, action: "login" | "re
       return response;
     }
     const body = await authJson(req);
+    const allowed = action === "login" ? ["email", "password"] : action === "register" ? ["email", "password", "name"] : action === "forgot" ? ["email"] : action === "reset" ? ["token", "password", "confirmPassword"] : ["token"];
+    if (Object.keys(body).some(key => !allowed.includes(key))) throw new AuthError("Unexpected authentication fields.");
     if (["login", "register", "forgot"].includes(action)) {
       const email = emailAddress(body);
       await authLimit(req, action, email, false);

@@ -5,17 +5,19 @@ import { prisma } from "@/lib/prisma";
 import { getBlogAdminUser } from "@/lib/blogAdmin";
 import { renderBlogContent, sanitizeBlogHtml } from "@/lib/blogContent";
 import { slugify } from "@/lib/slugify";
+import { blogForm } from "@/lib/api/blogInput";
 
 // Pasted HTML must be sanitized before it enters the live contentEditable DOM.
 export async function sanitizeBlogPaste(html: string) {
   if (!(await getBlogAdminUser())) redirect("/login");
-  if (typeof html !== "string") throw new Error("Invalid blog HTML.");
+  if (typeof html !== "string" || Buffer.byteLength(html, "utf8") > 524288) throw new Error("Invalid or oversized blog HTML.");
   return sanitizeBlogHtml(html);
 }
 
 export async function createBlogPost(formData: FormData) {
   const adminUser = await getBlogAdminUser();
   if (!adminUser) redirect("/login");
+  blogForm(formData, "create");
 
   const title = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
@@ -49,6 +51,7 @@ export async function createBlogPost(formData: FormData) {
 export async function updateBlogPost(formData: FormData) {
   const adminUser = await getBlogAdminUser();
   if (!adminUser) redirect("/login");
+  blogForm(formData, "update");
 
   const id = String(formData.get("id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
@@ -91,6 +94,7 @@ export async function updateBlogPost(formData: FormData) {
 export async function deleteBlogPost(formData: FormData) {
   const adminUser = await getBlogAdminUser();
   if (!adminUser) redirect("/login");
+  blogForm(formData, "delete");
 
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Missing blog post id.");

@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import { getOpenAI } from "@/lib/ai/openaiClient";
 import { zodTextFormat } from "openai/helpers/zod";
 
@@ -138,10 +139,7 @@ export async function backfillPatristicTranslations() {
     } catch (error) {
       failed += 1;
 
-      console.error(
-        `Translation backfill failed for quote ${quote.id}:`,
-        error,
-      );
+      diagnostic("operation_failed", { operation: "translation", failure: failureCategory(error) });
     }
   }
 

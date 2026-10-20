@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { claimPatristicJob, finishPatristicJob } from "./job-claims";
 import { prisma } from "@/lib/prisma";
+import { safeResearchFailure } from "@/lib/diagnostics";
 
 import { discoverAndSavePatristicQuotes } from "./discover-and-save";
 import { verifyQuotesAgainstPg } from "./verify-second-source";
@@ -79,13 +80,10 @@ export async function processPatristicDiscoveryJob(
       embedded,
     };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unknown discovery error.";
+    const message = safeResearchFailure(error);
 
     await finishPatristicJob(job.id, owner, message);
 
-    throw error;
+    throw new Error(message);
   }
 }

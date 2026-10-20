@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma, User, BillingSubscription } from "@/generated/prisma/client";
 import * as providers from "./providers";
 import { BillingError, type Provider, type Subscription } from "./providers";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { entitlement, PAID_GRACE_MS, reviewAccess, type BillingUser, type ReconciliationState } from "./entitlements";
+export { accessUntil, PAID_GRACE_MS } from "./entitlements";
 
 type Tx = Prisma.TransactionClient;
 const pending = ["CREATING", "OPEN", "UNKNOWN", "PAID_OPEN"];
-export const PAID_GRACE_MS = 72 * 60 * 60 * 1000;
 const RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 export function protectedReview(email: string) {
   return [process.env.REVIEW_USER_EMAIL ?? "fr-josiah-review@orthodoxai.app",
@@ -22,58 +24,109 @@ async function locked<T>(userId: string, action: (tx: Tx, user: User) => Promise
     return action(tx, user);
   }, { isolationLevel: "ReadCommitted", timeout: 120000, maxWait: 10000 });
 }
-export function accessUntil(s: Pick<BillingSubscription, "status" | "paidVerified" | "currentPeriodEndsAt" | "trialEndsAt" | "lastVerifiedAt" | "cancelAtPeriodEnd">): Date | null {
-  if (!s.lastVerifiedAt) return null;
-  if (["trialing", "on_trial"].includes(s.status)) return s.trialEndsAt;
-  if (["active", "cancelled"].includes(s.status) && s.currentPeriodEndsAt) {
-    // A known cancellation has no outage extension. Grace is never applied to trials.
-    return s.currentPeriodEndsAt;
-  }
-  return null;
-}
-async function project(tx: Tx, user: User) {
+async function project(tx: Tx, user: User, state: ReconciliationState = {}) {
   const rows = await tx.billingSubscription.findMany({ where: { userId: user.id } });
   const verified = rows.filter(row => row.lastVerifiedAt);
-  const until = verified.map(accessUntil).filter((d): d is Date => Boolean(d))
-    .sort((a, b) => b.getTime() - a.getTime())[0];
-  // A partial reconciliation cannot downgrade legacy access owned by an unverified
-  // other provider. Staging reconciliation must resolve these rows before cutover.
-  if ((!until || until.getTime() <= Date.now()) && rows.some(row => !row.lastVerifiedAt) && user.billingAccessUntil === null) return;
-  if (protectedReview(user.email)) return;
+  if (reviewAccess(user) && rows.length === 0) return;
+  const effective = entitlement(user, rows, state);
+  // A temporary legacy projection must not become a verified provider deadline.
+  if (effective.source === "legacy") return;
   const graceUntil = verified.filter(row => row.status === "active" && row.paidVerified && !row.cancelAtPeriodEnd && row.currentPeriodEndsAt)
     .map(row => new Date(row.currentPeriodEndsAt!.getTime() + PAID_GRACE_MS))
     .sort((a, b) => b.getTime() - a.getTime())[0];
   await tx.user.update({ where: { id: user.id }, data: {
-    plan: until && until.getTime() > Date.now() ? "PRO" : "FREE",
-    subscriptionStatus: until && until.getTime() > Date.now() ? "active" : "inactive",
-    billingAccessUntil: until ?? new Date(0),
+    plan: effective.plan,
+    subscriptionStatus: effective.subscriptionStatus,
+    billingAccessUntil: effective.billingAccessUntil,
     billingGraceUntil: graceUntil ?? null,
   } });
 }
-export async function refreshAccess(user: User): Promise<User> {
-  if (protectedReview(user.email) || (user.billingAccessUntil && user.billingAccessUntil > new Date())) return user;
-  // Reconcile legacy references lazily too, including trials previously rejected
-  // by the shared status check. A provider failure preserves the legacy snapshot.
-  if (!user.billingAccessUntil && !user.subscriptionId && !user.lemonSqueezySubscriptionId &&
-      !user.stripeCustomerId && !user.lemonSqueezyCustomerId) return user;
+export async function refreshAccess(user: User): Promise<BillingUser> {
   try {
     return await locked(user.id, async (tx, current) => {
-      await inventory(tx, current);
-      await project(tx, current);
-      return (await tx.user.findUnique({ where: { id: user.id } }))!;
+      const rows = await tx.billingSubscription.findMany({ where: { userId: user.id } });
+      if (reviewAccess(current) && rows.length === 0 && !await tx.billingCheckoutAttempt.findFirst({ where: { userId: user.id } })) {
+        return { ...current, reviewAccess: true };
+      }
+      const state = await refreshInventory(tx, current, rows);
+      const latest = await tx.user.findUnique({ where: { id: user.id } });
+      if (!latest) throw new BillingError("Account verification is unavailable.", 503);
+      const effective = entitlement(latest, await tx.billingSubscription.findMany({ where: { userId: user.id } }), state);
+      // Preserve stored provider evidence on an outage/conflict. Every response is
+      // nevertheless bounded; no branch returns the unvalidated stored snapshot.
+      if (!state.unavailable.size && !state.conflicted.size) await project(tx, latest, state);
+      return { ...latest, plan: effective.plan, subscriptionStatus: effective.subscriptionStatus,
+        billingAccessUntil: effective.billingAccessUntil, reviewAccess: false };
     });
   } catch (error) {
-    // Only an existing verified paid grant can survive an outage. Never persist
-    // the extension as another paid verification, which would restart the clock.
-    let latest: User | null;
-    try { latest = await prisma.user.findUnique({ where: { id: user.id } }); }
-    catch { return user; }
-    if (error instanceof BillingError && error.status === 503 && latest?.plan === "PRO" &&
-        latest.subscriptionStatus === "active" && latest.billingGraceUntil && latest.billingGraceUntil > new Date()) {
-      return { ...latest, billingAccessUntil: latest.billingGraceUntil };
-    }
-    return latest ?? user;
+    diagnostic("operation_failed", { operation: "billing", failure: failureCategory(error) });
+    throw new BillingError("Account access could not be verified. Please try again later.", 503);
   }
+}
+
+/** Read access can reconcile providers independently; sensitive writes below
+ * continue using the strict complete inventory, never this partial result. */
+async function refreshInventory(tx: Tx, user: User, rows: BillingSubscription[]) {
+  const unavailable = new Set<string>(), conflicted = new Set<string>();
+  for (const provider of ["STRIPE", "LEMONSQUEEZY"] as const) {
+    const customerField = provider === "STRIPE" ? "stripeCustomerId" : "lemonSqueezyCustomerId";
+    const pointer = provider === "STRIPE" ? user.subscriptionId : user.lemonSqueezySubscriptionId;
+    const ownRows = rows.filter(row => row.provider === provider);
+    const ids = new Set([...ownRows.map(row => row.providerSubscriptionId), ...(pointer ? [pointer] : [])]);
+    const customers = new Set(ownRows.map(row => row.providerCustomerId).filter((id): id is string => Boolean(id)));
+    if (user[customerField]) customers.add(user[customerField]!);
+    if (!ids.size && !customers.size) continue;
+    const snapshots = new Map<string, Subscription>();
+    try {
+      // Detect local ownership collisions even when the remote provider is down.
+      // An outage must never hide evidence already held by this application.
+      for (const id of ids) {
+        const local = await tx.billingSubscription.findUnique({ where: {
+          provider_providerSubscriptionId: { provider, providerSubscriptionId: id } } });
+        if (local && local.userId !== user.id) throw new BillingError("Subscription ownership conflict.");
+      }
+      for (const customer of customers) {
+        if (user[customerField] && user[customerField] !== customer) throw new BillingError("Customer ownership conflict.");
+        const owners = await tx.user.findMany({ where: { [customerField]: customer }, take: 2 });
+        if (owners.some(owner => owner.id !== user.id)) throw new BillingError("Ambiguous customer ownership.");
+      }
+      for (const id of ids) {
+        const s = await providers.retrieve(provider, id);
+        if (s.provider !== provider || s.providerSubscriptionId !== id) throw new BillingError("Subscription ownership conflict.");
+        snapshots.set(id, s); customers.add(s.providerCustomerId);
+      }
+      for (const customer of customers) {
+        if (user[customerField] && user[customerField] !== customer) throw new BillingError("Customer ownership conflict.");
+        const owners = await tx.user.findMany({ where: { [customerField]: customer }, take: 2 });
+        if (owners.some(owner => owner.id !== user.id)) throw new BillingError("Ambiguous customer ownership.");
+        for (const s of await providers.inventory(provider, customer)) {
+          if (s.provider !== provider || s.providerCustomerId !== customer) throw new BillingError("Provider inventory ownership mismatch.");
+          snapshots.set(s.providerSubscriptionId, s);
+        }
+      }
+      // Validate the complete provider batch before saving any of its rows.
+      for (const s of snapshots.values()) {
+        const old = await tx.billingSubscription.findUnique({ where: { provider_providerSubscriptionId: { provider, providerSubscriptionId: s.providerSubscriptionId } } });
+        if ((old && old.userId !== user.id) || (old?.providerCustomerId && old.providerCustomerId !== s.providerCustomerId)) throw new BillingError("Subscription ownership conflict.");
+        const period = ["trialing", "on_trial"].includes(s.status) ? s.trialEndsAt : s.currentPeriodEndsAt;
+        if (["active", "trialing", "on_trial"].includes(s.status) && (!(period instanceof Date) || !Number.isFinite(period.getTime()))) {
+          throw new BillingError("Provider deadline evidence is temporarily unavailable.", 503);
+        }
+      }
+    } catch (error) {
+      if (!(error instanceof BillingError)) throw error;
+      if (error.status === 503) {
+        unavailable.add(provider);
+        diagnostic("billing_provider_unavailable", { operation: "billing", outcome: "unavailable", failure: "provider" });
+      } else {
+        conflicted.add(provider);
+        diagnostic("billing_ownership_conflict", { operation: "billing", outcome: "conflict" });
+      }
+      continue;
+    }
+    for (const snapshot of snapshots.values()) await save(tx, user, snapshot);
+  }
+  return { unavailable, conflicted, complete: unavailable.size === 0 && conflicted.size === 0 };
 }
 async function save(tx: Tx, user: User, s: Subscription) {
   const key = { provider: s.provider, providerSubscriptionId: s.providerSubscriptionId };
@@ -86,7 +139,9 @@ async function save(tx: Tx, user: User, s: Subscription) {
   await tx.billingSubscription.upsert({ where: { provider_providerSubscriptionId: key },
     create: { ...data, userId: user.id, lastVerifiedAt: new Date() }, update: { ...data, lastVerifiedAt: new Date() } });
   // Never overwrite the current provider pointer with a historical subscription.
-  const current = s.provider === "STRIPE" ? user.subscriptionId : user.lemonSqueezySubscriptionId;
+  const latest = await tx.user.findUnique({ where: { id: user.id } });
+  if (!latest) throw new BillingError("User not found.", 404);
+  const current = s.provider === "STRIPE" ? latest.subscriptionId : latest.lemonSqueezySubscriptionId;
   if (!current || current === s.providerSubscriptionId) {
     await tx.user.update({ where: { id: user.id }, data: s.provider === "STRIPE"
       ? { subscriptionId: s.providerSubscriptionId, stripeCustomerId: s.providerCustomerId }

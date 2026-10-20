@@ -1,18 +1,19 @@
-import { NextResponse } from "next/server";
+import { apiJson } from "@/lib/api/response";
 import { getCurrentUser } from "@/lib/auth";
 import { recover } from "@/lib/billing/service";
 import { billingFailure } from "@/lib/billing/http";
+import { parse, readJson, idSchema } from "@/lib/api/validation";
+import { z } from "zod";
 
 export async function POST(req: Request) {
   try {
     const actor = await getCurrentUser();
-    if (!actor) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    let body;
-    try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid recovery request." }, { status: 400 }); }
+    if (!actor) return apiJson({ error: "Unauthorized" }, { status: 401 });
+    const body = parse(z.strictObject({ userId: idSchema, reason: z.string().trim().min(10).max(500) }), await readJson(req, 16384));
     if (typeof body?.userId !== "string" || typeof body?.reason !== "string") {
-      return NextResponse.json({ error: "User ID and recovery reason are required." }, { status: 400 });
+      return apiJson({ error: "User ID and recovery reason are required." }, { status: 400 });
     }
     await recover(body.userId, actor.id, body.reason);
-    return NextResponse.json({ recovered: true });
+    return apiJson({ recovered: true });
   } catch (error) { return billingFailure(error); }
 }

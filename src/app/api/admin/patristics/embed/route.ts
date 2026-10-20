@@ -1,8 +1,6 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { secureResearchRoute } from "@/lib/patristics/api-security";
-import {
-  NextResponse,
-} from "next/server";
-
 import {
   embedVerifiedQuotes,
 } from "@/lib/patristics/embed-quotes";
@@ -20,19 +18,16 @@ async function handleResearch(
       await embedVerifiedQuotes();
 
 
-    return NextResponse.json(
+    return apiJson(
       result,
     );
 
   } catch (error) {
 
-    console.error(
-      "PATRISTICS_EMBED_ERROR",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "embedding", failure: failureCategory(error) });
 
 
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Embedding generation failed",

@@ -1,31 +1,13 @@
+import { apiJson } from "@/lib/api/response";
 import "server-only";
-import { NextResponse } from "next/server";
+import { ApiError, readJson } from "@/lib/api/validation";
 
 export class AuthError extends Error {
   constructor(message: string, readonly status = 400, readonly retryAfter?: number) { super(message); }
 }
 export async function authJson(req: Request): Promise<Record<string, unknown>> {
-  const reader = req.body?.getReader();
-  if (!reader) throw new AuthError("JSON body is required.");
-  let size = 0;
-  let timedOut = false;
-  const timer = setTimeout(() => { timedOut = true; void reader.cancel().catch(() => {}); }, 5000);
-  const chunks: Uint8Array[] = [];
-  try {
-    while (true) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      size += chunk.value.length;
-      if (size > 16384) { await reader.cancel(); throw new AuthError("Request is too large.", 413); }
-      chunks.push(chunk.value);
-    }
-  } finally { clearTimeout(timer); reader.releaseLock(); }
-  if (timedOut) throw new AuthError("Request body timed out.", 408);
-  let body: unknown;
-  try { body = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
-  catch { throw new AuthError("Invalid JSON."); }
-  if (!body || typeof body !== "object" || Array.isArray(body)) throw new AuthError("JSON object is required.");
-  return body as Record<string, unknown>;
+  return readJson(req, 16384);
+
 }
 export function text(body: Record<string, unknown>, key: string, max = 256): string {
   const value = body[key];
@@ -47,8 +29,9 @@ export function tokenValue(body: Record<string, unknown>) {
   return token;
 }
 export function authFailure(error: unknown) {
-  return NextResponse.json({ error: error instanceof AuthError ? error.message : "Authentication is temporarily unavailable. Please try again later." }, {
-    status: error instanceof AuthError ? error.status : 503,
+  return apiJson({ error: error instanceof AuthError || error instanceof ApiError ? error.message : "Authentication is temporarily unavailable. Please try again later.",
+    code: error instanceof ApiError ? error.code : error instanceof AuthError ? ({ 401: "UNAUTHENTICATED", 403: "FORBIDDEN", 429: "RATE_LIMITED" } as Record<number, string>)[error.status] ?? "INVALID_INPUT" : "AUTH_SERVICE_UNAVAILABLE" }, {
+    status: error instanceof AuthError || error instanceof ApiError ? error.status : 503,
     headers: error instanceof AuthError && error.retryAfter ? { "Retry-After": String(error.retryAfter) } : undefined,
   });
 }
