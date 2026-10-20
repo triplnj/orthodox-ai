@@ -55,3 +55,45 @@ jobs:
         run: node tests/run-regressions.mjs
       - name: Build without provider credentials
         run: node node_modules/next/dist/bin/next build
+
+  synthetic-migration-18:
+    name: Migration 18 on disposable PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: orthodoxai_synthetic
+          POSTGRES_USER: orthodoxai_ci
+          POSTGRES_PASSWORD: synthetic-ci-only
+        ports:
+          - 55439:5432
+        options: >-
+          --health-cmd "pg_isready -U orthodoxai_ci -d orthodoxai_synthetic"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "true"
+      PGHOST: "127.0.0.1"
+      PGPORT: "55439"
+      PGDATABASE: orthodoxai_synthetic
+      PGUSER: orthodoxai_ci
+      PGPASSWORD: synthetic-ci-only
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Validate migration 18 against isolated synthetic rows
+        run: node tests/phase8-migration18-ci.mjs
