@@ -24,8 +24,10 @@ try {
   const identity = (await client.query("SELECT current_database() db, current_user usr, inet_server_addr()::text addr, inet_server_port() port")).rows[0];
   assert.equal(identity.db, "orthodoxai_synthetic");
   assert.equal(identity.usr, "orthodoxai_ci");
-  assert.equal(identity.addr, "127.0.0.1");
-  assert.equal(identity.port, 55439);
+  // GitHub-hosted Docker publishes loopback:55439 to container:5432.
+  // inet_server_addr() reports the container interface, not the host endpoint.
+  assert.match(identity.addr, /^(?:127\.0\.0\.1|172\.(?:1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3})(?:\/32)?$/);
+  assert.equal(identity.port, 5432);
   await client.query(`CREATE SCHEMA "${schema}"`);
   await client.query(`SET search_path TO "${schema}"`);
   await client.query(`CREATE TABLE "users" (
