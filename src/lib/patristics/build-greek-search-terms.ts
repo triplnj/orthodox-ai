@@ -66,8 +66,30 @@ const DETERMINISTIC_CONCEPT_RULES:
     {
       pattern: /тројиц|trojic|trinity|dreifalt|triad/i,
       concept: "Trinity",
-      greekTerms: ["τριάς"],
-      greekStems: ["τριαδ", "τριασ"],
+      greekTerms: [
+        "τριάς",
+        "μονάς",
+        "θεότης",
+        "πατήρ",
+        "υἱός",
+        "πνεῦμα",
+      ],
+      /*
+       * PG OCR is inconsistent with case endings and
+       * diacritics. Searching only τριαδ/τριασ proved
+       * too brittle in production (PG 90-91 returned
+       * zero matches). These conservative stems cover
+       * both explicit Trinitarian vocabulary and the
+       * standard Father/Son/Spirit formulation.
+       */
+      greekStems: [
+        "τρια",
+        "μοναδ",
+        "θεοτ",
+        "πατρ",
+        "υιο",
+        "πνευμα",
+      ],
     },
     {
       pattern: /свети дух|sveti duh|holy spirit|heiliger geist/i,
