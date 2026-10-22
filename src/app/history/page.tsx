@@ -1,9 +1,14 @@
 "use client";
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
+
 
 import { useEffect, useState } from "react";
+import { ReadError } from "@/components/layout/ReadError";
 import Link from "next/link";
 import { UpgradeBox } from "@/components/upgrade/UpgradeBox";
 import { productCopy } from "@/lib/productCopy";
+import { SourceCards } from "@/components/chat/SourceCards";
+import type { PatristicResearchSource } from "@/lib/patristics/build-patristic-research-context";
 
 type HistoryMessage = {
   id: string;
@@ -11,6 +16,8 @@ type HistoryMessage = {
   content: string;
   category: string | null;
   createdAt: string;
+  conversationId?: string | null;
+  sources?: { snapshot: PatristicResearchSource }[];
 };
 
 export default function HistoryPage() {
@@ -20,6 +27,8 @@ export default function HistoryPage() {
   const [isPro, setIsPro] = useState(false);
   const [limit, setLimit] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     async function loadHistory() {
@@ -31,10 +40,12 @@ export default function HistoryPage() {
         const data = await response.json();
 
         if (!response.ok) {
+          setAuthenticationRequired(response.status === 401);
           setError(data.error ?? "Could not load conversation history.");
           return;
         }
 
+        setAuthenticationRequired(false);
         setMessages(data.messages);
         setPlan(data.plan);
         setIsPro(data.isPro);
@@ -47,7 +58,7 @@ export default function HistoryPage() {
     }
 
     loadHistory();
-  }, []);
+  }, [loadAttempt]);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -56,7 +67,7 @@ export default function HistoryPage() {
           Conversation History
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Review your previous OrthodoxAI conversations.
         </h1>
 
@@ -74,7 +85,7 @@ export default function HistoryPage() {
             </h2>
 
             <p className="mt-2 text-sm text-gray-600">
-              Plan: <span className="font-medium">{plan ?? "unknown"}</span>
+              Plan: <span className="font-medium">{plan ?? "Loading..."}</span>
               {limit !== null && (
                 <>
                   {" "}
@@ -94,19 +105,17 @@ export default function HistoryPage() {
         </div>
       </section>
 
-      {!isPro && (
+      {!isLoading && !error && !isPro && (
         <section className="mt-8">
           <UpgradeBox
             title="Pro feature: Extended Conversation History"
-            message="Free users can view a limited recent history. OrthodoxAI Pro will unlock extended conversation history together with unlimited questions, personal prayer plans, Scripture reading plans, and the Spiritual Journal."
+            message={`Free users can view a limited recent history. OrthodoxAI Pro will unlock extended conversation history together with ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, personal prayer plans, Scripture reading plans, and the Spiritual Journal.`}
           />
         </section>
       )}
 
       {error && (
-        <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          {error}
-        </div>
+        <ReadError message={error} authenticationRequired={authenticationRequired} retry={() => setLoadAttempt(value => value + 1)} />
       )}
 
       <section className="mt-8">
@@ -116,7 +125,7 @@ export default function HistoryPage() {
           </div>
         )}
 
-        {!isLoading && messages.length === 0 && (
+        {!isLoading && !error && messages.length === 0 && (
           <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm leading-6 text-gray-600 shadow-sm">
             No conversation history yet. Start by asking OrthodoxAI a question.
           </div>
@@ -141,9 +150,12 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-800">
+              <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-gray-800">
                 {message.content}
               </p>
+              {message.role === "assistant" && <SourceCards sources={message.sources?.map(source => source.snapshot) ?? []} />}
+              {message.conversationId ? <Link className="mt-3 inline-block text-sm underline" href={`/chat?conversationId=${encodeURIComponent(message.conversationId)}`}>Resume conversation</Link>
+                : <p className="mt-3 text-xs text-gray-500">Legacy message: preserved without inferred conversation grouping or source references.</p>}
             </article>
           ))}
         </div>

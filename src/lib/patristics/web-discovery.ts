@@ -1,3 +1,4 @@
+import { diagnostic } from "@/lib/diagnostics";
 export type PatristicDiscoveryRequest = {
   query: string;
   language: "sr" | "en";
@@ -29,10 +30,8 @@ export type PatristicDiscoveryCandidate = {
 export async function discoverPatristicSources(
   request: PatristicDiscoveryRequest,
 ): Promise<PatristicDiscoveryCandidate[]> {
-  console.log("PATRISTIC_WEB_DISCOVERY_DISABLED:", {
-    query: request.query,
-    language: request.language,
-  });
+  void request;
+  diagnostic("operation_skipped", { operation: "discovery" });
 
   return [];
 }

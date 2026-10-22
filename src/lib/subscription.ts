@@ -4,8 +4,11 @@ export type AppUser = {
   name?: string | null;
   plan: "FREE" | "PRO";
   subscriptionStatus?: string | null;
+  billingAccessUntil?: Date | string | null;
+  reviewAccess?: boolean;
 };
 
 export function isProUser(user: AppUser) {
-  return user.plan === "PRO" && user.subscriptionStatus === "active";
+  return user.plan === "PRO" && user.subscriptionStatus === "active" &&
+    (user.reviewAccess === true || Boolean(user.billingAccessUntil && new Date(user.billingAccessUntil).getTime() > Date.now()));
 }

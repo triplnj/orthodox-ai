@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
 
 export type GreekSearchTermsResult = {
@@ -10,11 +10,7 @@ export type GreekSearchTermsResult = {
 };
 
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env.OPENAI_API_KEY,
-  });
+
 
 
 function normalizeGreek(
@@ -204,7 +200,7 @@ export async function buildGreekSearchTerms(
    * or source attribution.
    */
   const response =
-    await openai.responses.create({
+    await getOpenAI().responses.create({
       model:
         "gpt-4.1-mini",
 

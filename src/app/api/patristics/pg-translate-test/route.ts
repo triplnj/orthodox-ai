@@ -1,11 +1,6 @@
-import {
-  NextResponse,
-} from "next/server";
-
-import {
-  getCurrentUser,
-} from "@/lib/auth";
-
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import {
   searchPgPassages,
 } from "@/lib/patristics/pg-passage-search";
@@ -19,24 +14,9 @@ import {
 } from "@/lib/patristics/pg-column-map";
 
 
-export async function POST(
+async function handleResearch(
   request: Request,
 ) {
-  const user =
-    await getCurrentUser();
-
-
-  if (!user) {
-    return NextResponse.json(
-      {
-        error:
-          "Unauthorized.",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
 
 
   const body =
@@ -51,7 +31,7 @@ export async function POST(
 
 
   if (!query) {
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Query is required.",
@@ -133,7 +113,7 @@ export async function POST(
       );
 
 
-    return NextResponse.json({
+    return apiJson({
       query,
 
       count:
@@ -142,18 +122,12 @@ export async function POST(
       results,
     });
   } catch (error) {
-    console.error(
-      "PG_TRANSLATE_TEST_ERROR:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "translation", failure: failureCategory(error) });
 
 
-    return NextResponse.json(
+    return apiJson(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "PG translation test failed.",
+        error: "PG translation test failed.",
       },
       {
         status: 500,
@@ -161,3 +135,4 @@ export async function POST(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch, true);

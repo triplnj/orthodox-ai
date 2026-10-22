@@ -1,10 +1,6 @@
-import {
-  NextResponse,
-} from "next/server";
-import {
-  getCurrentUser,
-} from "@/lib/auth";
-
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import {
   buildPgSearchPlan,
 } from "@/lib/patristics/build-pg-search-plan";
@@ -22,24 +18,9 @@ import {
 } from "@/lib/patristics/pg-column-map";
 
 
-export async function POST(
+async function handleResearch(
   request: Request,
 ) {
-  const user =
-    await getCurrentUser();
-
-
-  if (!user) {
-    return NextResponse.json(
-      {
-        error:
-          "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
 
 
   let body: {
@@ -51,7 +32,7 @@ export async function POST(
     body =
       await request.json();
   } catch {
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Invalid JSON body.",
@@ -68,7 +49,7 @@ export async function POST(
 
 
   if (!query) {
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Query is required.",
@@ -163,7 +144,7 @@ export async function POST(
       );
 
 
-    return NextResponse.json({
+    return apiJson({
       query,
 
       plan: {
@@ -197,18 +178,12 @@ export async function POST(
       results,
     });
   } catch (error) {
-    console.error(
-      "General PG test failed:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
 
 
-    return NextResponse.json(
+    return apiJson(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "General PG test failed.",
+        error: "General PG test failed.",
       },
       {
         status: 500,
@@ -216,3 +191,4 @@ export async function POST(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch, true);

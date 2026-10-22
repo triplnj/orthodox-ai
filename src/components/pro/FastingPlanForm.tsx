@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePersonalOperation } from "./usePersonalOperation";
+import { errorMessage } from "@/lib/api/clientErrors";
 
 export function FastingPlanForm() {
   const [experienceLevel, setExperienceLevel] = useState("beginner");
@@ -18,30 +20,25 @@ export function FastingPlanForm() {
   const [upgradeRequired, setUpgradeRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const operation = usePersonalOperation("fasting-plan", data => setPlan(String(data.plan)));
+
   async function createFastingPlan() {
     setIsLoading(true);
     setError(null);
-    setPlan(null);
     setUpgradeRequired(false);
 
     try {
-      const response = await fetch("/api/pro/fasting-plan", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await operation.submit({
           experienceLevel,
           fastingContext,
           availableDiscipline,
           currentChallenge,
-        }),
-      });
+        });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error ?? "Could not create fasting guidance.");
+        setError(errorMessage(data));
 
         if (data.upgradeRequired) {
           setUpgradeRequired(true);
@@ -77,11 +74,11 @@ export function FastingPlanForm() {
 
       <div className="mt-6 space-y-4">
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label htmlFor="pro-fastingplanform-field-1" className="text-sm font-medium text-gray-700">
             Experience level
           </label>
 
-          <select
+          <select aria-describedby={error ? "form-error-6" : undefined} id="pro-fastingplanform-field-1"
             value={experienceLevel}
             onChange={(event) => setExperienceLevel(event.target.value)}
             className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -99,11 +96,11 @@ export function FastingPlanForm() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label htmlFor="pro-fastingplanform-field-2" className="text-sm font-medium text-gray-700">
             Fasting context
           </label>
 
-          <select
+          <select aria-describedby={error ? "form-error-6" : undefined} id="pro-fastingplanform-field-2"
             value={fastingContext}
             onChange={(event) => setFastingContext(event.target.value)}
             className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -123,11 +120,11 @@ export function FastingPlanForm() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label htmlFor="pro-fastingplanform-field-3" className="text-sm font-medium text-gray-700">
             Available discipline
           </label>
 
-          <select
+          <select aria-describedby={error ? "form-error-6" : undefined} id="pro-fastingplanform-field-3"
             value={availableDiscipline}
             onChange={(event) => setAvailableDiscipline(event.target.value)}
             className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -147,11 +144,11 @@ export function FastingPlanForm() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label htmlFor="pro-fastingplanform-field-4" className="text-sm font-medium text-gray-700">
             Current challenge
           </label>
 
-          <textarea
+          <textarea aria-describedby={error ? "form-error-6" : undefined} maxLength={2000} id="pro-fastingplanform-field-4"
             value={currentChallenge}
             onChange={(event) => setCurrentChallenge(event.target.value)}
             className="mt-2 min-h-28 w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm leading-6 text-gray-950 outline-none focus:border-gray-950"
@@ -161,7 +158,7 @@ export function FastingPlanForm() {
         <button
           type="button"
           onClick={createFastingPlan}
-          disabled={isLoading}
+          disabled={isLoading || operation.blocked}
           className="w-full rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Creating guidance..." : "Create fasting guidance"}
@@ -169,7 +166,7 @@ export function FastingPlanForm() {
       </div>
 
       {error && (
-        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div id="form-error-6" role="alert" tabIndex={-1} className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <p>{error}</p>
 
           {upgradeRequired && (
@@ -183,13 +180,14 @@ export function FastingPlanForm() {
         </div>
       )}
 
+      {operation.controls}
       {plan && (
         <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-5">
           <h3 className="text-lg font-semibold text-gray-950">
             Your fasting guidance
           </h3>
 
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+          <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
             {plan}
           </p>
         </div>

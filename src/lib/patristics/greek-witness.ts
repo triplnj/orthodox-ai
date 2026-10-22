@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 export type GreekWitnessSource = {
   pgVolume: number;
 
@@ -61,7 +62,7 @@ export async function fetchGreekWitnessText(
 
 
   const response =
-    await fetch(
+    await safeSourceFetch(
       source.textUrl,
       {
         headers: {

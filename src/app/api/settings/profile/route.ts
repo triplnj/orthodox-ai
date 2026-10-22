@@ -1,24 +1,26 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { apiFailure, parse, readJson, profileSchema } from "@/lib/api/validation";
 
 export async function PATCH(req: Request) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to update your profile." },
         { status: 401 }
       );
     }
 
-    const body = await req.json();
+    const body = parse(profileSchema, await readJson(req, 16384));
 
-    const name = String(body.name ?? "").trim();
+    const name = body.name;
 
     if (name.length > 80) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Name must be 80 characters or fewer." },
         { status: 400 }
       );
@@ -40,15 +42,12 @@ export async function PATCH(req: Request) {
       },
     });
 
-    return NextResponse.json({
-      user: updatedUser,
+    return apiJson({
+      user: { ...updatedUser, plan: user.plan, subscriptionStatus: user.subscriptionStatus, billingAccessUntil: user.billingAccessUntil, reviewAccess: user.reviewAccess === true },
     });
   } catch (error) {
-    console.error("SETTINGS_PROFILE_UPDATE_ERROR:", error);
+    diagnostic("operation_failed", { operation: "profile", failure: failureCategory(error) });
 
-    return NextResponse.json(
-      { error: "Something went wrong while updating your profile." },
-      { status: 500 }
-    );
+    return apiFailure(error);
   }
 }

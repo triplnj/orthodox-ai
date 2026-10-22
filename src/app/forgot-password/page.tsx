@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [message, setMessage] = useState<string | null>(null);
@@ -14,6 +15,8 @@ export default function ForgotPasswordPage() {
     event: React.FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
 
     setIsSubmitting(true);
     setMessage(null);
@@ -42,6 +45,7 @@ export default function ForgotPasswordPage() {
     } catch {
       setError("Network error while processing password reset request.");
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   }
@@ -63,25 +67,25 @@ export default function ForgotPasswordPage() {
         </p>
 
         {message && (
-          <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div role="status" className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div id="form-error-2" role="alert" tabIndex={-1} className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
 
         <form onSubmit={handleForgotPassword} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700">
+            <label htmlFor="forgot-password-page-field-1" className="text-sm font-medium text-gray-700">
               Email
             </label>
 
-            <input
-              type="email"
+            <input aria-describedby={error ? "form-error-2" : undefined} id="forgot-password-page-field-1"
+              type="email" autoComplete="email" maxLength={254}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"

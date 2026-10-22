@@ -1,4 +1,5 @@
-import OpenAI from "openai";
+import { safeResearchFailure } from "@/lib/diagnostics";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 
@@ -11,9 +12,7 @@ import type {
 } from "./verify-discovery";
 
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 
 const AttributionResultSchema = z.object({
@@ -286,10 +285,7 @@ export async function verifyCandidateAttribution(
       actualAuthorName:
         null,
 
-      reason:
-        error instanceof Error
-          ? `Could not load source for attribution verification: ${error.message}`
-          : "Could not load source for attribution verification.",
+      reason: safeResearchFailure(error),
     };
   }
 
@@ -346,7 +342,7 @@ Not available.
 
 
   const response =
-    await openai.responses.parse({
+    await getOpenAI().responses.parse({
       model,
 
       input: [

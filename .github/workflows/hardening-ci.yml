@@ -1,0 +1,99 @@
+name: OrthodoxAI hardening checks
+
+on:
+  push:
+    branches:
+      - audit/orthodoxai-hardening
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orthodoxai-hardening-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Tests, types, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DEBUG: ""
+      NODE_DEBUG: ""
+      OPENAI_LOG: "off"
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+      OPENAI_API_KEY: ""
+      STRIPE_SECRET_KEY: ""
+      STRIPE_WEBHOOK_SECRET: ""
+      LEMONSQUEEZY_API_KEY: ""
+      LEMONSQUEEZY_WEBHOOK_SECRET: ""
+      RESEND_API_KEY: ""
+    steps:
+      - name: Checkout this branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install exact lockfile dependencies
+        run: npm ci
+      - name: Verify TypeScript
+        run: npx tsc --noEmit
+      - name: Verify ESLint
+        run: npx eslint .
+      - name: Run isolated mocked regressions
+        run: node tests/run-regressions.mjs
+      - name: Build without provider credentials
+        run: node node_modules/next/dist/bin/next build
+
+  synthetic-migration-18:
+    name: Migration 18 on disposable PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: orthodoxai_synthetic
+          POSTGRES_USER: orthodoxai_ci
+          POSTGRES_PASSWORD: synthetic-ci-only
+        ports:
+          - 55439:5432
+        options: >-
+          --health-cmd "pg_isready -U orthodoxai_ci -d orthodoxai_synthetic"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "true"
+      PGHOST: "127.0.0.1"
+      PGPORT: "55439"
+      PGDATABASE: orthodoxai_synthetic
+      PGUSER: orthodoxai_ci
+      PGPASSWORD: synthetic-ci-only
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Validate migration 18 against isolated synthetic rows
+        run: node tests/phase8-migration18-ci.mjs

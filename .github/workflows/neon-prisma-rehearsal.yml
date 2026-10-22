@@ -1,0 +1,74 @@
+name: Neon isolated Prisma rehearsal
+
+on:
+  push:
+    branches: [audit/orthodoxai-hardening]
+    paths: [.github/workflows/neon-prisma-rehearsal.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prisma-rehearsal:
+    name: Prisma deploy on approved Neon test branch only
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: ${{ secrets.NEON_HARDENING_REHEARSAL_URL }}
+      DIRECT_URL: ${{ secrets.NEON_HARDENING_REHEARSAL_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install from lockfile
+        run: npm ci
+      - name: Refuse production or wrong Neon branch
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { Client } from 'pg';
+          const raw = process.env.DIRECT_URL || '';
+          if (!raw) throw Error('Set NEON_HARDENING_REHEARSAL_URL as a GitHub Actions secret first; no migration was attempted.');
+          const url = new URL(raw);
+          const exactHost = 'ep-jolly-bread-asjdmmhe.c-4.eu-central-1.aws.neon.tech';
+          if (!['postgresql:', 'postgres:'].includes(url.protocol) ||
+              url.hostname !== exactHost || url.pathname !== '/neondb' ||
+              url.searchParams.get('sslmode') !== 'require') {
+            throw Error('Database target is not the approved unpooled Neon rehearsal endpoint');
+          }
+          const db = new Client({ connectionString: raw, connectionTimeoutMillis: 8000 });
+          await db.connect();
+          try {
+            const r = (await db.query(
+              'SELECT current_database() AS db, (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL) AS applied, (SELECT count(*)::integer FROM public.users) AS users'
+            )).rows[0];
+            if (r.db !== 'neondb' || r.applied !== 12 || r.users < 50) {
+              throw Error('Unexpected rehearsal database baseline; migration blocked');
+            }
+            console.log('Verified test-only endpoint, 12 migration receipts and baseline user count. No identities logged.');
+          } finally { await db.end(); }
+          NODE
+      - name: Deploy pending migrations ONLY to isolated Neon test branch
+        run: node node_modules/prisma/build/index.js migrate deploy
+      - name: Verify 18 completed migration receipts and preserved users
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { Client } from 'pg';
+          const db = new Client({ connectionString: process.env.DIRECT_URL, connectionTimeoutMillis: 8000 });
+          await db.connect();
+          try {
+            const { rows: [r] } = await db.query(
+              'SELECT (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL) AS applied, (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL) AS failed, (SELECT count(*)::integer FROM public.users) AS users, (SELECT count(*)::integer FROM public.users WHERE "legacyReconciliationDeadlineAt" IS NOT NULL) AS legacy'
+            );
+            if (r.applied !== 18 || r.failed !== 0 || r.users < 50) throw Error('Failed rehearsal integrity checks');
+            console.log('TEST_BRANCH_MIGRATIONS=18; UNFINISHED=0; USER_COUNT_PRESERVED=true; LEGACY_CANDIDATES=' + r.legacy);
+          } finally { await db.end(); }
+          NODE

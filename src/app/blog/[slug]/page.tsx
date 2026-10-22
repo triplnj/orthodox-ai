@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { renderBlogContent } from "@/lib/blogContent";
 
 export const dynamic = "force-dynamic";
 
@@ -9,18 +10,6 @@ type BlogPostPageProps = {
     slug: string;
   }>;
 };
-
-function looksLikeHtml(content: string) {
-  return /<([a-z][\s\S]*?)>/i.test(content);
-}
-
-function plainTextToHtml(content: string) {
-  return content
-    .trim()
-    .split("\n\n")
-    .map((paragraph) => `<p>${paragraph.trim().replace(/\n/g, "<br />")}</p>`)
-    .join("");
-}
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
@@ -62,9 +51,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  const contentHtml = looksLikeHtml(post.content)
-    ? post.content
-    : plainTextToHtml(post.content);
+  const contentHtml = renderBlogContent(post.content);
 
   return (
     <main className="bg-white px-6 py-16 text-gray-950">

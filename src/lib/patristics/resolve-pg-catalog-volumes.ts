@@ -1,3 +1,4 @@
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import * as cheerio from "cheerio";
 
 const PG_AUTHOR_INDEX_URL =
@@ -101,7 +102,7 @@ export async function resolvePgCatalogVolumes(
 
   try {
     const response =
-      await fetch(
+      await safeSourceFetch(
         PG_AUTHOR_INDEX_URL,
         {
           headers: {

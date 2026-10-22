@@ -1,17 +1,24 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
 const SESSION_COOKIE_NAME = "orthodoxai_session";
 const SESSION_DURATION_DAYS = 30;
 
 export async function createSession(userId: string) {
+  const session = await createSessionRecord(prisma, userId);
+  await setSessionCookie(session.token, session.expiresAt);
+  return session.token;
+}
+
+export async function createSessionRecord(db: Pick<Prisma.TransactionClient, "session">, userId: string) {
   const token = crypto.randomBytes(32).toString("hex");
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + SESSION_DURATION_DAYS);
 
-  await prisma.session.create({
+  await db.session.create({
     data: {
       token,
       userId,
@@ -19,6 +26,10 @@ export async function createSession(userId: string) {
     },
   });
 
+  return { token, expiresAt };
+}
+
+export async function setSessionCookie(token: string, expiresAt: Date) {
   const cookieStore = await cookies();
 
   cookieStore.set(SESSION_COOKIE_NAME, token, {
@@ -29,14 +40,13 @@ export async function createSession(userId: string) {
     expires: expiresAt,
   });
 
-  return token;
 }
 
 export async function getSessionUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
-  if (!token) {
+  if (!token || !/^[a-f0-9]{64}$/.test(token)) {
     return null;
   }
 
@@ -53,8 +63,8 @@ export async function getSessionUser() {
     return null;
   }
 
-  if (session.expiresAt < new Date()) {
-    await prisma.session.delete({
+  if (session.expiresAt <= new Date()) {
+    await prisma.session.deleteMany({
       where: {
         id: session.id,
       },

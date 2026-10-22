@@ -1,22 +1,25 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 
-export async function POST(req: Request) {
+async function handleAiRequest(req: Request) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to use this feature." },
         { status: 401 }
       );
     }
 
     if (!isProUser(user)) {
-      return NextResponse.json(
+      return apiJson(
         {
           error:
             "Personal Scripture reading plans are available with OrthodoxAI Pro.",
@@ -57,15 +60,18 @@ Requirements:
       isPro: true,
     });
 
-    return NextResponse.json({
+    return apiJson({
       plan: result.answer,
     });
   } catch (error) {
-    console.error("SCRIPTURE_PLAN_API_ERROR:", error);
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
+    diagnostic("operation_failed", { operation: "plans", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Something went wrong while creating the Scripture plan." },
       { status: 500 }
     );
   }
 }
+export const POST = secureAiRoute(handleAiRequest, "scripture-plan");

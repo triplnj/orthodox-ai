@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -11,12 +11,15 @@ function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleResetPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
 
     setIsSubmitting(true);
     setSuccessMessage(null);
@@ -48,6 +51,7 @@ function ResetPasswordContent() {
     } catch {
       setError("Network error while resetting password.");
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   }
@@ -93,7 +97,7 @@ function ResetPasswordContent() {
         </p>
 
         {successMessage && (
-          <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div role="status" className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
             <p>{successMessage}</p>
 
             <Link
@@ -106,7 +110,7 @@ function ResetPasswordContent() {
         )}
 
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div id="form-error-3" role="alert" tabIndex={-1} className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -114,11 +118,11 @@ function ResetPasswordContent() {
         {!successMessage && (
           <form onSubmit={handleResetPassword} className="mt-6 space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label htmlFor="reset-password-page-field-1" className="text-sm font-medium text-gray-700">
                 New password
               </label>
 
-              <input
+              <input aria-describedby={error ? "form-error-3" : undefined} id="reset-password-page-field-1"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -128,11 +132,11 @@ function ResetPasswordContent() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label htmlFor="reset-password-page-field-2" className="text-sm font-medium text-gray-700">
                 Confirm new password
               </label>
 
-              <input
+              <input aria-describedby={error ? "form-error-3" : undefined} id="reset-password-page-field-2"
                 type="password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
@@ -168,7 +172,7 @@ export default function ResetPasswordPage() {
       fallback={
         <main className="mx-auto max-w-md px-6 py-16">
           <section className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <p className="text-sm text-gray-600">Loading reset form...</p>
+            <p role="status" className="text-sm text-gray-600">Loading reset form...</p>
           </section>
         </main>
       }

@@ -28,7 +28,17 @@ model User {
   lemonSqueezyOrderId        String?
   lemonSqueezySubscriptionId String?
   lemonSqueezyVariantId      String?
+  billingDeletionRequestedAt DateTime?
+  billingRecoveryLog         Json?
+  billingAccessUntil         DateTime?
+  billingGraceUntil          DateTime?
+  legacyReconciliationDeadlineAt DateTime? @db.Timestamp(3)
+  billingSubscriptions       BillingSubscription[]
+  billingCheckoutAttempts    BillingCheckoutAttempt[]
   messages                   ChatMessage[]
+  conversations              Conversation[]
+  chatTurns                  ChatTurn[]
+  aiReservations             AiReservation[]
   emailVerificationTokens    EmailVerificationToken[]
   journalEntries             JournalEntry[]
   passwordResetTokens        PasswordResetToken[]
@@ -47,8 +57,74 @@ model ChatMessage {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  conversationId String?
+  turnId String?
+  conversation Conversation? @relation(fields: [conversationId, userId], references: [id, userId], onDelete: Cascade)
+  turn ChatTurn? @relation(fields: [turnId, conversationId, userId], references: [id, conversationId, userId], onDelete: Cascade)
+  sources ChatMessageSource[]
+
   @@index([userId])
+  @@unique([turnId, role])
+  @@index([conversationId, createdAt, id])
   @@map("chat_messages")
+}
+
+model Conversation {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contextKey String @default("general")
+  activeTurnId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  turns ChatTurn[]
+  messages ChatMessage[]
+  @@unique([id, userId])
+  @@index([userId, updatedAt, id])
+}
+
+model ChatTurn {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId, userId], references: [id, userId], onDelete: Cascade)
+  requestId String
+  fingerprint String
+  question String
+  status String @default("PENDING")
+  executionToken String
+  dispatchedAt DateTime?
+  finishedAt DateTime?
+  failureCode String?
+  evidenceSnapshot Json?
+  responseSnapshot Json?
+  budgetSnapshot Json?
+  createdAt DateTime @default(now())
+  messages ChatMessage[]
+  @@unique([userId, requestId])
+  @@unique([id, conversationId, userId])
+  @@index([conversationId, createdAt, id])
+  @@index([status, createdAt])
+}
+
+model ChatMessageSource {
+  id String @id @default(cuid())
+  messageId String
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  sourceOrder Int
+  provider String
+  authorName String?
+  workTitle String?
+  reference String?
+  originalLanguage String?
+  sourceUrl String
+  scanUrl String?
+  verificationStatus String
+  includedInContext Boolean
+  snapshot Json
+  createdAt DateTime @default(now())
+  @@unique([messageId, sourceOrder])
 }
 
 model UsageLog {
@@ -61,6 +137,7 @@ model UsageLog {
   @@index([userId])
   @@index([feature])
   @@index([createdAt])
+  @@index([userId, feature, createdAt])
   @@map("usage_logs")
 }
 
@@ -187,8 +264,115 @@ model PatristicDiscoveryJob {
   createdAt  DateTime                    @default(now())
   startedAt  DateTime?
   finishedAt DateTime?
+  claimToken String?
+  dispatchedAt DateTime?
 
   @@index([status, createdAt])
+}
+
+model AiReservation {
+  id         String   @id @default(cuid())
+  subject    String
+  feature    String
+  status     String   @default("RUNNING")
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  finishedAt DateTime?
+  userId String?
+  requestKey String? @db.VarChar(128)
+  requestHash String? @db.Char(64)
+  responseSnapshot Json?
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([subject, feature, requestKey], map: "AiReservation_subject_feature_requestKey_key")
+  @@index([userId], map: "AiReservation_userId_idx")
+  @@index([status, finishedAt], map: "AiReservation_status_finishedAt_idx")
+
+  @@index([subject, createdAt])
+  @@index([subject, status, expiresAt])
+}
+
+model BillingSubscription {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider String
+  providerSubscriptionId String
+  providerCustomerId String?
+  providerProductId String?
+  status String @default("unverified_legacy")
+  legacySnapshotStatus String?
+  trialEndsAt DateTime?
+  currentPeriodEndsAt DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  providerUpdatedAt DateTime?
+  lastVerifiedAt DateTime?
+  paidVerified Boolean @default(false)
+  retainedUntil DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([provider, providerSubscriptionId], map: "BillingSubscription_provider_subscription_key")
+  @@index([userId])
+}
+
+model BillingWebhookEvent {
+  id String @id @default(cuid())
+  provider String
+  eventId String
+  eventType String
+  providerSubscriptionId String?
+  payloadDigest String
+  occurredAt DateTime?
+  status String @default("RECEIVED")
+  receivedAt DateTime @default(now())
+  processedAt DateTime?
+  errorCode String?
+  @@unique([provider, eventId], map: "BillingWebhookEvent_provider_event_key")
+}
+
+model BillingCheckoutAttempt {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider String
+  status String @default("CREATING")
+  providerCheckoutId String?
+  checkoutUrl String?
+  expiresAt DateTime?
+  recoveryLog Json?
+  retainedUntil DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+model AuthRateLimitBucket {
+  key String @id
+  count Int @default(0)
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+
+model PatristicSourceDomain {
+  hostname String @id
+  enabled Boolean @default(true)
+  redirectHosts String[]
+  verifiedAt DateTime
+  verifiedBy String
+  verificationNote String
+  updatedAt DateTime @updatedAt
+}
+
+model PatristicSourceDomainAudit {
+  id String @id @default(cuid())
+  hostname String
+  actorId String
+  action String
+  reason String
+  addresses String[]
+  redirectHosts String[]
+  createdAt DateTime @default(now())
+  @@index([hostname, createdAt])
 }
 
 enum Plan {

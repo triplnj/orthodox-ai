@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getBlogAdminUser } from "@/lib/blogAdmin";
-import { slugify } from "@/lib/slugify";
+import { renderBlogContent } from "@/lib/blogContent";
+import { updateBlogPost, deleteBlogPost } from "../../actions";
 import { BlogContentEditor } from "@/components/blog/BlogContentEditor";
 
 export const dynamic = "force-dynamic";
@@ -13,89 +14,8 @@ type EditBlogPostPageProps = {
   }>;
 };
 
-async function updateBlogPost(formData: FormData) {
-  "use server";
-
-  const adminUser = await getBlogAdminUser();
-
-  if (!adminUser) {
-    redirect("/login");
-  }
-
-  const id = String(formData.get("id") ?? "");
-  const title = String(formData.get("title") ?? "").trim();
-  const rawSlug = String(formData.get("slug") ?? "").trim();
-  const excerpt = String(formData.get("excerpt") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
-  const status = String(formData.get("status") ?? "DRAFT");
-
-  if (!id || !title || !content) {
-    throw new Error("Missing required fields.");
-  }
-
-  const existingPost = await prisma.blogPost.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      publishedAt: true,
-    },
-  });
-
-  if (!existingPost) {
-    throw new Error("Blog post not found.");
-  }
-
-  const slug = rawSlug ? slugify(rawSlug) : slugify(title);
-
-  await prisma.blogPost.update({
-    where: {
-      id,
-    },
-    data: {
-      title,
-      slug,
-      excerpt: excerpt || null,
-      category: category || null,
-      content,
-      status: status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
-      publishedAt:
-        status === "PUBLISHED"
-          ? existingPost.publishedAt ?? new Date()
-          : null,
-      authorEmail: adminUser.email,
-    },
-  });
-
-  redirect("/admin/blog");
-}
-
-async function deleteBlogPost(formData: FormData) {
-  "use server";
-
-  const adminUser = await getBlogAdminUser();
-
-  if (!adminUser) {
-    redirect("/login");
-  }
-
-  const id = String(formData.get("id") ?? "");
-
-  if (!id) {
-    throw new Error("Missing blog post id.");
-  }
-
-  await prisma.blogPost.delete({
-    where: {
-      id,
-    },
-  });
-
-  redirect("/admin/blog");
-}
-
 export async function generateMetadata({ params }: EditBlogPostPageProps) {
+  if (!(await getBlogAdminUser())) redirect("/login");
   const { id } = await params;
 
   const post = await prisma.blogPost.findUnique({
@@ -150,11 +70,11 @@ export default async function EditBlogPostPage({
         <input type="hidden" name="id" value={post.id} />
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="edit-page-field-1" className="block text-sm font-semibold text-gray-800">
             Title
           </label>
-          <input
-            name="title"
+          <input id="edit-page-field-1"
+            name="title" maxLength={300}
             required
             defaultValue={post.title}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -162,11 +82,11 @@ export default async function EditBlogPostPage({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="edit-page-field-2" className="block text-sm font-semibold text-gray-800">
             Slug
           </label>
-          <input
-            name="slug"
+          <input id="edit-page-field-2"
+            name="slug" maxLength={200}
             required
             defaultValue={post.slug}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -174,22 +94,22 @@ export default async function EditBlogPostPage({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="edit-page-field-3" className="block text-sm font-semibold text-gray-800">
             Category
           </label>
-          <input
-            name="category"
+          <input id="edit-page-field-3"
+            name="category" maxLength={100}
             defaultValue={post.category ?? ""}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="edit-page-field-4" className="block text-sm font-semibold text-gray-800">
             Excerpt
           </label>
-          <textarea
-            name="excerpt"
+          <textarea id="edit-page-field-4"
+            name="excerpt" maxLength={2000}
             rows={3}
             defaultValue={post.excerpt ?? ""}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
@@ -197,20 +117,18 @@ export default async function EditBlogPostPage({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
-            Content
-          </label>
+          <p id="blog-content-label" className="block text-sm font-semibold text-gray-800">Content</p>
           <p className="mt-1 text-xs leading-5 text-gray-500">
             Paste from Word or Google Docs here. Basic formatting such as headings, paragraphs, lists, bold and italic text will be kept.
           </p>
-          <BlogContentEditor name="content" defaultValue={post.content} />
+          <BlogContentEditor name="content" defaultValue={renderBlogContent(post.content)} />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="edit-page-field-5" className="block text-sm font-semibold text-gray-800">
             Status
           </label>
-          <select
+          <select id="edit-page-field-5"
             name="status"
             defaultValue={post.status}
             className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"

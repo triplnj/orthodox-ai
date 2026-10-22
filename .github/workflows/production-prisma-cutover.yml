@@ -1,0 +1,67 @@
+name: OrthodoxAI production Prisma cutover
+on:
+  push:
+    branches: [audit/orthodoxai-hardening]
+    paths: [.github/workflows/production-prisma-cutover.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production-migrations:
+    name: Production DB schema migration (operator maintenance only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production-database
+    env:
+      CI: 'true'
+      DATABASE_URL: ${{ secrets.NEON_PRODUCTION_MIGRATION_URL }}
+      DIRECT_URL: ${{ secrets.NEON_PRODUCTION_MIGRATION_URL }}
+      DEBUG: ''
+      NODE_DEBUG: ''
+      OPENAI_LOG: 'off'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install reviewed dependency lockfile
+        run: npm ci
+      - name: Hard fail unless exact production endpoint and expected pre-cutover schema
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { Client } from 'pg';
+          const raw = process.env.DIRECT_URL || '';
+          if (!raw) throw Error('NEON_PRODUCTION_MIGRATION_URL secret is not configured.');
+          const u = new URL(raw);
+          if (!['postgres:','postgresql:'].includes(u.protocol) ||
+              u.hostname !== 'ep-cool-math-asmp4s9d.c-4.eu-central-1.aws.neon.tech' ||
+              u.pathname !== '/neondb' || u.searchParams.get('sslmode') !== 'require') {
+            throw Error('Refusing unknown database or pooled connection');
+          }
+          const db = new Client({connectionString:raw,connectionTimeoutMillis:10000});
+          await db.connect();
+          try {
+            const {rows:[r]} = await db.query('SELECT (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL) AS applied, (SELECT count(*)::integer FROM public.users) AS users, (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL) AS unfinished');
+            if (r.applied !== 12 || r.unfinished !== 0 || r.users < 53) throw Error('Unexpected live migration or user baseline. STOP.');
+            console.log('Production endpoint and 12 migration baseline confirmed. User count is at least 53.');
+          } finally { await db.end(); }
+          NODE
+      - name: Apply Prisma migrations 13-18
+        run: node node_modules/prisma/build/index.js migrate deploy
+      - name: Verify migrated schema and original user data
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { Client } from 'pg';
+          const db=new Client({connectionString:process.env.DIRECT_URL,connectionTimeoutMillis:10000});
+          await db.connect();
+          try {
+            const {rows:[r]}=await db.query('SELECT (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL) AS applied, (SELECT count(*)::integer FROM public._prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL) AS unfinished, (SELECT count(*)::integer FROM public.users) AS users');
+            if (r.applied!==18 || r.unfinished!==0 || r.users<53) throw Error('Post-cutover migration integrity failed');
+            console.log('VERIFIED: all 18 migrations; no unfinished receipts; at least 53 existing users preserved.');
+          } finally { await db.end(); }
+          NODE

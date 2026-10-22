@@ -43,7 +43,7 @@ export default async function PrayersPage() {
           Prayer
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">
           Build a simple and steady Orthodox prayer rhythm.
         </h1>
 

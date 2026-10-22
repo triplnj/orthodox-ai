@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 
 type CheckoutButtonProps = {
@@ -10,12 +10,15 @@ type CheckoutButtonProps = {
 export function CheckoutButton({
   children = "Upgrade to Pro",
 }: CheckoutButtonProps) {
+  const pending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailVerificationRequired, setEmailVerificationRequired] =
     useState(false);
 
   async function handleCheckout() {
+    if (pending.current) return;
+    pending.current = true;
     setIsLoading(true);
     setError(null);
     setEmailVerificationRequired(false);
@@ -44,8 +47,9 @@ export function CheckoutButton({
 
       window.location.href = data.url;
     } catch {
-      setError("Network error while starting Checkout.");
+      setError("Could not confirm checkout. Check your account status before trying again; do not start another checkout while the outcome is uncertain.");
     } finally {
+      pending.current = false;
       setIsLoading(false);
     }
   }
@@ -62,7 +66,7 @@ export function CheckoutButton({
       </button>
 
       {error && (
-        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <p>{error}</p>
 
           {emailVerificationRequired && (

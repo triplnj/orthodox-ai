@@ -1,25 +1,13 @@
-import { NextResponse } from "next/server";
-
-import { getCurrentUser } from "@/lib/auth";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import { detectPatristicLanguage } from "@/lib/patristics/detect-language";
 import { discoverAndSavePatristicQuotes } from "@/lib/patristics/discover-and-save";
 import { verifyQuotesAgainstPg } from "@/lib/patristics/verify-second-source";
 import { embedVerifiedQuotes } from "@/lib/patristics/embed-quotes";
 
-export async function POST(req: Request) {
+async function handleResearch(req: Request) {
   try {
-    const user = await getCurrentUser();
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
 
     const body = await req.json();
 
@@ -29,7 +17,7 @@ export async function POST(req: Request) {
         : "";
 
     if (!query) {
-      return NextResponse.json(
+      return apiJson(
         {
           error: "Query is required.",
         },
@@ -53,24 +41,7 @@ export async function POST(req: Request) {
         (item) => item.saved.id,
       );
 
-    console.log(
-      "PATRISTIC_BACKGROUND_DISCOVERY:",
-      {
-        query,
-        discovered:
-          discoveryResult.discovered,
-        exactMatches:
-          discoveryResult.exactMatches,
-        trustedExactMatches:
-          discoveryResult.trustedExactMatches,
-        attributionVerified:
-          discoveryResult.attributionVerified,
-        saved:
-          discoveryResult.saved,
-        quoteIds:
-          discoveredQuoteIds,
-      },
-    );
+    diagnostic("operation_completed", { operation: "discovery", count: discoveryResult.saved });
 
     let secondSourceResult = null;
     let embeddingResult = null;
@@ -81,10 +52,7 @@ export async function POST(req: Request) {
           discoveredQuoteIds,
         );
 
-      console.log(
-        "PATRISTIC_BACKGROUND_SECOND_SOURCE:",
-        secondSourceResult,
-      );
+      diagnostic("operation_completed", { operation: "verification" });
 
       if (secondSourceResult.matched > 0) {
         embeddingResult =
@@ -92,14 +60,11 @@ export async function POST(req: Request) {
             discoveredQuoteIds,
           );
 
-        console.log(
-          "PATRISTIC_BACKGROUND_EMBEDDING:",
-          embeddingResult,
-        );
+        diagnostic("operation_completed", { operation: "embedding" });
       }
     }
 
-    return NextResponse.json({
+    return apiJson({
       ok: true,
 
       query,
@@ -117,12 +82,9 @@ export async function POST(req: Request) {
         embeddingResult?.embedded ?? 0,
     });
   } catch (error) {
-    console.error(
-      "PATRISTIC_BACKGROUND_DISCOVERY_ERROR:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "discovery", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Patristic discovery failed.",
@@ -133,3 +95,4 @@ export async function POST(req: Request) {
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch, false);

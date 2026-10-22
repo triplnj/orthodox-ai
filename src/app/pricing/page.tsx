@@ -1,3 +1,4 @@
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 import { PricingCards } from "@/components/pricing/PricingCards";
 import { productCopy } from "@/lib/productCopy";
 
@@ -15,7 +16,7 @@ const faqs = [
   {
     question: "What does Pro unlock?",
     answer:
-      "Pro unlocks unlimited questions, personal prayer plans, Scripture reading plans, a spiritual journal, deeper explanations, conversation history, and future PDF export.",
+      `Pro unlocks ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, personal prayer plans, Scripture reading plans, a spiritual journal, deeper explanations, conversation history, and future PDF export.`,
   },
   {
     question: "Can I use this for serious personal spiritual issues?",
@@ -32,14 +33,14 @@ export default function PricingPage() {
           Pricing
         </p>
 
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950 sm:text-5xl">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl">
           Start free. Upgrade when OrthodoxAI becomes part of your daily rhythm.
         </h1>
 
         <p className="mt-5 text-base leading-7 text-gray-600">
           Use OrthodoxAI for prayer, fasting, Scripture, and practical Orthodox
           Christian guidance. The Free plan helps you start. Pro gives you
-          unlimited access and deeper personal tools.
+          {FULL_ACCESS_DAILY_CHAT_LIMIT} chat questions per day and deeper personal tools.
         </p>
         <p className="mt-4 text-3xl font-bold text-gray-950">
         <span className="text-base font-medium text-gray-500">$7.99/month</span>
@@ -65,7 +66,7 @@ export default function PricingPage() {
       </section>
 
       <section className="mt-14">
-        <h2 className="text-2xl font-semibold text-white-950">
+        <h2 className="text-2xl font-semibold text-gray-950">
           Frequently asked questions
         </h2>
 

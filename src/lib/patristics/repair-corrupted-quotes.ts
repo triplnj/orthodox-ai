@@ -1,3 +1,4 @@
+import { safeResearchFailure } from "@/lib/diagnostics";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -283,10 +284,7 @@ export async function inspectCorruptedQuotes() {
         candidates:
           0,
 
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: safeResearchFailure(error),
       });
     }
   }

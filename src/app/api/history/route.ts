@@ -1,14 +1,19 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { ApiError } from "@/lib/api/validation";
+import { apiFailure } from "@/lib/api/validation";
+import { queryInput } from "@/lib/api/validation";
+import { apiJson } from "@/lib/api/response";
+import { visibleMessages } from "@/lib/chat/history";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
+    if (request) { try { queryInput(request); } catch (error) { return apiFailure(error); } }
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to view conversation history." },
         { status: 401 }
       );
@@ -16,26 +21,19 @@ export async function GET() {
 
     const isPro = isProUser(user);
 
-    const messages = await prisma.chatMessage.findMany({
-      where: {
-        userId: user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: isPro ? 100 : 10,
-    });
+    const messages = await visibleMessages(user);
 
-    return NextResponse.json({
+    return apiJson({
       messages,
       plan: user.plan,
       isPro,
       limit: isPro ? 100 : 10,
     });
   } catch (error) {
-    console.error("HISTORY_GET_ERROR:", error);
+    if (error instanceof ApiError) return apiFailure(error);
+    diagnostic("operation_failed", { operation: "history", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Something went wrong while loading conversation history." },
       { status: 500 }
     );

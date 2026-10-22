@@ -1,3 +1,4 @@
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 import Link from "next/link";
 import { ProStatusCard } from "@/components/pro/ProStatusCard";
 import { getCurrentUser } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { CustomerPortalButton } from "@/components/billing/CustomerPortalButton"
 
 const proTools = [
   {
-    title: "Unlimited OrthodoxAI Chat",
+    title: `${FULL_ACCESS_DAILY_CHAT_LIMIT} OrthodoxAI questions per day`,
     description:
       "Ask deeper questions about prayer, fasting, Scripture, worship, saints, doctrine, and practical Orthodox Christian life.",
     href: "/chat",
@@ -74,7 +75,7 @@ export default async function ProPage() {
             OrthodoxAI Pro
           </p>
 
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-white-950 sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl">
             A deeper daily OrthodoxAI experience.
           </h1>
 

@@ -1,3 +1,5 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { safeSourceFetch } from "@/lib/security/source-transport";
 import * as cheerio from "cheerio";
 
 import {
@@ -112,7 +114,7 @@ async function fetchPgDjvuXml(
 
 
   const response =
-    await fetch(
+    await safeSourceFetch(
       source.djvuXmlUrl,
       {
         headers: {
@@ -367,16 +369,7 @@ export async function searchPgPassages(
       query,
     );
 
-  console.log(
-    "PATRISTIC_PG_PLAN:",
-    {
-      authorName: plan.authorName,
-      pgVolumes: plan.pgVolumes,
-      hasSpecificWorks: plan.hasSpecificWorks,
-      routingVerified: plan.routingVerified,
-      authorSource: plan.authorSource,
-    },
-  );
+  diagnostic("operation_started", { operation: "retrieval" });
 
 
   if (
@@ -403,14 +396,7 @@ export async function searchPgPassages(
     !plan.hasSpecificWorks &&
     plan.pgVolumes.length > MAX_BROAD_PG_VOLUMES
   ) {
-    console.warn(
-      "PATRISTIC_PG_SKIPPED_BROAD_RANGE:",
-      {
-        authorName: plan.authorName,
-        pgVolumeCount: plan.pgVolumes.length,
-        maxBroadVolumes: MAX_BROAD_PG_VOLUMES,
-      },
-    );
+    diagnostic("operation_skipped", { operation: "retrieval", count: plan.pgVolumes.length });
 
     return [];
   }
@@ -435,13 +421,7 @@ export async function searchPgPassages(
     ]);
 
 
-  console.log(
-    "PATRISTIC_PG_TERMS:",
-    {
-      concepts: greekSearch.concepts,
-      terms,
-    },
-  );
+  diagnostic("operation_started", { operation: "retrieval", count: terms.length });
 
   if (
     terms.length === 0 ||
@@ -467,15 +447,8 @@ export async function searchPgPassages(
       Date.now() - searchStartedAt >
       MAX_PG_SEARCH_MS
     ) {
-      console.warn(
-        "PATRISTIC_PG_TIME_BUDGET_EXCEEDED:",
-        {
-          authorName: plan.authorName,
-          elapsedMs:
-            Date.now() - searchStartedAt,
-          collectedMatches: allResults.length,
-        },
-      );
+      diagnostic("operation_skipped", { operation: "retrieval", failure: "timeout",
+        durationMs: Date.now() - searchStartedAt, count: allResults.length });
 
       break;
     }
@@ -494,38 +467,17 @@ export async function searchPgPassages(
           volume,
         );
     } catch (error) {
-      console.error(
-        "PATRISTIC_PG_FETCH_ERROR:",
-        {
-          volume,
-          error:
-            error instanceof Error
-              ? error.message
-              : String(error),
-        },
-      );
+      diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
       continue;
     }
 
 
     if (!fetched) {
-      console.warn(
-        "PATRISTIC_PG_NO_SOURCE:",
-        { volume },
-      );
+      diagnostic("operation_skipped", { operation: "retrieval" });
       continue;
     }
 
-    console.log(
-      "PATRISTIC_PG_FETCH_OK:",
-      {
-        volume,
-        archiveIdentifier:
-          fetched.archiveIdentifier,
-        xmlChars:
-          fetched.xml.length,
-      },
-    );
+    diagnostic("operation_completed", { operation: "retrieval" });
 
 
     const {
@@ -542,21 +494,7 @@ export async function searchPgPassages(
         terms,
       );
 
-    console.log(
-      "PATRISTIC_PG_RAW_MATCHES:",
-      {
-        volume,
-        count: rawMatches.length,
-        sample:
-          rawMatches.slice(0, 3).map(
-            (match) => ({
-              scanPage: match.scanPage,
-              matchedTerms:
-                match.matchedTerms,
-            }),
-          ),
-      },
-    );
+    diagnostic("operation_completed", { operation: "retrieval", count: rawMatches.length });
 
 
     /*
@@ -612,15 +550,7 @@ export async function searchPgPassages(
       if (
         scanRanges.length > 0
       ) {
-        console.log(
-          "PATRISTIC_PG_WORK_RANGES:",
-          {
-            volume,
-            workColumns:
-              volumeWorkRanges,
-            scanRanges,
-          },
-        );
+        diagnostic("operation_completed", { operation: "retrieval", count: scanRanges.length });
 
         rawMatches =
           rawMatches.filter(
@@ -742,10 +672,7 @@ export async function searchPgPassages(
   }
 
 
-  console.log(
-    "PATRISTIC_PG_TOTAL_BEFORE_FILTER:",
-    { count: allResults.length },
-  );
+  diagnostic("operation_completed", { operation: "retrieval", count: allResults.length });
 
   const conceptCount =
     greekSearch.concepts.length;

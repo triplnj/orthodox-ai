@@ -1,21 +1,26 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { ApiError } from "@/lib/api/validation";
+import { queryInput } from "@/lib/api/validation";
+import { apiJson } from "@/lib/api/response";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
+import { apiFailure, parse, readJson, journalSchema } from "@/lib/api/validation";
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
+    if (request) { try { queryInput(request); } catch (error) { return apiFailure(error); } }
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to use the journal." },
         { status: 401 }
       );
     }
 
     if (!isProUser(user)) {
-      return NextResponse.json(
+      return apiJson(
         {
           error: "The Spiritual Journal is available with OrthodoxAI Pro.",
           upgradeRequired: true,
@@ -33,13 +38,14 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({
+    return apiJson({
       entries,
     });
   } catch (error) {
-    console.error("JOURNAL_GET_ERROR:", error);
+    if (error instanceof ApiError) return apiFailure(error);
+    diagnostic("operation_failed", { operation: "journal", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Something went wrong while loading journal entries." },
       { status: 500 }
     );
@@ -51,14 +57,14 @@ export async function POST(req: Request) {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to use the journal." },
         { status: 401 }
       );
     }
 
     if (!isProUser(user)) {
-      return NextResponse.json(
+      return apiJson(
         {
           error: "The Spiritual Journal is available with OrthodoxAI Pro.",
           upgradeRequired: true,
@@ -67,13 +73,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
+    const body = parse(journalSchema, await readJson(req, 262144));
 
     const title = body.title as string | undefined;
     const content = body.content as string | undefined;
 
     if (!content || typeof content !== "string" || !content.trim()) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Journal content is required." },
         { status: 400 }
       );
@@ -87,15 +93,13 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({
+    return apiJson({
       entry,
     });
   } catch (error) {
-    console.error("JOURNAL_POST_ERROR:", error);
+    if (error instanceof ApiError) return apiFailure(error);
+    diagnostic("operation_failed", { operation: "journal", failure: failureCategory(error) });
 
-    return NextResponse.json(
-      { error: "Something went wrong while saving the journal entry." },
-      { status: 500 }
-    );
+    return apiFailure(error);
   }
 }

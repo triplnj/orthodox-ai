@@ -12,17 +12,31 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+:root { color-scheme: light; }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Shared keyboard and narrow-screen behavior, retaining the existing palette. */
+:focus-visible {
+  outline: 3px solid #2563eb !important;
+  outline-offset: 3px;
+}
+button, input, select, textarea { font: inherit; }
+button, select, input:not([type="radio"]):not([type="checkbox"]):not([type="hidden"]) { min-height: 44px; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+main, section, article, aside, form { min-width: 0; }
+main { overflow-wrap: anywhere; }
+textarea { max-width: 100%; }
+.blog-prose { overflow-wrap: anywhere; }
+.skip-link { position: absolute; left: 1rem; top: -10rem; z-index: 100; padding: .75rem 1rem; background: white; color: #111827; }
+.skip-link:focus { top: 1rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
 .prose-content-editor:empty::before {

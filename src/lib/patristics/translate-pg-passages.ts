@@ -1,15 +1,11 @@
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
 import type {
   PgPassageMatch,
 } from "./pg-passage-search";
 
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env.OPENAI_API_KEY,
-  });
+
 
 
 export type TranslatedPgPassage =
@@ -54,7 +50,7 @@ async function translateOnePassage(
 
 
   const response =
-    await openai.responses.create({
+    await getOpenAI().responses.create({
       model:
         "gpt-4.1-mini",
 

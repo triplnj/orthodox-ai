@@ -1,4 +1,7 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import type { ChatContextKey } from "@/lib/ai/chatContexts";
 
@@ -12,7 +15,7 @@ function isValidReviewToken(token: string | null) {
   return token === expectedToken;
 }
 
-export async function POST(req: Request) {
+async function handleAiRequest(req: Request) {
   try {
     const body = await req.json();
 
@@ -21,14 +24,14 @@ export async function POST(req: Request) {
     const contextKey = body.contextKey as ChatContextKey | undefined;
 
     if (!isValidReviewToken(token ?? null)) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Review access is invalid or expired." },
         { status: 401 }
       );
     }
 
     if (!message || typeof message !== "string" || !message.trim()) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Message is required." },
         { status: 400 }
       );
@@ -52,15 +55,18 @@ Answer as OrthodoxAI normally would, but be especially careful to demonstrate:
       isPro: true,
     });
 
-    return NextResponse.json({
+    return apiJson({
       answer: result.answer,
     });
   } catch (error) {
-    console.error("REVIEW_CHAT_API_ERROR:", error);
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
+    diagnostic("operation_failed", { operation: "review", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Something went wrong while generating the review answer." },
       { status: 500 }
     );
   }
 }
+export const POST = secureAiRoute(handleAiRequest, "review");

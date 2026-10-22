@@ -1,4 +1,5 @@
-import OpenAI from "openai";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 import { zodTextFormat } from "openai/helpers/zod";
 
 import { prisma } from "@/lib/prisma";
@@ -7,9 +8,7 @@ import {
   type BackfillTranslation,
 } from "./types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 export async function translateQuote(
   originalText: string,
@@ -23,7 +22,7 @@ export async function translateQuote(
     );
   }
 
-  const response = await openai.responses.parse({
+  const response = await getOpenAI().responses.parse({
     model,
 
     input: [
@@ -140,10 +139,7 @@ export async function backfillPatristicTranslations() {
     } catch (error) {
       failed += 1;
 
-      console.error(
-        `Translation backfill failed for quote ${quote.id}:`,
-        error,
-      );
+      diagnostic("operation_failed", { operation: "translation", failure: failureCategory(error) });
     }
   }
 

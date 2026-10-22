@@ -1,68 +1,35 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { queryInput } from "@/lib/api/validation";
+import { withAiOperation } from "@/lib/ai/operationLimits";
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { createSession } from "@/lib/session";
-
-function isValidReviewToken(token: string | null) {
-  const expectedToken = process.env.REVIEW_ACCESS_TOKEN;
-
-  if (!expectedToken) {
-    return false;
-  }
-
-  return token === expectedToken;
-}
+import { startReviewSession, validReviewAccessToken } from "@/lib/security/review-provisioning";
+import { ReviewIdentityError } from "@/lib/security/review-identities";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.nextUrl.searchParams.get("token");
+    const token = queryInput(req, ["token"]).token ?? null;
 
-    if (!isValidReviewToken(token)) {
-      return NextResponse.json(
+    if (!validReviewAccessToken("fr-josiah", token)) {
+      return apiJson(
         { error: "Review access is invalid or expired." },
         { status: 401 }
       );
     }
 
-    const reviewEmail =
-      process.env.REVIEW_USER_EMAIL ?? "fr-josiah-review@orthodoxai.app";
+    return await withAiOperation("review:fr-josiah-start", "review", undefined, async () => {
+      await startReviewSession("fr-josiah");
 
-    const reviewUser = await prisma.user.upsert({
-      where: {
-        email: reviewEmail,
-      },
-      update: {
-        name: "Fr. Josiah Review",
-        plan: "PRO",
-        subscriptionStatus: "active",
-        emailVerified: new Date(),
-        onboardingCompleted: true,
-        spiritualGoal: "learn Orthodox basics",
-        experienceLevel: "advanced",
-        dailyTime: "15 minutes",
-      },
-      create: {
-        email: reviewEmail,
-        name: "Fr. Josiah Review",
-        plan: "PRO",
-        subscriptionStatus: "active",
-        emailVerified: new Date(),
-        onboardingCompleted: true,
-        spiritualGoal: "learn Orthodox basics",
-        experienceLevel: "advanced",
-        dailyTime: "15 minutes",
-      },
-      select: {
-        id: true,
-      },
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     });
-
-    await createSession(reviewUser.id);
-
-    return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error) {
-    console.error("REVIEW_START_ERROR:", error);
+    if (error instanceof ReviewIdentityError) return apiJson({ error: error.message, code: error.code }, { status: error.status });
+    const response = aiSecurityResponse(error);
+    if (response) return response;
+    diagnostic("operation_failed", { operation: "review", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Could not start review access." },
       { status: 500 }
     );

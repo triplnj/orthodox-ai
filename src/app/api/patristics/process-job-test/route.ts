@@ -1,19 +1,11 @@
-import { NextResponse } from "next/server";
-
-import { getCurrentUser } from "@/lib/auth";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import { processPatristicDiscoveryJob } from "@/lib/patristics/process-discovery-job";
 
-export async function POST(
+async function handleResearch(
   request: Request,
 ) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized." },
-      { status: 401 },
-    );
-  }
 
   try {
     const body = await request.json();
@@ -24,7 +16,7 @@ export async function POST(
         : "";
 
     if (!jobId) {
-      return NextResponse.json(
+      return apiJson(
         { error: "jobId is required." },
         { status: 400 },
       );
@@ -35,25 +27,20 @@ export async function POST(
         jobId,
       );
 
-    return NextResponse.json({
+    return apiJson({
       ok: true,
       result,
     });
   } catch (error) {
-    console.error(
-      "PATRISTIC_PROCESS_JOB_TEST_ERROR:",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error.",
+        error: "The research operation could not be completed.",
       },
       { status: 500 },
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch, true);

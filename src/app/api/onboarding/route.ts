@@ -1,26 +1,28 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { apiFailure, parse, readJson, onboardingSchema } from "@/lib/api/validation";
 
 export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to complete onboarding." },
         { status: 401 }
       );
     }
 
-    const body = await req.json();
+    const body = parse(onboardingSchema, await readJson(req, 16384));
 
     const spiritualGoal = String(body.spiritualGoal ?? "").trim();
     const experienceLevel = String(body.experienceLevel ?? "").trim();
     const dailyTime = String(body.dailyTime ?? "").trim();
 
     if (!spiritualGoal || !experienceLevel || !dailyTime) {
-      return NextResponse.json(
+      return apiJson(
         { error: "All onboarding fields are required." },
         { status: 400 }
       );
@@ -50,21 +52,21 @@ export async function POST(req: Request) {
     ];
 
     if (!allowedGoals.includes(spiritualGoal)) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Invalid spiritual goal." },
         { status: 400 }
       );
     }
 
     if (!allowedExperienceLevels.includes(experienceLevel)) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Invalid experience level." },
         { status: 400 }
       );
     }
 
     if (!allowedDailyTimes.includes(dailyTime)) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Invalid daily time." },
         { status: 400 }
       );
@@ -91,15 +93,12 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({
+    return apiJson({
       user: updatedUser,
     });
   } catch (error) {
-    console.error("ONBOARDING_ERROR:", error);
+    diagnostic("operation_failed", { operation: "profile", failure: failureCategory(error) });
 
-    return NextResponse.json(
-      { error: "Something went wrong while saving onboarding." },
-      { status: 500 }
-    );
+    return apiFailure(error);
   }
 }

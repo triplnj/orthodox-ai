@@ -15,28 +15,32 @@ export async function enqueuePatristicDiscovery({
     return null;
   }
 
-  const existingJob =
-    await prisma.patristicDiscoveryJob.findFirst({
-      where: {
-        query: normalizedQuery,
-        status: {
-          in: ["PENDING", "PROCESSING"],
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${"discovery:" + language + ":" + normalizedQuery}, 0))`;
+    const existingJob =
+      await tx.patristicDiscoveryJob.findFirst({
+        where: {
+          query: normalizedQuery,
+          language,
+          status: {
+            in: ["PENDING", "PROCESSING"],
+          },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+    if (existingJob) {
+      return existingJob;
+    }
+
+    return tx.patristicDiscoveryJob.create({
+      data: {
+        query: normalizedQuery,
+        language,
+        status: "PENDING",
       },
     });
-
-  if (existingJob) {
-    return existingJob;
-  }
-
-  return prisma.patristicDiscoveryJob.create({
-    data: {
-      query: normalizedQuery,
-      language,
-      status: "PENDING",
-    },
-  });
+  }, { isolationLevel: "ReadCommitted", maxWait: 10_000, timeout: 15_000 });
 }

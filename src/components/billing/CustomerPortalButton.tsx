@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function CustomerPortalButton() {
+  const pending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handlePortal() {
+    if (pending.current) return;
+    pending.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -31,6 +34,7 @@ export function CustomerPortalButton() {
     } catch {
       setError("Network error while opening billing portal.");
     } finally {
+      pending.current = false;
       setIsLoading(false);
     }
   }
@@ -46,7 +50,7 @@ export function CustomerPortalButton() {
         {isLoading ? "Opening billing portal..." : "Manage subscription"}
       </button>
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
     </div>
   );
 }

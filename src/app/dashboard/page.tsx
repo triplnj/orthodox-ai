@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { ReadError } from "@/components/layout/ReadError";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
@@ -27,6 +28,7 @@ type DashboardData = {
     todayChatUsage: number;
     freeDailyChatLimit: number;
     remainingFreeQuestions: number | null;
+    remainingQuestions: number;
   };
   dailyRhythm: {
     title: string;
@@ -102,6 +104,8 @@ function DashboardContent() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -113,10 +117,12 @@ function DashboardContent() {
         const data = await response.json();
 
         if (!response.ok) {
+          setAuthenticationRequired(response.status === 401);
           setError(data.error ?? "Could not load dashboard.");
           return;
         }
 
+        setAuthenticationRequired(false);
         setDashboard(data);
       } catch {
         setError("Network error while loading dashboard.");
@@ -126,13 +132,13 @@ function DashboardContent() {
     }
 
     loadDashboard();
-  }, []);
+  }, [loadAttempt]);
 
   if (isLoading) {
     return (
       <main className="min-h-screen bg-gray-950 px-6 py-12 text-white">
         <div className="mx-auto max-w-6xl rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm">
-          <p className="text-sm text-gray-200">Loading dashboard...</p>
+          <p role="status" className="text-sm text-gray-200">Loading dashboard...</p>
         </div>
       </main>
     );
@@ -144,9 +150,9 @@ function DashboardContent() {
         <section className="mx-auto max-w-3xl rounded-2xl border border-red-300 bg-red-50 p-8 text-red-950">
           <h1 className="text-2xl font-bold">Dashboard error</h1>
 
-          <p className="mt-3 text-sm text-red-700">{error}</p>
+          <ReadError message={error} authenticationRequired={authenticationRequired} retry={() => setLoadAttempt(value => value + 1)} />
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/login"
               className="rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white"
@@ -272,7 +278,7 @@ function DashboardContent() {
               }
             >
               {isPro
-                ? "Your Pro access is active. You have unlimited questions and access to Pro tools."
+                ? `Your Pro access is active. You have ${stats.remainingQuestions} chat questions remaining today and access to Pro tools.`
                 : `You have ${stats.remainingFreeQuestions} Free questions remaining today.`}
             </p>
 
@@ -520,7 +526,7 @@ function DashboardContent() {
                     {message.role} · {message.category ?? "general"}
                   </p>
 
-                  <p className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                  <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
                     {message.content}
                   </p>
 
@@ -562,7 +568,7 @@ function DashboardContent() {
                     {entry.title ?? "Untitled reflection"}
                   </h3>
 
-                  <p className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                  <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
                     {entry.content}
                   </p>
 
@@ -588,7 +594,7 @@ export default function DashboardPage() {
     <Suspense
       fallback={
         <main className="min-h-screen bg-gray-950 px-6 py-12 text-white">
-          <p className="mx-auto max-w-6xl text-sm text-gray-200">
+          <p role="status" className="mx-auto max-w-6xl text-sm text-gray-200">
             Loading dashboard...
           </p>
         </main>

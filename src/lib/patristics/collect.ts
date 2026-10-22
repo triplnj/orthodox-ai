@@ -1,3 +1,4 @@
+import { diagnostic } from "@/lib/diagnostics";
 import { fetchSourceText }
   from "./fetch-source";
 
@@ -43,10 +44,7 @@ export async function collectFromSource(
 
     if (!exists) {
 
-      console.warn(
-        "REJECTED QUOTE:",
-        candidate.originalText,
-      );
+      diagnostic("operation_skipped", { operation: "extraction" });
 
       results.rejected++;
 

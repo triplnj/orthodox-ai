@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse }
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
+import { NextRequest }
   from "next/server";
 
 import { collectFromSource }
@@ -6,42 +9,10 @@ import { collectFromSource }
 
 export const runtime = "nodejs";
 
-export async function POST(
+async function handleResearch(
   request: NextRequest,
 ) {
   try {
-    const secret =
-      request.headers.get(
-        "x-patristics-secret",
-      );
-      console.log("HEADER EXISTS:", Boolean(secret));
-console.log("HEADER LENGTH:", secret?.length);
-console.log(
-  "ENV EXISTS:",
-  Boolean(process.env.PATRISTICS_SECRET),
-);
-console.log(
-  "ENV LENGTH:",
-  process.env.PATRISTICS_SECRET?.length,
-);
-console.log(
-  "SECRETS MATCH:",
-  secret === process.env.PATRISTICS_SECRET,
-);  
-    if (
-      !process.env.PATRISTICS_SECRET ||
-      secret !==
-        process.env.PATRISTICS_SECRET
-    ) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
 
     const body =
       await request.json();
@@ -52,7 +23,7 @@ console.log(
     if (
       !url.startsWith("https://")
     ) {
-      return NextResponse.json(
+      return apiJson(
         {
           error:
             "Valid HTTPS URL required",
@@ -66,17 +37,14 @@ console.log(
     const result =
       await collectFromSource(url);
 
-    return NextResponse.json(
+    return apiJson(
       result,
     );
   } catch (error) {
 
-    console.error(
-      "PATRISTICS_COLLECT_ERROR",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "extraction", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
         error:
           "Patristic collection failed",
@@ -87,3 +55,4 @@ console.log(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch);

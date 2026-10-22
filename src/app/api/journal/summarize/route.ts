@@ -1,22 +1,26 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { aiSecurityResponse } from "@/lib/ai/requestSecurity";
+import { secureAiRoute } from "@/lib/ai/secureRoute";
+import { AiInputError } from "@/lib/ai/requestSecurity";
 import { prisma } from "@/lib/prisma";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 
-export async function POST(req: Request) {
+async function handleAiRequest(req: Request) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to use this feature." },
         { status: 401 }
       );
     }
 
     if (!isProUser(user)) {
-      return NextResponse.json(
+      return apiJson(
         {
           error: "AI journal summaries are available with OrthodoxAI Pro.",
           upgradeRequired: true,
@@ -29,7 +33,7 @@ export async function POST(req: Request) {
     const entryId = body.entryId as string | undefined;
 
     if (!entryId) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Journal entry ID is required." },
         { status: 400 }
       );
@@ -43,11 +47,13 @@ export async function POST(req: Request) {
     });
 
     if (!entry) {
-      return NextResponse.json(
+      return apiJson(
         { error: "Journal entry not found." },
         { status: 404 }
       );
     }
+
+    if (entry.content.length > 40_000) throw new AiInputError("Journal entry is too long to summarize.", 413);
 
     const prompt = `
 Help organize this Orthodox Christian journal entry.
@@ -77,7 +83,7 @@ Important:
       isPro: true,
     });
 
-    const updatedEntry = await prisma.journalEntry.update({
+    const updatedEntry = req.headers.get("x-ai-defer-summary") === "1" ? { ...entry, aiSummary: result.answer, updatedAt: new Date() } : await prisma.journalEntry.update({
       where: {
         id: entry.id,
       },
@@ -86,16 +92,19 @@ Important:
       },
     });
 
-    return NextResponse.json({
+    return apiJson({
       entry: updatedEntry,
       summary: result.answer,
     });
   } catch (error) {
-    console.error("JOURNAL_SUMMARY_ERROR:", error);
+    const securityError = aiSecurityResponse(error);
+    if (securityError) return securityError;
+    diagnostic("operation_failed", { operation: "journal", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Something went wrong while summarizing the journal entry." },
       { status: 500 }
     );
   }
 }
+export const POST = secureAiRoute(handleAiRequest, "journal-summary");

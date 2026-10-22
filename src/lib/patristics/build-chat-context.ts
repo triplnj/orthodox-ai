@@ -1,3 +1,4 @@
+import { diagnostic } from "@/lib/diagnostics";
 import { detectPatristicAuthor } from "./detect-author";
 import { formatPatristicQuote } from "./format-quote";
 import { calculateHybridScore } from "./hybrid-score";
@@ -13,6 +14,7 @@ export type VerifiedPatristicSource = {
   sourceUrl: string;
   sourceName: string | null;
   verificationStatus: string;
+  metadata?: Record<string, unknown>;
 };
 
 export type VerifiedPatristicContextResult = {
@@ -50,15 +52,7 @@ export async function buildVerifiedPatristicContext(
 
   const minSimilarity = 0.0;
 
-  console.log(
-    "PATRISTIC_RETRIEVAL_INPUT:",
-    {
-      query,
-      language,
-      detectedAuthor,
-      minSimilarity,
-    },
-  );
+  diagnostic("operation_started", { operation: "retrieval" });
 
   const semanticQuotes =
     await semanticSearchPatristicQuotes(
@@ -115,24 +109,7 @@ export async function buildVerifiedPatristicContext(
       })
       .slice(0, 3);
 
-  console.log(
-    "PATRISTIC_USABLE_QUOTES:",
-    usableQuotes.map(
-      (item) => ({
-        id: item.quote.id,
-        authorName:
-          item.quote.authorName,
-        workTitle:
-          item.quote.workTitle,
-        semanticScore:
-          item.semanticScore,
-        keywordScore:
-          item.keywordScore,
-        hybridScore:
-          item.hybridScore,
-      }),
-    ),
-  );
+  diagnostic("operation_completed", { operation: "retrieval", count: usableQuotes.length });
 
   if (usableQuotes.length === 0) {
     return null;
@@ -165,6 +142,10 @@ export async function buildVerifiedPatristicContext(
           )
           .map(
             (source) => ({
+              metadata: { quoteId: item.quote.id, sourceName: source.sourceName, sourceType: source.sourceType,
+                exactMatch: source.exactMatch, confidence: item.quote.confidence,
+                section: item.quote.section, chapter: item.quote.chapter, paragraph: item.quote.paragraph,
+                pgReference: item.quote.pgReference, scReference: item.quote.scReference, cpgReference: item.quote.cpgReference },
               authorName:
                 item.quote.authorName,
               workTitle:

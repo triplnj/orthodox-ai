@@ -1,16 +1,22 @@
-import { NextResponse } from "next/server";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { ApiError } from "@/lib/api/validation";
+import { apiFailure } from "@/lib/api/validation";
+import { queryInput } from "@/lib/api/validation";
+import { apiJson } from "@/lib/api/response";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 import { FREE_DAILY_CHAT_LIMIT } from "@/lib/features";
 import { buildDailyRhythm } from "@/lib/dailyRhythm";
+import { quotaSnapshot } from "@/lib/ai/operationLimits";
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
+    if (request) { try { queryInput(request); } catch (error) { return apiFailure(error); } }
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json(
+      return apiJson(
         { error: "You must be signed in to view your dashboard." },
         { status: 401 }
       );
@@ -37,7 +43,7 @@ export async function GET() {
 });
 
 if (!dbUser) {
-  return NextResponse.json(
+  return apiJson(
     { error: "User not found." },
     { status: 404 }
   );
@@ -49,8 +55,7 @@ const dailyRhythm = buildDailyRhythm({
   dailyTime: dbUser.dailyTime,
 });
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const quota = await quotaSnapshot(user.id, "chat", user);
 
     const [chatCount, journalCount, todayChatUsage, recentMessages, recentJournalEntries] =
       await Promise.all([
@@ -66,15 +71,7 @@ const dailyRhythm = buildDailyRhythm({
           },
         }),
 
-        prisma.usageLog.count({
-          where: {
-            userId: user.id,
-            feature: "chat",
-            createdAt: {
-              gte: startOfDay,
-            },
-          },
-        }),
+        Promise.resolve(quota.used),
 
         prisma.chatMessage.findMany({
           where: {
@@ -97,10 +94,11 @@ const dailyRhythm = buildDailyRhythm({
         }),
       ]);
 
-    return NextResponse.json({
-      user: dbUser,
+    return apiJson({
+      user: { ...dbUser, plan: user.plan, subscriptionStatus: user.subscriptionStatus, billingAccessUntil: user.billingAccessUntil, reviewAccess: user.reviewAccess === true },
       isPro,
       stats: {
+        quota, remainingQuestions: quota.remaining,
         chatCount,
         journalCount,
         todayChatUsage,
@@ -114,9 +112,10 @@ const dailyRhythm = buildDailyRhythm({
       recentJournalEntries,
     });
   } catch (error) {
-    console.error("DASHBOARD_GET_ERROR:", error);
+    if (error instanceof ApiError) return apiFailure(error);
+    diagnostic("operation_failed", { operation: "dashboard", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       { error: "Something went wrong while loading dashboard data." },
       { status: 500 }
     );

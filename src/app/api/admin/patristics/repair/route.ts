@@ -1,56 +1,28 @@
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
-
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { apiJson } from "@/lib/api/response";
+import { secureResearchRoute } from "@/lib/patristics/api-security";
 import {
   repairCorruptedQuotes,
 } from "@/lib/patristics/repair-corrupted-quotes";
 
 
-export async function POST(
-  request: NextRequest,
-) {
-  const secret =
-    request.headers.get(
-      "x-patristics-secret",
-    );
-
-  if (
-    secret !==
-    process.env.PATRISTICS_SECRET
+async function handleResearch(
   ) {
-    return NextResponse.json(
-      {
-        error:
-          "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
 
 
   try {
     const result =
       await repairCorruptedQuotes();
 
-    return NextResponse.json(
+    return apiJson(
       result,
     );
   } catch (error) {
-    console.error(
-      "PATRISTIC_QUOTE_REPAIR_FAILED",
-      error,
-    );
+    diagnostic("operation_failed", { operation: "verification", failure: failureCategory(error) });
 
-    return NextResponse.json(
+    return apiJson(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown repair error.",
+        error: "The repair operation could not be completed.",
       },
       {
         status: 500,
@@ -58,3 +30,4 @@ export async function POST(
     );
   }
 }
+export const POST = secureResearchRoute(handleResearch);

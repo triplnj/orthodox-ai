@@ -1,4 +1,7 @@
+import { getWorkflowMetadata } from "workflow";
 import { prisma } from "@/lib/prisma";
+import { claimPatristicJob, finishPatristicJob } from "@/lib/patristics/job-claims";
+import { diagnostic, failureCategory, safeResearchFailure } from "@/lib/diagnostics";
 
 import {
   discoverPatristicSourceUrls,
@@ -219,86 +222,22 @@ export async function patristicDiscoveryWorkflow(
       embedded,
     };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unknown patristic discovery error.";
+    const message = safeResearchFailure(error);
 
     await markJobFailedStep(
       jobId,
       message,
     );
 
-    throw error;
+    throw new Error(message);
   }
 }
 
 
-async function markJobProcessingStep(
-  jobId: string,
-) {
+async function markJobProcessingStep(jobId: string) {
   "use step";
-
-  const job =
-    await prisma
-      .patristicDiscoveryJob
-      .findUnique({
-        where: {
-          id: jobId,
-        },
-      });
-
-
-  if (!job) {
-    return false;
-  }
-
-
-  if (
-    job.status ===
-      "COMPLETED" ||
-    job.status ===
-      "FAILED"
-  ) {
-    return false;
-  }
-
-
-  if (
-    job.status ===
-    "PENDING"
-  ) {
-    await prisma
-      .patristicDiscoveryJob
-      .update({
-        where: {
-          id: jobId,
-        },
-
-        data: {
-          status:
-            "PROCESSING",
-
-          attempts: {
-            increment: 1,
-          },
-
-          startedAt:
-            new Date(),
-
-          finishedAt:
-            null,
-
-          error:
-            null,
-        },
-      });
-  }
-
-
-  return true;
+  return claimPatristicJob(jobId, getWorkflowMetadata().workflowRunId, true);
 }
-
 
 async function discoverSourcesStep(
   jobId: string,
@@ -307,14 +246,7 @@ async function discoverSourcesStep(
 ) {
   "use step";
 
-  console.log(
-    "PATRISTIC_WORKFLOW_DISCOVERY_START:",
-    {
-      jobId,
-      query,
-      language,
-    },
-  );
+  diagnostic("operation_started", { operation: "workflow" });
 
 
   const result =
@@ -324,18 +256,7 @@ async function discoverSourcesStep(
     );
 
 
-  console.log(
-    "PATRISTIC_WORKFLOW_DISCOVERY_RESULT:",
-    {
-      jobId,
-
-      discovered:
-        result.discovered,
-
-      sourceUrls:
-        result.sourceUrls,
-    },
-  );
+  diagnostic("operation_completed", { operation: "discovery", count: result.discovered });
 
 
   return result;
@@ -351,13 +272,7 @@ async function extractSourceStep(
 > {
   "use step";
 
-  console.log(
-    "PATRISTIC_WORKFLOW_EXTRACTION_START:",
-    {
-      jobId,
-      sourceUrl,
-    },
-  );
+  diagnostic("operation_started", { operation: "extraction" });
 
 
   try {
@@ -368,13 +283,7 @@ async function extractSourceStep(
 
 
     if (!trusted) {
-      console.warn(
-        "PATRISTIC_WORKFLOW_UNTRUSTED_SOURCE:",
-        {
-          jobId,
-          sourceUrl,
-        },
-      );
+      diagnostic("operation_skipped", { operation: "extraction" });
 
       return [];
     }
@@ -433,41 +342,12 @@ async function extractSourceStep(
         );
 
 
-    console.log(
-      "PATRISTIC_WORKFLOW_EXTRACTION_RESULT:",
-      {
-        jobId,
-        sourceUrl,
-
-        sourceName:
-          trusted.name,
-
-        textLength:
-          source.text.length,
-
-        extracted:
-          extracted.length,
-
-        exactMatches:
-          exactCandidates.length,
-      },
-    );
+    diagnostic("operation_completed", { operation: "extraction", count: exactCandidates.length });
 
 
     return exactCandidates;
   } catch (error) {
-    console.warn(
-      "PATRISTIC_WORKFLOW_SOURCE_SKIPPED:",
-      {
-        jobId,
-        sourceUrl,
-
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown source error.",
-      },
-    );
+    diagnostic("operation_skipped", { operation: "extraction", failure: failureCategory(error) });
 
 
     return [];
@@ -486,21 +366,7 @@ async function verifyAndSaveCandidateStep(
       !candidate.authorName ||
       !candidate.workTitle
     ) {
-      console.warn(
-        "PATRISTIC_WORKFLOW_INCOMPLETE_CANDIDATE:",
-        {
-          jobId,
-
-          sourceUrl:
-            candidate.sourceUrl,
-
-          authorName:
-            candidate.authorName,
-
-          workTitle:
-            candidate.workTitle,
-        },
-      );
+      diagnostic("operation_skipped", { operation: "verification" });
 
       return null;
     }
@@ -516,21 +382,7 @@ async function verifyAndSaveCandidateStep(
       !attribution
         .matchesClaimedAuthor
     ) {
-      console.warn(
-        "PATRISTIC_WORKFLOW_ATTRIBUTION_REJECTED:",
-        {
-          jobId,
-
-          sourceUrl:
-            candidate.sourceUrl,
-
-          authorName:
-            candidate.authorName,
-
-          workTitle:
-            candidate.workTitle,
-        },
-      );
+      diagnostic("operation_skipped", { operation: "verification" });
 
       return null;
     }
@@ -571,39 +423,12 @@ async function verifyAndSaveCandidateStep(
       });
 
 
-    console.log(
-      "PATRISTIC_WORKFLOW_QUOTE_SAVED:",
-      {
-        jobId,
-
-        quoteId:
-          saved.id,
-
-        authorName:
-          candidate.authorName,
-
-        workTitle:
-          candidate.workTitle,
-      },
-    );
+    diagnostic("operation_completed", { operation: "workflow" });
 
 
     return saved.id;
   } catch (error) {
-    console.warn(
-      "PATRISTIC_WORKFLOW_CANDIDATE_SKIPPED:",
-      {
-        jobId,
-
-        sourceUrl:
-          candidate.sourceUrl,
-
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown candidate error.",
-      },
-    );
+    diagnostic("operation_skipped", { operation: "verification", failure: failureCategory(error) });
 
 
     return null;
@@ -628,30 +453,12 @@ async function verifySecondSourceStep(
       result.matched > 0;
 
 
-    console.log(
-      "PATRISTIC_WORKFLOW_SECOND_SOURCE_RESULT:",
-      {
-        jobId,
-        quoteId,
-        matched,
-      },
-    );
+    diagnostic("operation_completed", { operation: "verification" });
 
 
     return matched;
   } catch (error) {
-    console.warn(
-      "PATRISTIC_WORKFLOW_SECOND_SOURCE_SKIPPED:",
-      {
-        jobId,
-        quoteId,
-
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown second-source error.",
-      },
-    );
+    diagnostic("operation_skipped", { operation: "verification", failure: failureCategory(error) });
 
 
     return false;
@@ -676,30 +483,12 @@ async function embedQuoteStep(
       result.embedded > 0;
 
 
-    console.log(
-      "PATRISTIC_WORKFLOW_EMBED_RESULT:",
-      {
-        jobId,
-        quoteId,
-        embedded,
-      },
-    );
+    diagnostic("operation_completed", { operation: "embedding" });
 
 
     return embedded;
   } catch (error) {
-    console.warn(
-      "PATRISTIC_WORKFLOW_EMBED_SKIPPED:",
-      {
-        jobId,
-        quoteId,
-
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown embedding error.",
-      },
-    );
+    diagnostic("operation_skipped", { operation: "embedding", failure: failureCategory(error) });
 
 
     return false;
@@ -707,60 +496,12 @@ async function embedQuoteStep(
 }
 
 
-async function markJobCompletedStep(
-  jobId: string,
-) {
+async function markJobCompletedStep(jobId: string) {
   "use step";
-
-  await prisma
-    .patristicDiscoveryJob
-    .update({
-      where: {
-        id: jobId,
-      },
-
-      data: {
-        status:
-          "COMPLETED",
-
-        finishedAt:
-          new Date(),
-
-        error:
-          null,
-      },
-    });
+  await finishPatristicJob(jobId, getWorkflowMetadata().workflowRunId);
 }
 
-
-async function markJobFailedStep(
-  jobId: string,
-  error: string,
-) {
+async function markJobFailedStep(jobId: string, error: string) {
   "use step";
-
-  await prisma
-    .patristicDiscoveryJob
-    .updateMany({
-      where: {
-        id: jobId,
-
-        status: {
-          in: [
-            "PENDING",
-            "PROCESSING",
-          ],
-        },
-      },
-
-      data: {
-        status:
-          "FAILED",
-
-        error,
-
-        finishedAt:
-          new Date(),
-      },
-    });
+  await finishPatristicJob(jobId, getWorkflowMetadata().workflowRunId, error);
 }

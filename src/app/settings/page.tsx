@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ReadError } from "@/components/layout/ReadError";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { productCopy } from "@/lib/productCopy";
@@ -30,6 +31,8 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const [account, setAccount] = useState<AccountData | null>(null);
+  const nameEdited = useRef(false);
+  const writes = useRef(new Set<string>());
   const [name, setName] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -46,6 +49,8 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [verificationMessage, setVerificationMessage] = useState<
@@ -66,12 +71,14 @@ export default function SettingsPage() {
         const data = await response.json();
 
         if (!response.ok) {
+          setAuthenticationRequired(response.status === 401);
           setError(data.error ?? "Could not load settings.");
           return;
         }
 
+        setAuthenticationRequired(false);
         setAccount(data);
-        setName(data.user.name ?? "");
+        if (!nameEdited.current) setName(data.user.name ?? "");
       } catch {
         setError("Network error while loading settings.");
       } finally {
@@ -80,10 +87,12 @@ export default function SettingsPage() {
     }
 
     loadAccount();
-  }, []);
+  }, [loadAttempt]);
 
   async function updateProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (writes.current.has("profile")) return;
+    writes.current.add("profile");
 
     setIsSavingProfile(true);
     setProfileMessage(null);
@@ -124,12 +133,15 @@ export default function SettingsPage() {
     } catch {
       setError("Network error while updating profile.");
     } finally {
+      writes.current.delete("profile");
       setIsSavingProfile(false);
     }
   }
 
   async function changePassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (writes.current.has("password")) return;
+    writes.current.add("password");
 
     setIsChangingPassword(true);
     setPasswordMessage(null);
@@ -158,10 +170,13 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordMessage("Password changed successfully.");
+      setPasswordMessage("Password changed. Please sign in again.");
+      router.replace("/login");
+      router.refresh();
     } catch {
       setPasswordError("Network error while changing password.");
     } finally {
+      writes.current.delete("password");
       setIsChangingPassword(false);
     }
   }
@@ -213,6 +228,8 @@ export default function SettingsPage() {
       return;
     }
 
+    if (writes.current.has("delete")) return;
+    writes.current.add("delete");
     setIsDeleting(true);
 
     try {
@@ -246,9 +263,10 @@ export default function SettingsPage() {
       window.location.href = "/";
     } catch {
       setDeleteError(
-        "A network error occurred while deleting your account. Please try again."
+        "Could not confirm account deletion. Check your account status before trying again; do not assume your subscription was cancelled."
       );
     } finally {
+      writes.current.delete("delete");
       setIsDeleting(false);
     }
   }
@@ -257,7 +275,7 @@ export default function SettingsPage() {
     return (
       <main className="mx-auto max-w-5xl px-6 py-12">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <p className="text-sm text-gray-600">Loading settings...</p>
+          <p role="status" className="text-sm text-gray-600">Loading settings...</p>
         </div>
       </main>
     );
@@ -269,7 +287,7 @@ export default function SettingsPage() {
         <section className="rounded-2xl border border-red-200 bg-red-50 p-8">
           <h1 className="text-2xl font-bold text-red-950">Settings error</h1>
 
-          <p className="mt-3 text-sm text-red-700">{error}</p>
+          <ReadError message={error} authenticationRequired={authenticationRequired} retry={() => setLoadAttempt(value => value + 1)} />
 
           <Link
             href="/login"
@@ -313,26 +331,25 @@ export default function SettingsPage() {
             </p>
 
             {error && (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {error}
-              </div>
+              <ReadError message={error} authenticationRequired={authenticationRequired} retry={() => setLoadAttempt(value => value + 1)} />
             )}
 
             {profileMessage && (
-              <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              <div role="status" className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
                 {profileMessage}
               </div>
             )}
 
             <form onSubmit={updateProfile} className="mt-6 space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="settings-page-field-1" className="text-sm font-medium text-gray-700">
                   Display name
                 </label>
 
-                <input
+                <input id="settings-page-field-1"
+                  maxLength={80}
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(event) => { nameEdited.current = true; setName(event.target.value); }}
                   className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-950 outline-none focus:border-gray-950"
                 />
               </div>
@@ -357,24 +374,24 @@ export default function SettingsPage() {
             </p>
 
             {passwordError && (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 {passwordError}
               </div>
             )}
 
             {passwordMessage && (
-              <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              <div role="status" className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
                 {passwordMessage}
               </div>
             )}
 
             <form onSubmit={changePassword} className="mt-6 space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="settings-page-field-2" className="text-sm font-medium text-gray-700">
                   Current password
                 </label>
 
-                <input
+                <input id="settings-page-field-2"
                   type="password"
                   value={currentPassword}
                   onChange={(event) =>
@@ -386,11 +403,11 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="settings-page-field-3" className="text-sm font-medium text-gray-700">
                   New password
                 </label>
 
-                <input
+                <input id="settings-page-field-3"
                   type="password"
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
@@ -400,11 +417,11 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="settings-page-field-4" className="text-sm font-medium text-gray-700">
                   Confirm new password
                 </label>
 
-                <input
+                <input id="settings-page-field-4"
                   type="password"
                   value={confirmPassword}
                   onChange={(event) =>
@@ -457,25 +474,22 @@ export default function SettingsPage() {
             </p>
 
             <p className="mt-3 text-sm leading-6 text-red-800">
-              If you have an active Full Access subscription, you will first be
-              redirected to the Lemon Squeezy billing portal. Cancel the
-              subscription there, then return to OrthodoxAI to delete your
-              account.
+              Account deletion may require subscription cancellation or billing verification. Follow the instructions returned by the server and use Manage subscription on your account page. Do not repeat deletion while its outcome is uncertain.
             </p>
 
             {deleteError && (
-              <div className="mt-5 rounded-xl border border-red-300 bg-white p-4 text-sm text-red-700">
+              <div role="alert" className="mt-5 rounded-xl border border-red-300 bg-white p-4 text-sm text-red-700">
                 {deleteError}
               </div>
             )}
 
             <form onSubmit={deleteAccount} className="mt-6 space-y-4">
               <div>
-                <label className="text-sm font-medium text-red-950">
+                <label htmlFor="settings-page-field-5" className="text-sm font-medium text-red-950">
                   Type DELETE to confirm
                 </label>
 
-                <input
+                <input id="settings-page-field-5"
                   value={deleteConfirmation}
                   onChange={(event) =>
                     setDeleteConfirmation(event.target.value)
@@ -563,13 +577,13 @@ export default function SettingsPage() {
               </p>
 
               {verificationMessage && (
-                <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+                <div role="status" className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
                   {verificationMessage}
                 </div>
               )}
 
               {verificationError && (
-                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                   {verificationError}
                 </div>
               )}

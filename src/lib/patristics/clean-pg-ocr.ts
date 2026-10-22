@@ -1,4 +1,5 @@
-import OpenAI from "openai";
+import { safeSourceFetch } from "@/lib/security/source-transport";
+import { getOpenAI } from "@/lib/ai/openaiClient";
 
 import type {
   PgPassageMatch,
@@ -9,11 +10,7 @@ import {
 } from "./pg-page-image";
 
 
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env.OPENAI_API_KEY,
-  });
+
 
 
 const PG_ARCHIVE_IDENTIFIERS: Record<
@@ -51,7 +48,7 @@ async function imageUrlToDataUrl(
   imageUrl: string,
 ) {
   const response =
-    await fetch(
+    await safeSourceFetch(
       imageUrl,
       {
         redirect: "follow",
@@ -127,7 +124,7 @@ async function cleanOnePassage(
 
 
   const response =
-    await openai.responses.create({
+    await getOpenAI().responses.create({
       model:
         "gpt-4.1",
 

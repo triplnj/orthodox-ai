@@ -1,3 +1,4 @@
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import {
   fetchSourceText,
 } from "./fetch-source";
@@ -273,17 +274,7 @@ export async function searchCuratedPatristicTexts(
       );
     }
 
-    console.log(
-      "CURATED_DETERMINISTIC_TERMS:",
-      {
-        query,
-        source:
-          document.key,
-        language:
-          document.sourceLanguage,
-        terms,
-      },
-    );
+    diagnostic("operation_started", { operation: "retrieval" });
 
     try {
       /*
@@ -430,15 +421,7 @@ export async function searchCuratedPatristicTexts(
         });
       }
     } catch (error) {
-      console.error(
-        "CURATED_PATRISTIC_SOURCE_ERROR:",
-        {
-          source:
-            document.key,
-
-          error,
-        },
-      );
+      diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
     }
   }
 

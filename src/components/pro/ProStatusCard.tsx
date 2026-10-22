@@ -1,3 +1,4 @@
+import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 import Link from "next/link";
 import { isProUser, type AppUser } from "@/lib/subscription";
 
@@ -44,7 +45,7 @@ export function ProStatusCard({ user }: ProStatusCardProps) {
         }
       >
         {isPro
-          ? "Your Pro access is active. You can use unlimited chat, journal tools, personal prayer plans, and Scripture reading plans."
+          ? `Your Pro access is active. You can use up to ${FULL_ACCESS_DAILY_CHAT_LIMIT} chat questions per day, journal tools, personal prayer plans, and Scripture reading plans.`
           : "You are currently using the Free plan. Free users can ask 5 AI questions per day and access basic OrthodoxAI tools."}
       </p>
 
