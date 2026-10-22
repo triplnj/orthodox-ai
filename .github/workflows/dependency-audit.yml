@@ -1,0 +1,36 @@
+name: Dependency audit (report only)
+
+on:
+  push:
+    branches: [audit/orthodoxai-hardening]
+    paths: [.github/workflows/dependency-audit.yml, package-lock.json, package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Report exact lockfile advisories without auto-fix
+        shell: bash
+        run: |
+          npm audit --json > "$RUNNER_TEMP/audit.json" || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const data=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/audit.json','utf8'));
+          console.log('Vulnerability counts:', JSON.stringify(data.metadata?.vulnerabilities ?? {}));
+          for(const [name,x] of Object.entries(data.vulnerabilities ?? {})) {
+            const via=(x.via??[]).filter(z=>typeof z==='object').map(z=>z.name+':'+z.range);
+            console.log(JSON.stringify({name,severity:x.severity,isDirect:x.isDirect,range:x.range,fixAvailable:x.fixAvailable,via}));
+          }
+          NODE
