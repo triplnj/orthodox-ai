@@ -15,7 +15,13 @@ export function Footer() {
 
         </div>
 
-        <nav aria-label="Footer" className="flex flex-wrap gap-4 text-xs font-medium">
+        <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs font-medium md:justify-end">
+          {[
+            { href: "/history", label: "History" },
+            { href: "/account", label: "Account" },
+            { href: "/settings", label: "Settings" },
+            { href: "/pricing", label: "Pricing" },
+          ].map(item => <Link key={item.href} href={item.href} className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">{item.label}</Link>)}
           <Link href="/terms" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Terms
           </Link>
