@@ -31,7 +31,7 @@ jobs:
           cache: npm
       - name: Apply only semver-compatible dependency fixes in disposable checkout
         run: |
-          npm audit fix --package-lock-only --ignore-scripts --no-fund
+          npm audit fix --package-lock-only --ignore-scripts --no-fund || { code=$?; test "$code" -eq 1; }
           npm ci
       - name: Report remaining security advisories
         run: |
