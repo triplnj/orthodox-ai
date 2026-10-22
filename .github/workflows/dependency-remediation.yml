@@ -1,0 +1,64 @@
+name: Dependency remediation rehearsal
+
+on:
+  push:
+    branches: [audit/orthodoxai-hardening]
+    paths: [.github/workflows/dependency-remediation.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      DEBUG: ''
+      NODE_DEBUG: ''
+      OPENAI_LOG: 'off'
+      NEXT_TELEMETRY_DISABLED: '1'
+      DATABASE_URL: ''
+      DIRECT_URL: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Apply only semver-compatible dependency fixes in disposable checkout
+        run: |
+          npm audit fix --package-lock-only --ignore-scripts --no-fund
+          npm ci
+      - name: Report remaining security advisories
+        run: |
+          npm audit --json > "$RUNNER_TEMP/audit-after.json" || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const a=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/audit-after.json','utf8'));
+          console.log('REMAINING_AUDIT_COUNTS='+JSON.stringify(a.metadata?.vulnerabilities??{}));
+          for(const [k,v] of Object.entries(a.vulnerabilities??{})) if(v.severity==='critical') console.log('STILL_CRITICAL='+k);
+          NODE
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx eslint .
+      - name: Regressions
+        run: node tests/run-regressions.mjs
+      - name: Production build without external credentials
+        run: node node_modules/next/dist/bin/next build
+      - name: Package proposed lockfile for review (never modifies repository)
+        if: always()
+        run: |
+          git diff -- package-lock.json > dependency-lockfile.patch
+          git diff --stat -- package-lock.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-lockfile-candidate
+          path: |
+            dependency-lockfile.patch
+          retention-days: 7
