@@ -1,0 +1,61 @@
+name: Workflow SDK v5 migration rehearsal
+
+on:
+  push:
+    branches: [audit/orthodoxai-hardening]
+    paths: [.github/workflows/workflow-v5-rehearsal.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-major-upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      DEBUG: ''
+      NODE_DEBUG: ''
+      OPENAI_LOG: 'off'
+      DATABASE_URL: ''
+      DIRECT_URL: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Produce isolated v5 dependency candidate
+        run: |
+          npm install workflow@^5.2.3 --save --package-lock-only --ignore-scripts --no-fund
+          npm ci
+      - name: Validate types and imports against v5
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx eslint .
+      - name: Full isolated regression suite
+        run: node tests/run-regressions.mjs
+      - name: Next production build
+        run: node node_modules/next/dist/bin/next build
+      - name: Audit only production dependencies
+        if: success()
+        run: |
+          npm audit --omit=dev --json > "$RUNNER_TEMP/runtime-audit.json" || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const a=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/runtime-audit.json','utf8'));
+          console.log('RUNTIME_VULNERABILITIES='+JSON.stringify(a.metadata?.vulnerabilities??{}));
+          NODE
+      - name: Package v5 patch for independent review
+        if: always()
+        run: git diff -- package.json package-lock.json > workflow-v5-candidate.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workflow-v5-migration-patch
+          path: workflow-v5-candidate.patch
+          retention-days: 7
