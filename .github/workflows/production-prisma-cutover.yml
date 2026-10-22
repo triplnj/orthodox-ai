@@ -1,5 +1,8 @@
 name: OrthodoxAI production Prisma cutover
 on:
+  push:
+    branches: [audit/orthodoxai-hardening]
+    paths: [.github/workflows/production-prisma-cutover.yml]
   workflow_dispatch:
 permissions:
   contents: read
