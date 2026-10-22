@@ -50,26 +50,7 @@ const primaryNavItems = [
 ];
 
 const secondaryNavItems = [
-  {
-    href: "/journal",
-    label: "Journal",
-  },
-  {
-    href: "/history",
-    label: "History",
-  },
-  {
-    href: "/account",
-    label: "Account",
-  },
-  {
-    href: "/settings",
-    label: "Settings",
-  },
-  {
-    href: "/pricing",
-    label: "Pricing",
-  },
+  { href: "/journal", label: "Journal" },
 ];
 
 export function NavbarClient({ user, isPro }: NavbarClientProps) {
