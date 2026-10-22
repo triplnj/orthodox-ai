@@ -17,6 +17,7 @@ export function Footer() {
 
         <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs font-medium md:justify-end">
           {[
+            { href: "/journal", label: "Journal" },
             { href: "/history", label: "History" },
             { href: "/account", label: "Account" },
             { href: "/settings", label: "Settings" },
