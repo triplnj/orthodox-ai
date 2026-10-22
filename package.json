@@ -30,7 +30,7 @@
     "sanitize-html": "^2.18.1",
     "server-only": "^0.0.1",
     "stripe": "^22.2.1",
-    "workflow": "^4.8.5",
+    "workflow": "^5.2.3",
     "zod": "^4.5.4"
   },
   "devDependencies": {
