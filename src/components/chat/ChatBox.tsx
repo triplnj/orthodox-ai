@@ -142,19 +142,19 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
     {contextKey === "general" ? <h1 className="text-2xl font-semibold text-gray-950">{title}</h1> : <h2 className="text-2xl font-semibold text-gray-950">{title}</h2>}
     <p className="mt-2 text-sm text-gray-600">{subtitle}</p>
     <p className="mt-2 text-xs text-gray-500">Patristic research includes verified sources, curated texts, PG OCR and general web research.</p>
-    <div className="my-4 flex flex-wrap gap-3">
-      <label className="min-w-0 text-sm">Saved conversation <select className="mt-1 block max-w-full rounded-lg border px-3 py-2" aria-label="Saved conversation" disabled={busy} value={conversationId ?? ""}
+    <div className="my-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <label className="block min-w-0 text-sm font-medium text-gray-700 sm:col-span-2">Saved conversation <select className="mt-2 block min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal text-gray-900" aria-label="Saved conversation" disabled={busy} value={conversationId ?? ""}
         onChange={event => { if (event.target.value) void readSaved(event.target.value); }}>
         <option value="">Choose a conversation</option>{saved.map(item => <option key={item.id} value={item.id}>{item.contextKey} · {item.id.slice(-8)}</option>)}
       </select></label>
-      <button className="rounded-lg border px-3 py-2 text-sm" type="button" disabled={busy || uncertain || Boolean(interrupted)} onClick={() => {
+      <button className="flex min-h-11 w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-center text-sm font-medium text-gray-800 transition-colors hover:bg-gray-50 disabled:opacity-50" type="button" disabled={busy || uncertain || Boolean(interrupted)} onClick={() => {
         if (inFlight.current) return;
         ++readVersion.current;
         drafts.current[conversationId ?? "new"] = input;
         setConversationId(undefined); setFeature(contextKey); setMessages([]); nearBottom.current = true; setAwayFromLatest(false); setInput(drafts.current.new ?? initialPrompt); setError(null); setNotice(null); setRemaining(quotaRef.current?.remaining ?? null); pending.current = null;
         const url = new URL(window.location.href); url.searchParams.delete("conversationId"); window.history.replaceState(null, "", url);
       }}>New conversation</button>
-      <a href="/history" className="text-sm underline">Conversation history</a>
+      <a href="/history" className="flex min-h-11 w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-center text-sm font-medium text-gray-800 transition-colors hover:bg-gray-50">Conversation history</a>
     </div>
     <p role="status" className="sr-only">{loadingConversation ? "Loading saved conversation." : busy ? "Request in progress." : messages.length ? "Conversation ready." : "Ready for your first question."}</p>
     <div ref={transcript} role="region" aria-label="Conversation messages" tabIndex={0} aria-busy={busy}
@@ -186,8 +186,8 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
     <textarea aria-describedby="chat-message-help" maxLength={20000} id="chat-message" value={input} disabled={busy || uncertain || Boolean(interrupted)} onChange={event => setInput(event.target.value)}
       onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void sendMessage(); } }}
       className="mt-2 min-h-28 w-full rounded-xl border border-gray-300 p-4 text-sm text-gray-950" />
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm"><p id="chat-message-help">Enter to send; Shift + Enter for a new line.</p>
-      <button disabled={busy || uncertain || Boolean(interrupted) || !input.trim()} onClick={() => void sendMessage()} className="rounded-lg bg-gray-950 px-5 py-2 text-white disabled:opacity-50">Send</button>
+    <div className="mt-3 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><p id="chat-message-help">Enter to send; Shift + Enter for a new line.</p>
+      <button disabled={busy || uncertain || Boolean(interrupted) || !input.trim()} onClick={() => void sendMessage()} className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-gray-950 px-6 py-3 font-semibold text-white disabled:opacity-50 sm:w-auto">Send</button>
     </div>
   </section>;
 }
