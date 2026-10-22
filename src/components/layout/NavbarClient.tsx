@@ -49,10 +49,6 @@ const primaryNavItems = [
   },
 ];
 
-const secondaryNavItems = [
-  { href: "/journal", label: "Journal" },
-];
-
 export function NavbarClient({ user, isPro }: NavbarClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -81,12 +77,10 @@ export function NavbarClient({ user, isPro }: NavbarClientProps) {
       </div>
       <div className="hidden border-t border-gray-100 py-2 lg:block">
         <nav aria-label="Primary" className="flex flex-wrap">{links(primaryNavItems)}</nav>
-        <nav aria-label="Personal and account" className="flex flex-wrap border-t border-gray-100">{links(secondaryNavItems)}</nav>
       </div>
       {<div hidden={!isOpen} id="mobile-navigation" className="border-t border-gray-100 py-3 lg:hidden">
         {user && <p className="break-words px-3 py-3 text-sm text-gray-600">{user.email} | {isPro ? "Pro" : "Free"}</p>}
         <nav aria-label="Mobile primary" className="grid grid-cols-2 gap-1">{links(primaryNavItems)}</nav>
-        <nav aria-label="Mobile personal and account" className="mt-2 grid grid-cols-2 gap-1 border-t border-gray-100 pt-2">{links(secondaryNavItems)}</nav>
         <div className="mt-3 grid gap-3 border-t border-gray-100 pt-3">
           {user ? <LogoutButton /> : <><Link href="/login" onClick={closeMenu} className="rounded-lg border px-4 py-3 text-center">Sign in</Link><Link href="/register" onClick={closeMenu} className="rounded-lg bg-gray-950 px-4 py-3 text-center text-white">Register</Link></>}
           {!isPro && <Link href="/pricing" onClick={closeMenu} className="rounded-lg bg-gray-950 px-4 py-3 text-center text-white">Full Access</Link>}
