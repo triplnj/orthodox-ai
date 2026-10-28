@@ -21,6 +21,7 @@ type DashboardData = {
     dailyTime: string | null;
     plan: "FREE" | "PRO";
     subscriptionStatus?: string | null;
+    adminAccess?: boolean;
   };
   isPro: boolean;
   stats: {
@@ -268,7 +269,7 @@ function DashboardContent() {
             </p>
 
             <h2 className="mt-3 text-3xl font-bold">
-              {isPro ? "OrthodoxAI Pro" : "Free"}
+              {user.adminAccess ? "Admin" : isPro ? "OrthodoxAI Pro" : "Free"}
             </h2>
 
             <p
@@ -278,7 +279,9 @@ function DashboardContent() {
                   : "mt-3 text-sm leading-6 text-gray-600"
               }
             >
-              {isPro
+              {user.adminAccess
+                ? `Administrator access is active. You have ${stats.remainingQuestions} chat questions remaining today and access to all tools.`
+                : isPro
                 ? `Your Pro access is active. You have ${stats.remainingQuestions} chat questions remaining today and access to Pro tools.`
                 : `You have ${stats.remainingFreeQuestions} Free questions remaining today.`}
             </p>
@@ -290,7 +293,7 @@ function DashboardContent() {
             )}
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              {isPro ? <CustomerPortalButton /> : <CheckoutButton />}
+              {user.adminAccess ? null : isPro ? <CustomerPortalButton /> : <CheckoutButton />}
 
               <Link
                 href="/pricing"
