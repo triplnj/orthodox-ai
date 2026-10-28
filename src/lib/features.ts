@@ -1,4 +1,4 @@
-export const FREE_DAILY_CHAT_LIMIT = 5;
+export const FREE_DAILY_CHAT_LIMIT = 3;
 export const FULL_ACCESS_DAILY_CHAT_LIMIT = 100;
 export const CHAT_RATE_LIMIT_PER_MINUTE = 10;
 
