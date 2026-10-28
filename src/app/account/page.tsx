@@ -15,6 +15,7 @@ type AccountData = {
     email: string;
     name: string | null;
     plan: "FREE" | "PRO";
+    adminAccess?: boolean;
     subscriptionStatus: string | null;
     subscriptionId: string | null;
     stripeCustomerId: string | null;
@@ -139,7 +140,7 @@ export default function AccountPage() {
                 : "mt-3 text-3xl font-bold text-gray-950"
             }
           >
-            {isPro ? "OrthodoxAI Pro" : "Free"}
+            {user.adminAccess ? "Admin" : isPro ? "OrthodoxAI Pro" : "Free"}
           </h2>
 
           <p
@@ -149,13 +150,15 @@ export default function AccountPage() {
                 : "mt-3 text-sm leading-6 text-gray-600"
             }
           >
-            {isPro
+            {user.adminAccess
+              ? "Administrator access is active. You can use all OrthodoxAI tools without a subscription."
+              : isPro
               ? `Your Pro access is active. You can use ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, journal tools, prayer plans, Scripture plans, and extended history.`
               : "You are currently using the Free plan. You can ask 5 AI questions per day and access basic OrthodoxAI tools."}
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            {isPro ? <CustomerPortalButton /> : <CheckoutButton />}
+            {user.adminAccess ? null : isPro ? <CustomerPortalButton /> : <CheckoutButton />}
 
             <Link
               href="/pricing"
@@ -186,13 +189,13 @@ export default function AccountPage() {
 
             <div className="flex justify-between gap-4 py-3">
               <span className="text-gray-500">Plan</span>
-              <span className="font-medium text-gray-950">{user.plan}</span>
+              <span className="font-medium text-gray-950">{user.adminAccess ? "Admin" : user.plan}</span>
             </div>
 
             <div className="flex justify-between gap-4 py-3">
               <span className="text-gray-500">Subscription status</span>
               <span className="font-medium text-gray-950">
-                {user.subscriptionStatus ?? "none"}
+                {user.adminAccess ? "Administrator" : user.subscriptionStatus ?? "none"}
               </span>
             </div>
 
@@ -248,7 +251,7 @@ export default function AccountPage() {
 
       <section className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-gray-950">
-          Pro tools
+          {user.adminAccess ? "Admin tools" : "Pro tools"}
         </h2>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
