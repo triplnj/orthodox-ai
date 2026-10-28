@@ -95,7 +95,7 @@ const dailyRhythm = buildDailyRhythm({
       ]);
 
     return apiJson({
-      user: { ...dbUser, plan: user.plan, subscriptionStatus: user.subscriptionStatus, billingAccessUntil: user.billingAccessUntil, reviewAccess: user.reviewAccess === true },
+      user: { ...dbUser, plan: user.plan, subscriptionStatus: user.subscriptionStatus, billingAccessUntil: user.billingAccessUntil, reviewAccess: user.reviewAccess === true, adminAccess: user.adminAccess === true },
       isPro,
       stats: {
         quota, remainingQuestions: quota.remaining,

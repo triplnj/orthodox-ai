@@ -13,6 +13,7 @@ type AccountData = {
     name: string | null;
     emailVerified: string | null;
     plan: "FREE" | "PRO";
+    adminAccess?: boolean;
     subscriptionStatus: string | null;
     subscriptionId: string | null;
     stripeCustomerId: string | null;
@@ -537,14 +538,14 @@ export default function SettingsPage() {
               <div className="flex justify-between gap-4 py-3">
                 <span className="text-gray-500">Plan</span>
                 <span className="font-medium text-gray-950">
-                  {account.isPro ? "Full Access" : "Free"}
+                  {account.user.adminAccess ? "Admin" : account.isPro ? "Full Access" : "Free"}
                 </span>
               </div>
 
               <div className="flex justify-between gap-4 py-3">
                 <span className="text-gray-500">Status</span>
                 <span className="font-medium text-gray-950">
-                  {account.user.subscriptionStatus ?? "none"}
+                  {account.user.adminAccess ? "Administrator" : account.user.subscriptionStatus ?? "none"}
                 </span>
               </div>
 

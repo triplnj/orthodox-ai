@@ -10,6 +10,7 @@ type NavbarClientProps = {
     email: string;
     plan: "FREE" | "PRO";
     subscriptionStatus?: string | null;
+    adminAccess?: boolean;
   } | null;
   isPro: boolean;
 };
@@ -65,7 +66,7 @@ export function NavbarClient({ user, isPro }: NavbarClientProps) {
       <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-2">
         <Link href="/" onClick={closeMenu} className="text-lg font-semibold text-gray-950">OrthodoxAI</Link>
         <div className="hidden flex-wrap items-center justify-end gap-3 lg:flex">
-          {user ? <><Link href="/account" className="max-w-48 truncate text-sm text-gray-600">{user.email} | {isPro ? "Pro" : "Free"}</Link><LogoutButton /></>
+          {user ? <><Link href="/account" className="max-w-48 truncate text-sm text-gray-600">{user.email} | {user.adminAccess ? "Admin" : isPro ? "Pro" : "Free"}</Link><LogoutButton /></>
             : <><Link className="px-3 py-3 text-sm" href="/login">Sign in</Link><Link className="rounded-lg bg-gray-950 px-4 py-3 text-sm text-white" href="/register">Register</Link></>}
           {!isPro && <Link className="rounded-lg bg-gray-950 px-4 py-3 text-sm text-white" href="/pricing">Full Access</Link>}
         </div>
@@ -79,7 +80,7 @@ export function NavbarClient({ user, isPro }: NavbarClientProps) {
         <nav aria-label="Primary" className="flex flex-wrap">{links(primaryNavItems)}</nav>
       </div>
       {<div hidden={!isOpen} id="mobile-navigation" className="border-t border-gray-100 py-3 lg:hidden">
-        {user && <p className="break-words px-3 py-3 text-sm text-gray-600">{user.email} | {isPro ? "Pro" : "Free"}</p>}
+        {user && <p className="break-words px-3 py-3 text-sm text-gray-600">{user.email} | {user.adminAccess ? "Admin" : isPro ? "Pro" : "Free"}</p>}
         <nav aria-label="Mobile primary" className="grid grid-cols-2 gap-1">{links(primaryNavItems)}</nav>
         <div className="mt-3 grid gap-3 border-t border-gray-100 pt-3">
           {user ? <LogoutButton /> : <><Link href="/login" onClick={closeMenu} className="rounded-lg border px-4 py-3 text-center">Sign in</Link><Link href="/register" onClick={closeMenu} className="rounded-lg bg-gray-950 px-4 py-3 text-center text-white">Register</Link></>}

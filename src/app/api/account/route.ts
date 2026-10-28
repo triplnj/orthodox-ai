@@ -63,7 +63,7 @@ export async function GET(request?: Request) {
     const todayUsage = quota.used;
 
     return apiJson({
-      user: { ...dbUser, plan: user.plan, subscriptionStatus: user.subscriptionStatus, billingAccessUntil: user.billingAccessUntil, reviewAccess: user.reviewAccess === true },
+      user: { ...dbUser, plan: user.plan, subscriptionStatus: user.subscriptionStatus, billingAccessUntil: user.billingAccessUntil, reviewAccess: user.reviewAccess === true, adminAccess: user.adminAccess === true },
       isPro: isProUser(user),
       stats: {
         quota, remainingQuestions: quota.remaining,
