@@ -334,6 +334,29 @@ function DashboardContent() {
           </div>
         </section>
 
+        <section aria-labelledby="explore-fathers-heading" className="mt-10 rounded-2xl border border-amber-200/30 bg-white p-6 text-gray-950 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+            Explore OrthodoxAI
+          </p>
+          <h2 id="explore-fathers-heading" className="mt-2 text-2xl font-semibold">
+            Discover the Church Fathers
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-700">
+            Explore the teachings of the Church Fathers and ask questions about
+            prayer, repentance, and Orthodox spiritual life. Where sources are
+            available, review their references and verify them for yourself.
+          </p>
+          <p className="mt-3 text-sm text-gray-600">
+            Try asking: What does St. Maximus the Confessor teach about the passions?
+          </p>
+          <Link
+            href="/chat"
+            className="mt-5 inline-block rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+          >
+            Explore patristic teaching
+          </Link>
+        </section>
+
         <section className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 text-gray-950 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
