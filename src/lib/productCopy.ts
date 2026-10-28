@@ -16,7 +16,7 @@ export const productCopy = {
     price: "$0",
     description: "For basic Orthodox guidance and occasional use.",
     features: [
-      "5 AI questions per day",
+      "3 AI questions per day",
       "Basic Orthodox Q&A",
       "Daily prayer card",
       "Basic fasting guidance",
