@@ -2,6 +2,7 @@ import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import { apiJson } from "@/lib/api/response";
 import { randomUUID } from "node:crypto";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { isProUser } from "@/lib/subscription";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import { withAiOperation, quotaSnapshot } from "@/lib/ai/operationLimits";
@@ -20,6 +21,13 @@ export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) return apiJson({ error: "You must be signed in." }, { status: 401 });
+    // Check the current database state on every request; never trust client profile or a cached flag.
+    const verifiedAccount = await prisma.user.findUnique({
+      where: { id: user.id }, select: { emailVerified: true },
+    });
+    if (!verifiedAccount?.emailVerified) {
+      return apiJson({ error: "Please verify your email address before using Chat. Open the verification link sent to your inbox.", code: "EMAIL_VERIFICATION_REQUIRED" }, { status: 403 });
+    }
     queryInput(request);
     const body = await readAiJson(request);
     validateAiStrings(body);
