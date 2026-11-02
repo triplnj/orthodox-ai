@@ -14,6 +14,7 @@ import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
+import { auditPatristicClaims } from "@/lib/chat/claim-audit";
 import { visibleMessages } from "@/lib/chat/history";
 
 async function handleChat(request: Request, onDelta?: (text: string) => void, onPhase?: (phase: string) => void) {
@@ -64,10 +65,12 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const result = await generateOrthodoxAnswer({ userMessage: message, contextKey,
         extraContext: `${profile}\n\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
         patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
-      const sources = snapshotSources(research?.sources ?? [], true);
+      onPhase?.("Reviewing source evidence...");
+      const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
+      const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
       const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
         conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,
-        patristicSources: sources, usedPatristicResearch: sources.length > 0,
+        patristicSources: sources, claimAudit, usedPatristicResearch: sources.length > 0,
         usedLivePg: sources.some(source => source.provider === "PATROLOGIA_GRAECA"), patristicProviders: research?.providersSucceeded ?? [] };
       await completeTurn(turn, contextKey, response, sources, research?.context ?? null, result.budget ?? {});
       const quota = await quotaSnapshot(user.id, "chat", user);
