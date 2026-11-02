@@ -39,19 +39,19 @@ export function ActivationSurvey() {
     }
   }
   return (
-    <section aria-labelledby="activation-survey-title" className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 text-gray-950 shadow-sm">
+    <section id="activation-survey" aria-labelledby="activation-survey-title" className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 text-gray-950 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Optional feedback · About 1 minute</p>
       <h2 id="activation-survey-title" className="mt-2 text-2xl font-semibold">Help us improve OrthodoxAI</h2>
-      <p className="mt-2 text-sm leading-6 text-gray-600">Your feedback helps us prioritize improvements. Please do not include private spiritual or confession details.</p>
+      <p className="mt-2 text-sm leading-6 text-gray-600">After trying OrthodoxAI, tell us what worked and what should be improved. Your feedback helps guide development. Please do not include private spiritual or confession details.</p>
       <form className="mt-5 space-y-5" onSubmit={submit}>
         <div>
-          <label htmlFor="feedback-reason" className="block text-sm font-semibold">What is the main reason you have not upgraded to Pro?</label>
+          <label htmlFor="feedback-reason" className="block text-sm font-semibold">What is the main thing preventing you from using OrthodoxAI more often?</label>
           <select id="feedback-reason" value={reason} onChange={e=>setReason(e.target.value)} required className="mt-2 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-950">
             <option value="">Select an answer</option>
-            <option value="not_using">I do not use OrthodoxAI often enough</option>
-            <option value="price">The price is too high</option>
-            <option value="unclear_value">I am not sure what Pro offers</option>
-            <option value="answer_quality">The answers need improvement</option>
+            <option value="not_using">I have not had enough opportunities to use it</option>
+            <option value="price">The paid plan is too expensive</option>
+            <option value="unclear_value">I am not sure which features would help me</option>
+            <option value="answer_quality">Some answers need more accuracy or better sources</option>
             <option value="other">Other</option>
           </select>
         </div>
