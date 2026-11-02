@@ -11,6 +11,7 @@ import { aiSecurityResponse, readAiJson, validateAiStrings, AiInputError } from 
 import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
+import { shouldRunPatristicResearch } from "@/lib/patristics/should-run-patristic-research";
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
@@ -57,8 +58,12 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const turns = await memoryForTurn(turn);
       const history = selectHistory(turns);
       const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message);
-      const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).join("\n");
-      const query = followUp && priorQuestions ? `${priorQuestions}\nFollow-up question: ${message}` : message;
+      const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).filter(item => item !== message);
+      const assent = /^(?:yes|yes please|sure|please do|go ahead|ok|okay|da|moze|može|naravno|да|може)[.!\s]*$/i.test(message);
+      const previousPatristicQuestion = [...priorQuestions].reverse().find(item => shouldRunPatristicResearch(item));
+      const query = assent && previousPatristicQuestion
+        ? `${previousPatristicQuestion}\nFollow-up: ${message}`
+        : followUp && priorQuestions.length ? `${priorQuestions.join("\n")}\nFollow-up question: ${message}` : message;
       onPhase?.("Searching and checking patristic sources...");
       const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
       onPhase?.("Writing the answer...");
