@@ -196,102 +196,94 @@ export async function buildPatristicResearchContext(
    * the strongest provenance.
    */
   const curatedDocuments = findCuratedPatristicDocuments(query);
+  const genericQuery = isGenericPatristicResearchQuery(query);
 
-  if (curatedDocuments.length > 0) {
-    providersAttempted.push("CURATED_TEXT");
-
-    try {
-      const curated = await searchCuratedPatristicTexts(query, 5);
-      if (curated.length > 0) {
-        providersSucceeded.push("CURATED_TEXT");
-        contextParts.push(formatCuratedContext(curated));
-        sources.push(...mapCuratedSources(curated));
+  // Independent retrieval providers run together. Each provider handles its own
+  // failure, preserving partial grounded evidence if another provider is unavailable.
+  // Keep the final assembly in evidence-priority order, not completion order.
+  const [curated, verified, livePg, webResearch] = await Promise.all([
+    (async () => {
+      if (curatedDocuments.length === 0) return null;
+      providersAttempted.push("CURATED_TEXT");
+      try {
+        return await searchCuratedPatristicTexts(query, 5);
+      } catch (error) {
+        diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
+        return null;
       }
-    } catch (error) {
-      diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
-    }
-  }
-
-  let verifiedDbAuthor: string | undefined;
-
-  try {
-    verifiedDbAuthor = await detectPatristicAuthor(query);
-  } catch (error) {
-    diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
-  }
-
-  if (verifiedDbAuthor || isGenericPatristicResearchQuery(query)) {
-    providersAttempted.push("VERIFIED_DB");
-
-    try {
-      const verified = await buildVerifiedPatristicContext(query, language);
-      if (verified) {
-        providersSucceeded.push("VERIFIED_DB");
-        contextParts.push(verified.context);
-        sources.push(
-          ...verified.sources.map((source) => ({
-            provider: "VERIFIED_DB" as const,
-            authorName: source.authorName,
-            workTitle: source.workTitle,
-            reference: source.reference,
-            originalLanguage: source.originalLanguage,
-            sourceUrl: source.sourceUrl,
-            scanUrl: null,
-            verificationStatus: source.verificationStatus,
-            metadata: source.metadata,
-          })),
-        );
+    })(),
+    (async () => {
+      try {
+        const author = await detectPatristicAuthor(query);
+        if (!author && !genericQuery) return null;
+        providersAttempted.push("VERIFIED_DB");
+        return await buildVerifiedPatristicContext(query, language);
+      } catch (error) {
+        diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
+        return null;
       }
-    } catch (error) {
-      diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
-    }
+    })(),
+    (async () => {
+      providersAttempted.push("PATROLOGIA_GRAECA");
+      try {
+        return await buildLivePgChatContext(query);
+      } catch (error) {
+        diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
+        return null;
+      }
+    })(),
+    (async () => {
+      providersAttempted.push("WEB_RESEARCH");
+      try {
+        return await researchPatristicQuestionOnWeb(query);
+      } catch (error) {
+        diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
+        return null;
+      }
+    })(),
+  ]);
+
+  // Maintain stable provenance ordering and keep every usable source.
+  if (curated?.length) {
+    providersSucceeded.push("CURATED_TEXT");
+    contextParts.push(formatCuratedContext(curated));
+    sources.push(...mapCuratedSources(curated));
   }
-
-  providersAttempted.push("PATROLOGIA_GRAECA");
-
-  try {
-    const livePg = await buildLivePgChatContext(query);
-    if (livePg?.context) {
-      providersSucceeded.push("PATROLOGIA_GRAECA");
-      contextParts.push(livePg.context);
-      sources.push(...mapPgSources(livePg.sources));
-    }
-  } catch (error) {
-    diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) });
+  if (verified) {
+    providersSucceeded.push("VERIFIED_DB");
+    contextParts.push(verified.context);
+    sources.push(...verified.sources.map(source => ({
+      provider: "VERIFIED_DB" as const,
+      authorName: source.authorName,
+      workTitle: source.workTitle,
+      reference: source.reference,
+      originalLanguage: source.originalLanguage,
+      sourceUrl: source.sourceUrl,
+      scanUrl: null,
+      verificationStatus: source.verificationStatus,
+      metadata: source.metadata,
+    })));
   }
-
-  /*
-   * Universal discovery provider.
-   *
-   * This removes the architectural dependency on hard-coded Fathers.
-   * The local corpus and PG catalog remain high-confidence accelerators,
-   * but an author who is absent from both can still be researched at
-   * request time from primary and scholarly web sources.
-   */
-  providersAttempted.push("WEB_RESEARCH");
-
-  try {
-    const webResearch = await researchPatristicQuestionOnWeb(query);
-    if (webResearch?.context) {
-      providersSucceeded.push("WEB_RESEARCH");
-      contextParts.push(webResearch.context);
-      sources.push(
-        ...webResearch.sources.map((source) => ({
-          provider: "WEB_RESEARCH" as const,
-          authorName: null,
-          workTitle: null,
-          webpageTitle: source.title,
-          originalSourceUrl: source.originalSourceUrl,
-          reference: null,
-          originalLanguage: null,
-          sourceUrl: source.sourceUrl,
-          scanUrl: null,
-          verificationStatus: "LIVE_WEB_RESEARCH",
-        })),
-      );
-    }
-  } catch (error) {
-    diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
+  if (livePg?.context) {
+    providersSucceeded.push("PATROLOGIA_GRAECA");
+    contextParts.push(livePg.context);
+    sources.push(...mapPgSources(livePg.sources));
+  }
+  if (webResearch?.context) {
+    providersSucceeded.push("WEB_RESEARCH");
+    contextParts.push(webResearch.context);
+    sources.push(...webResearch.sources.map(source => ({
+      provider: "WEB_RESEARCH" as const,
+      authorName: null,
+      workTitle: null,
+      webpageTitle: source.title,
+      originalSourceUrl: source.originalSourceUrl,
+      reference: null,
+      originalLanguage: null,
+      sourceUrl: source.sourceUrl,
+      scanUrl: null,
+      verificationStatus: "LIVE_WEB_RESEARCH",
+    })));
   }
 
   const result =
