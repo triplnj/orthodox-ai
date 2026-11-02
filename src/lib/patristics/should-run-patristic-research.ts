@@ -11,6 +11,12 @@ const PATRISTIC_WORK_PATTERN =
 const GENERIC_PATRISTIC_PATTERN =
   /(?:^|[^\p{L}\p{N}_])(?:church fathers|holy fathers|sveti oci|sveti otci|свети оци|свети отци|patristic|patristics|patrologia|philokalia|филокалија)(?=$|[^\p{L}\p{N}_])/iu;
 
+// Match generic references in Serbian grammatical cases, not only nominative.
+// Examples: "po nekom od svetih otaca", "učenje svetih otaca",
+// "po jednom svetom ocu", "otaca Crkve", "Church Father's teaching".
+const DECLINED_PATRISTIC_PATTERN =
+  /(?:^|[^\\p{L}\\p{N}_])(?:svetih?\\s+(?:otaca|oca|ocu|ocima|oci|otci|otaca)|crkvenih?\\s+(?:otaca|oca|ocima)|(?:oca|otaca|ocima)\\s+crkve|светих?\\s+(?:отаца|оца|оцу|оцима|оци)|црквених?\\s+(?:отаца|оца|оцима)|(?:оца|отаца|оцима)\\s+цркве|(?:a|one|any|some)\\s+(?:church|holy)\\s+father|church\\s+father['’]s?)(?=$|[^\\p{L}\\p{N}_])/iu;
+
 export function isGenericPatristicResearchQuery(
   query: string,
 ) {
