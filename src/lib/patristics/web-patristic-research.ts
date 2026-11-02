@@ -307,9 +307,12 @@ Return a compact dossier containing the identified author, the claim-evidence le
 Keep quotations short; the downstream answer model will synthesize the final response.
 If evidence is weak or contradictory, state that explicitly.`;
 
+const WEB_RESEARCH_DEADLINE_MS = 9000;
+
 async function runResearch(
   query: string,
-  allowedDomains?: string[],
+  allowedDomains: string[] | undefined,
+  signal: AbortSignal,
 ) {
   return getOpenAI().responses.create({
     model: "gpt-5-mini",
@@ -336,7 +339,7 @@ async function runResearch(
         content: query,
       },
     ],
-  });
+  }, { signal });
 }
 
 function buildResult(response: unknown) {
@@ -370,10 +373,16 @@ export async function researchPatristicQuestionOnWeb(
    * library, edition and academic domains. This solves the common
    * case without letting low-quality mirrors into the evidence set.
    */
-  const preferredResponse = await runResearch(
-    query,
-    PREFERRED_PATRISTIC_DOMAINS,
-  );
+  // One deadline covers both research passes; abort the actual network call
+  // rather than merely racing a timer against an uncontrolled request.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), WEB_RESEARCH_DEADLINE_MS);
+  try {
+    const preferredResponse = await runResearch(
+      query,
+      PREFERRED_PATRISTIC_DOMAINS,
+      controller.signal,
+    );
 
   let result = buildResult(preferredResponse);
 
@@ -383,7 +392,7 @@ export async function researchPatristicQuestionOnWeb(
    * gate still filters what can become downstream evidence.
    */
   if (!result) {
-    const broadResponse = await runResearch(query);
+    const broadResponse = await runResearch(query, undefined, controller.signal);
     result = buildResult(broadResponse);
   }
 
@@ -404,4 +413,7 @@ export async function researchPatristicQuestionOnWeb(
     ].join("\n"),
     sources: result.sources,
   };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
