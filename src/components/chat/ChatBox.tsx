@@ -102,10 +102,59 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
       setMessages(current => [...current, { role: "user", content: payload.message }]); setInput("");
     }
     try {
-      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      const data = await response.json();
+      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "text/event-stream" }, body: JSON.stringify(payload) });
+      let data: Record<string, any>;
+      if (response.headers.get("content-type")?.includes("text/event-stream") && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let finalResult: Record<string, any> | undefined;
+        let partialStarted = false;
+        const parseEvent = (frame: string) => {
+          const event = frame.match(/^event: (.+)$/m)?.[1];
+          const line = frame.split("\n").find(line => line.startsWith("data: "));
+          if (!line) return;
+          const value = JSON.parse(line.slice(6));
+          if (event === "phase") setNotice(value.message);
+          if (event === "delta" && typeof value.text === "string") {
+            if (!partialStarted) {
+              partialStarted = true;
+              setMessages(current => [...current, { role: "assistant", content: value.text }]);
+            } else {
+              setMessages(current => current.map((item, index) =>
+                index === current.length - 1 ? { ...item, content: item.content + value.text } : item));
+            }
+          }
+          if (event === "result") finalResult = value;
+        };
+        try {
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+            let index: number;
+            while ((index = buffer.indexOf("\n\n")) !== -1) {
+              parseEvent(buffer.slice(0, index));
+              buffer = buffer.slice(index + 2);
+            }
+          }
+          if (buffer.trim()) parseEvent(buffer);
+          if (!finalResult) throw new Error("Stream ended without a saved result.");
+          data = finalResult;
+        } catch (streamError) {
+          if (partialStarted) setMessages(current => current.slice(0, -1));
+          throw streamError;
+        }
+        if (partialStarted) {
+          // Replace provisional streamed text with the exact committed server answer.
+          setMessages(current => current.slice(0, -1));
+        }
+      } else {
+        data = await response.json();
+      }
+      setNotice(null);
       updateQuota(data);
-      if (!response.ok) {
+      if (!response.ok || data.ok === false) {
         setError(errorMessage(data)); setUpgrade(Boolean(data.upgradeRequired));
         // Reconcile with the server before permitting another request.
         setUncertain(Boolean(data.conversationId));

@@ -16,7 +16,7 @@ import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
 import { visibleMessages } from "@/lib/chat/history";
 
-export async function POST(request: Request) {
+async function handleChat(request: Request, onDelta?: (text: string) => void, onPhase?: (phase: string) => void) {
   let attempt: TurnAttempt | undefined;
   try {
     const user = await getCurrentUser();
@@ -58,10 +58,12 @@ export async function POST(request: Request) {
       const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message);
       const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).join("\n");
       const query = followUp && priorQuestions ? `${priorQuestions}\nFollow-up question: ${message}` : message;
+      onPhase?.("Searching and checking patristic sources...");
       const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
+      onPhase?.("Writing the answer...");
       const result = await generateOrthodoxAnswer({ userMessage: message, contextKey,
         extraContext: `${profile}\n\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
-        patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns } });
+        patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
       const sources = snapshotSources(research?.sources ?? [], true);
       const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
         conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,
@@ -82,4 +84,34 @@ export async function POST(request: Request) {
     return apiJson({ ...await apiFailure(error).json(), error: "The answer could not be saved. Reopen this conversation to recover or view its saved answer.",
       ...(attempt ? { conversationId: attempt.conversationId, turnId: attempt.id } : {}) }, { status: 500 });
   }
+}
+
+
+export async function POST(request: Request) {
+  if (!request.headers.get("accept")?.includes("text/event-stream")) return handleChat(request);
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      let closed = false;
+      const emit = (event: string, data: unknown) => {
+        if (!closed) controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      };
+      emit("phase", { message: "Preparing your question..." });
+      void handleChat(request, delta => emit("delta", { text: delta }), phase => emit("phase", { message: phase }))
+        .then(async response => {
+          const result = await response.json();
+          emit("result", { ...result, ok: response.ok, status: response.status });
+        })
+        .catch(() => emit("result", { ok: false, status: 500, error: "The response could not be completed. Check your saved conversation before retrying." }))
+        .finally(() => { closed = true; controller.close(); });
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }

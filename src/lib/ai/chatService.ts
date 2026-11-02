@@ -25,6 +25,7 @@ type GenerateOrthodoxAnswerInput = {
 
   isPro?: boolean;
   conversation?: { turns: MemoryTurn[] };
+  onDelta?: (text: string) => void;
 };
 
 export async function generateOrthodoxAnswer({
@@ -34,6 +35,7 @@ export async function generateOrthodoxAnswer({
   patristicContext,
   isPro = false,
   conversation,
+  onDelta,
 }: GenerateOrthodoxAnswerInput) {
   const context =
     chatContexts[
@@ -129,32 +131,43 @@ STRICT RULES:
   const inputTokens = messageTokens(messages);
   // Reject rather than truncate quotations or remove static grounding instructions.
   if (conversation && inputTokens > limits.inputTokens) throw new AiInputError("The research material exceeds this conversation's context budget. Please ask a narrower question.", 413);
-  const completion =
-    await getOpenAI().chat.completions.create({
-      model:
-        "gpt-4.1-mini",
-
-      messages,
-      ...(conversation ? { max_completion_tokens: limits.outputTokens } : {}),
-
-      temperature:
-        patristicContext
-          ? 0.15
-          : 0.4,
-    }).catch((error: unknown) => {
-      const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
-      throw new ApiError("The AI service is temporarily unavailable. Check saved status before retrying.", status === 408 || status === 504 ? 504 : status === 429 ? 503 : 502, "AI_SERVICE_FAILED");
-    });
-
-  if (conversation && (completion.choices[0]?.finish_reason === "length" || !completion.choices[0]?.message?.content?.trim())) {
-    throw new AiInputError("The answer was interrupted or exceeded its output budget. Recover this turn and ask a narrower question.", 502);
+  const params = {
+    model: "gpt-4.1-mini" as const,
+    messages,
+    ...(conversation ? { max_completion_tokens: limits.outputTokens } : {}),
+    temperature: patristicContext ? 0.15 : 0.4,
+  };
+  let answer: string;
+  try {
+    if (onDelta) {
+      const stream = await getOpenAI().chat.completions.create({ ...params, stream: true });
+      let collected = "";
+      let finishReason: string | null = null;
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta?.content ?? "";
+        if (delta) {
+          collected += delta;
+          onDelta(delta);
+        }
+        if (chunk.choices[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
+      }
+      if (conversation && (finishReason === "length" || !collected.trim())) {
+        throw new AiInputError("The answer was interrupted or exceeded its output budget. Recover this turn and ask a narrower question.", 502);
+      }
+      answer = collected;
+    } else {
+      const completion = await getOpenAI().chat.completions.create(params);
+      if (conversation && (completion.choices[0]?.finish_reason === "length" || !completion.choices[0]?.message?.content?.trim())) {
+        throw new AiInputError("The answer was interrupted or exceeded its output budget. Recover this turn and ask a narrower question.", 502);
+      }
+      answer = completion.choices[0]?.message?.content ?? "I could not generate an answer. Please try again.";
+    }
+  } catch (error) {
+    if (error instanceof AiInputError) throw error;
+    const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
+    throw new ApiError("The AI service is temporarily unavailable. Check saved status before retrying.",
+      status === 408 || status === 504 ? 504 : status === 429 ? 503 : 502, "AI_SERVICE_FAILED");
   }
-  const answer =
-    completion
-      .choices[0]
-      ?.message
-      ?.content ??
-    "I could not generate an answer. Please try again.";
 
   return {
     answer,
