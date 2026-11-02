@@ -154,7 +154,7 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
       }
       setNotice(null);
       updateQuota(data);
-      if (!response.ok) {
+      if (!response.ok || data.ok === false) {
         setError(errorMessage(data)); setUpgrade(Boolean(data.upgradeRequired));
         // Reconcile with the server before permitting another request.
         setUncertain(Boolean(data.conversationId));
