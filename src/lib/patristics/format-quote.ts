@@ -33,8 +33,8 @@ export function formatPatristicQuote(
 ): string {
   const translation =
     language === "sr"
-      ? quote.translationSr
-      : quote.translationEn;
+      ? (quote.translationSr ?? quote.translationEn)
+      : (quote.translationEn ?? quote.translationSr);
 
   const quoteToUse =
     translation ??
