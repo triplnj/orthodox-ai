@@ -125,11 +125,11 @@ export default function HomePage() {
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-gray-200 bg-white p-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Example question</p>
-              <p className="mt-3 text-lg font-medium text-gray-950">How can I begin a simple daily prayer routine?</p>
+              <p className="mt-3 text-lg font-medium text-gray-950">How can I recognize when my repentance is genuine rather than merely regret for my mistakes?</p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Illustrative answer</p>
-              <p className="mt-3 leading-7 text-gray-700">Start with a brief, consistent time each day. Read a short passage of Scripture, pray attentively, and make a little room for silence. Keep the routine manageable and discuss a personal prayer rule with your priest.</p>
+              <p className="mt-3 leading-7 text-gray-700">Regret often remains focused on the consequences of our actions. Repentance goes further: it asks us to acknowledge the harm we have done, turn toward God without excuses, and begin changing how we treat others. Its sincerity is seen not in intense feelings alone, but in humility, a willingness to seek forgiveness, and patient effort to live differently. Change may be gradual; repentance is a continuing movement of the heart, not a moment of self-condemnation.</p>
             </div>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
