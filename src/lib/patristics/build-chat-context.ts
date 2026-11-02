@@ -57,7 +57,7 @@ export async function buildVerifiedPatristicContext(
   const semanticQuotes =
     await semanticSearchPatristicQuotes(
       query,
-      5,
+      25,
       minSimilarity,
       detectedAuthor ?? undefined,
     );
