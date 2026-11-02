@@ -145,8 +145,10 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
           if (partialStarted) setMessages(current => current.slice(0, -1));
           throw streamError;
         }
-        if (partialStarted) {
-          // Replace provisional streamed text with the exact committed server answer.
+        if (partialStarted && finalResult?.ok !== false) {
+          // Replace provisional text with the exact committed server answer.
+          setMessages(current => current.slice(0, -1));
+        } else if (partialStarted) {
           setMessages(current => current.slice(0, -1));
         }
       } else {
@@ -160,7 +162,7 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
         setUncertain(Boolean(data.conversationId));
         await refreshList();
         if (data.conversationId) { await loadConversation(data.conversationId); setInput(payload.message); }
-        else { setInput(payload.message); pending.current = null; setMessages(current => current.slice(0, -1)); }
+        else { setInput(payload.message); pending.current = null; setMessages(current => current.filter((item, index, all) => index !== all.length - 1 || item.role !== "user")); }
         return;
       }
       setConversationId(data.conversationId); setUncertain(false); pending.current = null;
