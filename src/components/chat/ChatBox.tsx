@@ -112,7 +112,7 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
         let partialStarted = false;
         const parseEvent = (frame: string) => {
           const event = frame.match(/^event: (.+)$/m)?.[1];
-          const line = frame.split("\\n").find(line => line.startsWith("data: "));
+          const line = frame.split("\n").find(line => line.startsWith("data: "));
           if (!line) return;
           const value = JSON.parse(line.slice(6));
           if (event === "phase") setNotice(value.message);
@@ -131,9 +131,9 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
           for (;;) {
             const { done, value } = await reader.read();
             if (done) break;
-            buffer += decoder.decode(value, { stream: true }).replace(/\\r\\n/g, "\\n");
+            buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
             let index: number;
-            while ((index = buffer.indexOf("\\n\\n")) !== -1) {
+            while ((index = buffer.indexOf("\n\n")) !== -1) {
               parseEvent(buffer.slice(0, index));
               buffer = buffer.slice(index + 2);
             }
