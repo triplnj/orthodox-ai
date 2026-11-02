@@ -93,14 +93,14 @@ export async function buildVerifiedPatristicContext(
 
         if (
           language === "sr" &&
-          !item.quote.translationSr
+          !item.quote.translationSr && !item.quote.translationEn
         ) {
           return false;
         }
 
         if (
           language === "en" &&
-          !item.quote.translationEn
+          !item.quote.translationEn && !item.quote.translationSr
         ) {
           return false;
         }
@@ -142,7 +142,7 @@ export async function buildVerifiedPatristicContext(
           )
           .map(
             (source) => ({
-              metadata: { excerpt: (language === "sr" ? item.quote.translationSr : item.quote.translationEn) ?? item.quote.originalText, quoteId: item.quote.id, sourceName: source.sourceName, sourceType: source.sourceType,
+              metadata: { excerpt: (language === "sr" ? (item.quote.translationSr ?? item.quote.translationEn) : (item.quote.translationEn ?? item.quote.translationSr)) ?? item.quote.originalText, quoteId: item.quote.id, sourceName: source.sourceName, sourceType: source.sourceType,
                 exactMatch: source.exactMatch, confidence: item.quote.confidence,
                 section: item.quote.section, chapter: item.quote.chapter, paragraph: item.quote.paragraph,
                 pgReference: item.quote.pgReference, scReference: item.quote.scReference, cpgReference: item.quote.cpgReference },
