@@ -117,6 +117,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section id="try-orthodoxai" aria-labelledby="try-orthodoxai-title" className="border-y border-gray-200 bg-gray-50">
+        <div className="mx-auto max-w-6xl px-6 py-14">
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Public preview · No account needed</p>
+          <h2 id="try-orthodoxai-title" className="mt-3 text-3xl font-bold tracking-tight text-gray-950">See how OrthodoxAI helps</h2>
+          <p className="mt-3 max-w-3xl text-gray-700">Explore an illustrative example before creating an account. This is a sample of the experience, not a live AI answer or a verified patristic quotation.</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Example question</p>
+              <p className="mt-3 text-lg font-medium text-gray-950">How can I begin a simple daily prayer routine?</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Illustrative answer</p>
+              <p className="mt-3 leading-7 text-gray-700">Start with a brief, consistent time each day. Read a short passage of Scripture, pray attentively, and make a little room for silence. Keep the routine manageable and discuss a personal prayer rule with your priest.</p>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/register" className="rounded-lg bg-gray-950 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">Create a free account</Link>
+            <Link href="/login?next=/chat" className="rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-900 hover:border-gray-950">Sign in to try Chat</Link>
+          </div>
+          <p className="mt-3 text-xs text-gray-600">Live Chat requires an account and email verification. OrthodoxAI is an educational aid, not a replacement for pastoral care.</p>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="max-w-3xl">
           <h2 className="text-3xl font-bold tracking-tight text-gray-950">
