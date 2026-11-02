@@ -45,13 +45,13 @@ export function ActivationSurvey() {
       <p className="mt-2 text-sm leading-6 text-gray-600">After trying OrthodoxAI, tell us what worked and what should be improved. Your feedback helps guide development. Please do not include private spiritual or confession details.</p>
       <form className="mt-5 space-y-5" onSubmit={submit}>
         <div>
-          <label htmlFor="feedback-reason" className="block text-sm font-semibold">What is the main thing preventing you from using OrthodoxAI more often?</label>
+          <label htmlFor="feedback-reason" className="block text-sm font-semibold">How has your experience with OrthodoxAI been so far?</label>
           <select id="feedback-reason" value={reason} onChange={e=>setReason(e.target.value)} required className="mt-2 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-950">
             <option value="">Select an answer</option>
-            <option value="not_using">I have not had enough opportunities to use it</option>
-            <option value="price">The paid plan is too expensive</option>
-            <option value="unclear_value">I am not sure which features would help me</option>
-            <option value="answer_quality">Some answers need more accuracy or better sources</option>
+            <option value="not_using">I have not tried enough features yet</option>
+            <option value="price">The paid plan does not fit my needs or budget</option>
+            <option value="unclear_value">I am not sure where to start or what to try</option>
+            <option value="answer_quality">I need more reliable or useful answers</option>
             <option value="other">Other</option>
           </select>
         </div>
@@ -68,7 +68,7 @@ export function ActivationSurvey() {
           </select>
         </div>
         <div>
-          <label htmlFor="feedback-suggestion" className="block text-sm font-semibold">What could make OrthodoxAI more useful? (optional)</label>
+          <label htmlFor="feedback-suggestion" className="block text-sm font-semibold">What worked well, and what should we improve? (optional)</label>
           <textarea id="feedback-suggestion" maxLength={500} value={suggestion} onChange={e=>setSuggestion(e.target.value)} rows={3} className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-gray-950" />
         </div>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
