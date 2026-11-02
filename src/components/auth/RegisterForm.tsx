@@ -74,7 +74,7 @@ export default function RegisterForm() {
           </div>
         )}
 
-        {message && <div role="status" className="mt-5 rounded-xl bg-gray-50 p-4 text-sm">{message} <Link href="/login?next=/onboarding" className="font-semibold underline">Sign in</Link></div>}
+        {message && <div role="status" className="mt-5 rounded-xl bg-gray-50 p-4 text-sm leading-6">{message}<p className="mt-2">If you registered with this address, check your inbox and spam folder for the verification link. The link expires after 24 hours. After verifying, <Link href="/login?next=/onboarding" className="font-semibold underline">sign in to continue</Link>. If no email arrives, you can sign in and request another link in account settings.</p></div>}
         <form onSubmit={handleRegister} className="mt-6 space-y-4">
           <div>
             <label htmlFor="register-name" className="text-sm font-medium text-gray-700">Name</label>
