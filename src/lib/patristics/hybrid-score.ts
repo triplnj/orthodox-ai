@@ -50,6 +50,7 @@ export function calculateHybridScore(
     quote.translationEn ?? "",
     quote.translationSr ?? "",
     quote.originalText,
+    ...quote.topics,
   ].join(" "),
 );
 
@@ -64,9 +65,15 @@ export function calculateHybridScore(
   const keywordScore =
     terms.length > 0 ? matchedTerms / terms.length : 0;
 
+  // A narrow concept cannot be evidenced by a broad passage on passions alone.
+  // Match Greek, English and Serbian forms across the quote and its topic tags.
+  const selfLoveQuestion = /(?:φιλαυτ|самољуб|samoljub|self[ -]?love|philaut)/iu.test(query);
+  const selfLoveEvidence = /(?:φιλαυτ|самољуб|samoljub|self[ -]?love|philaut)/iu.test(
+    [quote.translationEn, quote.translationSr, quote.originalText, ...quote.topics].join(" ")
+  );
+  const topicalMismatch = selfLoveQuestion && !selfLoveEvidence;
   const hybridScore =
-    quote.similarity * 0.7 +
-    keywordScore * 0.3;
+    topicalMismatch ? 0 : quote.similarity * 0.7 + keywordScore * 0.3;
 
   return {
     semanticScore: quote.similarity,
