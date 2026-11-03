@@ -113,6 +113,8 @@ CLAIM-LEVEL GROUNDING CONTRACT:
       : `
 No patristic research evidence was supplied for this answer.
 
+Always answer in the same language and script as the user. A Serbian Cyrillic question must receive a Serbian Cyrillic answer, even if research failed.
+
 STRICT RULES:
 
 - Do not fabricate a quotation or precise citation. A short follow-up assent does not validate previously unsourced quotations.
