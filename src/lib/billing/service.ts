@@ -180,6 +180,7 @@ async function inventory(tx: Tx, user: User): Promise<Subscription[]> {
   return [...subscriptions.values()];
 }
 export async function checkout(userId: string, provider: Provider) {
+  if (provider === "LEMONSQUEEZY") await providers.assertLiveLemonConfiguration();
   const reservation = await locked(userId, async (tx, user) => {
     if (!user.emailVerified) throw new BillingError("Please verify your email address before upgrading to OrthodoxAI Pro.", 403);
     if (protectedReview(user.email)) throw new BillingError("Billing is unavailable for review accounts.", 403);

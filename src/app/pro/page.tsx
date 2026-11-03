@@ -111,7 +111,7 @@ export default async function ProPage() {
 
           {!isPro && (
             <p className="mt-5 text-xs leading-5 text-gray-500">
-             You will be redirected to Stripe Checkout to complete your subscription.
+             You will be redirected to Lemon Squeezy to complete your subscription. Only live payments activate Pro.
             </p>
           )}
         </div>
