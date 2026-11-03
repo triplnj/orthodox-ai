@@ -104,11 +104,13 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
     }
     try {
       const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "text/event-stream" }, body: JSON.stringify(payload) });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: Record<string, any>;
       if (response.headers.get("content-type")?.includes("text/event-stream") && response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let finalResult: Record<string, any> | undefined;
         let partialStarted = false;
         const parseEvent = (frame: string) => {
