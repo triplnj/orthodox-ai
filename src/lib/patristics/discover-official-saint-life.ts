@@ -25,7 +25,7 @@ function nameTokens(value: string) {
 export function saintSubject(query: string): string[] {
   const match = query.match(/(?:\b(?:st\.?|saint|sveti|svetog|sv\.)\s+|(?:свети|светог|св\.)\s+)([\p{L}][\p{L}\s.'-]{2,70})/iu);
   if (!match) return [];
-  const name = match[1].split(/(?:\s+(?:и|који|која|what|who|whose|and|is|are|је|су|у\s+чему|шта)\b|[?!,])/iu)[0];
+  const name = match[1].split(/(?:\s+(?:и|који|која|what|who|whose|and|is|are|је|су|шта)(?=\s|$)|[?!,])/iu)[0];
   const tokens = nameTokens(name);
   return tokens.length >= 2 ? tokens.slice(0, 5) : [];
 }
