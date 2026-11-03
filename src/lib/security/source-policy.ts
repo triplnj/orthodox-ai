@@ -1,12 +1,14 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { hostnameOnly } from "./public-dns";
+import { VERIFIED_SOURCE_HOSTS } from "@/lib/patristics/verified-source-catalog";
 
 const baseHosts = ["azbyka.ru", "pravoslavie.ru", "doxologia.ro", "svetigora.com", "svetosavlje.org",
   "churchofcyprus.org.cy", "agiooros.org", "newadvent.org", "orthodoxchurchfathers.com", "matia.gr",
   "catholiclibrary.org", "remacle.org", "syri.ac", "gorgiaspress.com", "vlioras.gr", "gutenberg.org",
   "archive.org", "patrologiagraeca.org", "biblegateway.com", "philokalia.com"];
 export const SOURCE_HOSTS = new Set([...baseHosts.flatMap(host => [host, `www.${host}`]),
+  ...VERIFIED_SOURCE_HOSTS,
   "en.wikisource.org", "el.wikisource.org", "la.wikisource.org", "commons.wikimedia.org", "upload.wikimedia.org",
   "onlinebooks.library.upenn.edu"]);
 const archiveShard = (host: string) => /^(?:ia\d+\.us|dn\d+\.ca)\.archive\.org$/.test(host);
