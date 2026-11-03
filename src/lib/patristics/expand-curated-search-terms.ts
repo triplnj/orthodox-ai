@@ -305,6 +305,13 @@ export function expandCuratedSearchTerms(
     }
   }
 
+  if (/причешћ|pričeš|prices|communion|eucharist|евхарист|euharist/i.test(normalized)) {
+    terms.push("communion", "holy communion", "eucharist", "partaking", "frequent communion", "sacrament");
+  }
+  if (/кољивар|коливар|kollyvad|kollybad|kolivad|κολλυβάδ/i.test(normalized)) {
+    terms.push("kollyvades", "kollyva", "frequent communion", "mount athos", "macarius", "nicodemus");
+  }
+
   /*
    * Bibliographic questions need vocabulary that
    * actually occurs on edition/catalog pages.
