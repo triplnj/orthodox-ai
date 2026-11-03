@@ -63,7 +63,11 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const previousPatristicQuestion = [...priorQuestions].reverse().find(item => shouldRunPatristicResearch(item));
       const query = assent && previousPatristicQuestion
         ? `${previousPatristicQuestion}\nFollow-up: ${message}`
-        : followUp && priorQuestions.length ? `${priorQuestions.join("\n")}\nFollow-up question: ${message}` : message;
+        : followUp && previousPatristicQuestion
+          ? `${previousPatristicQuestion}\nFollow-up question: ${message}`
+          : followUp && priorQuestions.length
+            ? `${priorQuestions.slice(-2).join("\n")}\nFollow-up question: ${message}`
+            : message;
       onPhase?.("Searching and checking patristic sources...");
       const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
       onPhase?.("Writing the answer...");
