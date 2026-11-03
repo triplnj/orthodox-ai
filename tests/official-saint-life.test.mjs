@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createLoader } from "./helpers/load-ts.mjs";
 
-const firstUrl = "https://www.oca.org/saints/lives?q=John";
+const firstUrl = "https://www.oca.org/saints/lives?q=john";
 const lifeUrl = "https://www.oca.org/saints/lives/2027/12/20/103598-repose-of-saint-john-of-kronstadt";
 const html = '<html><body><a href="/saints/lives/2027/12/20/103598-repose-of-saint-john-of-kronstadt">Read the Life</a></body></html>';
 const requested = [];
