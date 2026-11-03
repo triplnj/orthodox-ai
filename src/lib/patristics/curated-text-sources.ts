@@ -580,8 +580,11 @@ export function findCuratedPatristicDocuments(
   const normalizedQuery =
     normalize(query);
 
+  // Generic expressions such as "свети оци" or "свети отац" are
+  // topic requests, not explicit author names. Do not exclude all
+  // topical curated documents merely because a saint-prefix is present.
   const explicitNamedFather =
-    /(?:^|[^\p{L}\p{N}_])(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+[\p{L}][\p{L}.'’\-]{2,}/iu.test(
+    /(?:^|[^\p{L}\p{N}_])(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+(?!(?:оци|отац|отци|оца|отaца|oci|otci|otac|oca|fathers?|church)\b)[\p{L}][\p{L}.'’\-]{2,}/iu.test(
       query,
     );
 
