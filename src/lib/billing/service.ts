@@ -191,7 +191,34 @@ export async function checkout(userId: string, provider: Provider) {
         if ((await inventory(tx, user)).some(s => !providers.terminal(s))) throw new BillingError("An existing subscription must be managed through the billing portal.");
         return { url: existing.checkoutUrl };
       }
-      throw new BillingError("A checkout is already pending; reconciliation is required before another purchase.");
+      // Only an expired, known Lemon checkout can be automatically retired.
+      // Never clear CREATING, UNKNOWN, PAID_OPEN, or an attempt with missing
+      // provider evidence. Expiration does not itself prove nonpayment.
+      if (existing.status !== "OPEN" || existing.provider !== "LEMONSQUEEZY" ||
+          !existing.providerCheckoutId || !existing.expiresAt || existing.expiresAt > new Date()) {
+        throw new BillingError("A checkout is already pending; reconciliation is required before another purchase.");
+      }
+      if (!await providers.checkoutClosed("LEMONSQUEEZY", existing.providerCheckoutId)) {
+        throw new BillingError("The previous checkout is not confirmed closed; please contact billing support.");
+      }
+      const subscriptions = await inventory(tx, user);
+      if (subscriptions.some(s => !providers.terminal(s))) {
+        throw new BillingError("An existing subscription must be managed through the billing portal.");
+      }
+      // Missing webhooks may leave the local customer inventory empty. Check
+      // the provider's order records as an independent payment signal.
+      if (await providers.lemonOrdersSince(user.email, existing.createdAt)) {
+        throw new BillingError("A possible payment was found. Contact billing support before another checkout.");
+      }
+      await tx.billingCheckoutAttempt.updateMany({
+        where: { id: existing.id, status: "OPEN" },
+        data: { status: "RECONCILED", checkoutUrl: null,
+          recoveryLog: audit(existing.recoveryLog, "system", "Expired checkout confirmed closed; no linked subscription or matching provider order", "AUTO_RECONCILED") },
+      });
+      // Do not create a new checkout while any other uncertain attempt exists.
+      if (await tx.billingCheckoutAttempt.findFirst({ where: { userId, status: { in: pending } } })) {
+        throw new BillingError("Another checkout is pending; billing support must reconcile it.");
+      }
     }
     const subscriptions = await inventory(tx, user);
     if (subscriptions.some(s => !providers.terminal(s))) throw new BillingError("An existing subscription must be managed through the billing portal.");
