@@ -60,6 +60,17 @@ function fromLemon(data: LemonData): Subscription {
     providerUpdatedAt: date(a.updated_at), paidVerified: a.status === "active",
     portalUrl: a.urls?.customer_portal };
 }
+export async function assertLiveLemonConfiguration(): Promise<void> {
+  // Fail before creating any local checkout attempt. Test credentials must not
+  // reach the live purchase endpoint, even if a checkout could be created.
+  const variantId = required("LEMONSQUEEZY_PRO_VARIANT_ID");
+  const variant = (await lemon(`variants/${encodeURIComponent(variantId)}`)).data;
+  if (variant.type !== "variants" || String(variant.id) !== variantId ||
+      variant.attributes.test_mode !== false) {
+    throw new BillingError("Live checkout is not configured with a verified live Lemon Squeezy variant.", 503);
+  }
+}
+
 export async function retrieve(provider: Provider, id: string): Promise<Subscription> {
   if (provider === "LEMONSQUEEZY") {
     const subscription = fromLemon((await lemon(`subscriptions/${encodeURIComponent(id)}`)).data);
@@ -166,7 +177,7 @@ export async function createCheckout(provider: Provider, user: { id: string; ema
       checkout_data: { email: user.email, name: user.name ?? undefined, custom: { userId: user.id, billingAttemptId: attemptId } },
       product_options: { redirect_url: `${appUrl}/pro/success` },
       expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() } } });
-  if (!result.data?.id || !result.data.attributes.url) throw new BillingError("Checkout outcome is uncertain.", 503);
+  if (!result.data?.id || !result.data.attributes.url || result.data.attributes.test_mode !== false) throw new BillingError("Checkout outcome is uncertain or not in live mode.", 503);
   return { id: String(result.data.id), url: result.data.attributes.url, expiresAt: date(result.data.attributes.expires_at), customerId: null };
 }
 /**
