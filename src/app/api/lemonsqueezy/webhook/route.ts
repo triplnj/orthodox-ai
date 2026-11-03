@@ -14,6 +14,7 @@ export async function POST(req: Request) {
   }
   let payload;
   try { payload = JSON.parse(rawBody); } catch { return apiJson({ error: "Invalid JSON." }, { status: 400 }); }
+  if (payload?.data?.attributes?.test_mode !== false) return apiJson({ error: "Test mode events must use the test webhook endpoint." }, { status: 400 });
   const eventType = payload?.meta?.event_name;
   if (typeof eventType !== "string") return apiJson({ error: "Missing event type." }, { status: 400 });
   if (!eventType.startsWith("subscription_")) return apiJson({ received: true, ignored: eventType });
