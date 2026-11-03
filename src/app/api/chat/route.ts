@@ -59,10 +59,14 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const history = selectHistory(turns);
       const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message) || /(?:на ту тему|о томе|о истом|о овоме|који свети отац|који од светих отаца|koji sveti otac|na tu temu|o tome)/iu.test(message);
       const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).filter(item => item !== message);
-      const assent = /^(?:yes|yes please|sure|please do|go ahead|ok|okay|da|moze|može|naravno|да|може)[.!\s]*$/i.test(message);
+      const assent = /^(?:yes|yes please|sure|please do|go ahead|ok|okay|da|moze|može|naravno|да|може|желим|хоћу|желео бих|zelim|hoću|hocu)[.!\s]*$/i.test(message);
       const previousPatristicQuestion = [...priorQuestions].reverse().find(item => shouldRunPatristicResearch(item));
-      const query = assent && previousPatristicQuestion
-        ? `${previousPatristicQuestion}\nFollow-up: ${message}`
+      // A short assent agrees to the immediate preceding offer; never jump back
+      // to an unrelated older patristic question and discard the latest topic.
+      const lastAssistant = [...history].reverse().find(item => item.role === "assistant")?.content ?? "";
+      const immediateTopic = priorQuestions.slice(-2).join("\n");
+      const query = assent && priorQuestions.length
+        ? `${immediateTopic}\nPrevious assistant's offer: ${lastAssistant.slice(-600)}\nUser requests the offered source-based follow-up: ${message}`
         : followUp && previousPatristicQuestion
           ? `${previousPatristicQuestion}\nFollow-up question: ${message}`
           : followUp && priorQuestions.length
