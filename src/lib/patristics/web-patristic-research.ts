@@ -21,6 +21,12 @@ export type WebPatristicResearchResult = {
  * to our local corpus.
  */
 const PREFERRED_PATRISTIC_DOMAINS = [
+  // Canonical Orthodox ecclesial sources and text libraries first.
+  "oca.org",
+  "goarch.org",
+  "svetosavlje.org",
+  "myriobiblos.gr",
+  "apostoliki-diakonia.gr",
   "newadvent.org",
   "ccel.org",
   "bkv.unifr.ch",
