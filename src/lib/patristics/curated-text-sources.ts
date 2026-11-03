@@ -38,6 +38,45 @@ export type CuratedPatristicDocument = {
 export const CURATED_PATRISTIC_DOCUMENTS:
   CuratedPatristicDocument[] = [
     {
+      key: "chrysostom-colossians-homily-9",
+      authorName: "St. John Chrysostom",
+      authorAliases: ["john chrysostom", "jovan zlatousti", "sveti jovan zlatousti", "јован златоусти", "свети јован златоусти"],
+      workTitle: "Homily 9 on Colossians",
+      workAliases: ["homily 9 on colossians"],
+      subjects: ["scripture", "scriptures", "bible", "reading scripture", "reading the bible", "свето писмо", "светог писма", "читање светог писма", "читају свето писмо", "лаици", "мирјани", "читање писма", "citanje svetog pisma", "laici", "mirjani"],
+      sourceUrl: "https://www.newadvent.org/fathers/230309.htm",
+      sourceName: "New Advent — John Chrysostom",
+      sourceLanguage: "English",
+      documentType: "TRANSLATION",
+      verificationStatus: "CURATED_PATRISTIC_TEXT_REPOSITORY",
+    },
+    {
+      key: "chrysostom-ephesians-homily-21",
+      authorName: "St. John Chrysostom",
+      authorAliases: ["john chrysostom", "jovan zlatousti", "sveti jovan zlatousti", "јован златоусти", "свети јован златоусти"],
+      workTitle: "Homily 21 on Ephesians",
+      workAliases: ["homily 21 on ephesians"],
+      subjects: ["scripture", "scriptures", "bible", "reading scripture", "reading the bible", "свето писмо", "светог писма", "читање светог писма", "читају свето писмо", "лаици", "мирјани", "читање писма", "citanje svetog pisma", "laici", "mirjani"],
+      sourceUrl: "https://www.newadvent.org/fathers/230121.htm",
+      sourceName: "New Advent — John Chrysostom",
+      sourceLanguage: "English",
+      documentType: "TRANSLATION",
+      verificationStatus: "CURATED_PATRISTIC_TEXT_REPOSITORY",
+    },
+    {
+      key: "chrysostom-lazarus-discourse-3",
+      authorName: "St. John Chrysostom",
+      authorAliases: ["john chrysostom", "jovan zlatousti", "sveti jovan zlatousti", "јован златоусти", "свети јован златоусти"],
+      workTitle: "Third Discourse on Lazarus",
+      workAliases: ["third discourse on lazarus"],
+      subjects: ["scripture", "scriptures", "bible", "reading scripture", "reading the bible", "свето писмо", "светог писма", "читање светог писма", "читају свето писмо", "лаици", "мирјани", "читање писма", "citanje svetog pisma", "laici", "mirjani"],
+      sourceUrl: "https://www.tertullian.org/fathers/chrysostom_four_discourses_03_discourse3.htm",
+      sourceName: "Tertullian.org — English translation of John Chrysostom",
+      sourceLanguage: "English",
+      documentType: "TRANSLATION",
+      verificationStatus: "CURATED_PATRISTIC_TEXT_REPOSITORY",
+    },
+    {
       key:
         "isaac-nineveh-mystic-treatises-wensinck",
 
@@ -541,8 +580,11 @@ export function findCuratedPatristicDocuments(
   const normalizedQuery =
     normalize(query);
 
+  // Generic expressions such as "свети оци" or "свети отац" are
+  // topic requests, not explicit author names. Do not exclude all
+  // topical curated documents merely because a saint-prefix is present.
   const explicitNamedFather =
-    /(?:^|[^\p{L}\p{N}_])(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+[\p{L}][\p{L}.'’\-]{2,}/iu.test(
+    /(?:^|[^\p{L}\p{N}_])(?:sveti|svetog|svetom|sv\.?|свети|светог|светом|св\.?|saint|st\.?|heilige(?:r|n|m)?|hl\.?)\s+(?!(?:оци|отац|отци|оца|отaца|oci|otci|otac|oca|fathers?|church)\b)[\p{L}][\p{L}.'’\-]{2,}/iu.test(
       query,
     );
 

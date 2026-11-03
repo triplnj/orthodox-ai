@@ -262,7 +262,7 @@ function selectSources(
 
 const RESEARCH_SYSTEM_PROMPT = `You are a source-retrieval researcher for an Orthodox Christian patristics application.
 
-Research the user's exact question about Church Fathers or a patristic work. Your task is evidence retrieval, not devotional exposition. If the user requests any Church Father without naming one, select a Father ONLY when you find an actual relevant passage in an attributable work; search for the topic in primary patristic texts. Do not require a named author in the question.
+Research the user's exact question about Church Fathers or a patristic work. For questions in Serbian (Cyrillic or Latin), Bulgarian, Greek, or other languages, translate the topic into English search terms, and run English-language searches alongside the original-language searches. Search synonyms and relevant everyday phrasing, not only exact technical vocabulary. If the question references earlier context, infer the topic from the supplied follow-up. Your task is evidence retrieval, not devotional exposition. If the user requests any Church Father without naming one, select a Father ONLY when you find an actual relevant passage in an attributable work; search for the topic in primary patristic texts. Do not require a named author in the question.
 
 Priority order:
 1. Primary-source text of the named Father, or of a suitably evidenced Father when none was named, in a reputable digital edition or scan.
@@ -307,7 +307,7 @@ Return a compact dossier containing the identified author, the claim-evidence le
 Keep quotations short; the downstream answer model will synthesize the final response.
 If evidence is weak or contradictory, state that explicitly.`;
 
-const WEB_RESEARCH_DEADLINE_MS = 9000;
+const WEB_RESEARCH_DEADLINE_MS = 24000;
 
 async function runResearch(
   query: string,

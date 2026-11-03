@@ -57,13 +57,17 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       await dispatchTurn(turn);
       const turns = await memoryForTurn(turn);
       const history = selectHistory(turns);
-      const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message);
+      const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message) || /(?:на ту тему|о томе|о истом|о овоме|који свети отац|који од светих отаца|koji sveti otac|na tu temu|o tome)/iu.test(message);
       const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).filter(item => item !== message);
       const assent = /^(?:yes|yes please|sure|please do|go ahead|ok|okay|da|moze|može|naravno|да|може)[.!\s]*$/i.test(message);
       const previousPatristicQuestion = [...priorQuestions].reverse().find(item => shouldRunPatristicResearch(item));
       const query = assent && previousPatristicQuestion
         ? `${previousPatristicQuestion}\nFollow-up: ${message}`
-        : followUp && priorQuestions.length ? `${priorQuestions.join("\n")}\nFollow-up question: ${message}` : message;
+        : followUp && previousPatristicQuestion
+          ? `${previousPatristicQuestion}\nFollow-up question: ${message}`
+          : followUp && priorQuestions.length
+            ? `${priorQuestions.slice(-2).join("\n")}\nFollow-up question: ${message}`
+            : message;
       onPhase?.("Searching and checking patristic sources...");
       const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
       onPhase?.("Writing the answer...");
