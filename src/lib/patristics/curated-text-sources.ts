@@ -38,6 +38,32 @@ export type CuratedPatristicDocument = {
 export const CURATED_PATRISTIC_DOCUMENTS:
   CuratedPatristicDocument[] = [
     {
+      key: "kollyvades-oca-church-history",
+      authorName: "Orthodox Church in America",
+      authorAliases: [],
+      workTitle: "The Greek Church — Eighteenth-Century Church History",
+      workAliases: ["the greek church — eighteenth-century church history", "коливари", "кољивари", "kollyvades", "kollyvades movement"],
+      subjects: ["коливар", "кољивар", "кољивари", "коливари", "kollyvades", "често причешћивање", "сталном причешћивању", "причешћивању", "причешће", "frequent communion", "holy communion", "eucharist"],
+      sourceUrl: "https://www.oca.org/orthodoxy/the-orthodox-faith/church-history/eighteenth-century/the-greek-church",
+      sourceName: "Orthodox Church in America — historical overview",
+      sourceLanguage: "English",
+      documentType: "BIBLIOGRAPHIC",
+      verificationStatus: "CURATED_HISTORICAL_SOURCE",
+    },
+    {
+      key: "kollyvades-manna-from-athos-bibliography",
+      authorName: "Hieromonk Patapios and Archbishop Chrysostomos",
+      authorAliases: [],
+      workTitle: "Manna from Athos: The Issue of Frequent Communion",
+      workAliases: ["manna from athos: the issue of frequent communion", "коливари", "кољивари", "kollyvades", "kollyvades movement"],
+      subjects: ["коливар", "кољивар", "кољивари", "коливари", "kollyvades", "често причешћивање", "сталном причешћивању", "причешћивању", "причешће", "frequent communion", "holy communion", "eucharist"],
+      sourceUrl: "https://www.peterlang.com/document/1100560",
+      sourceName: "Peter Lang — scholarly book description",
+      sourceLanguage: "English",
+      documentType: "BIBLIOGRAPHIC",
+      verificationStatus: "CURATED_HISTORICAL_SOURCE",
+    },
+    {
       key: "chrysostom-colossians-homily-9",
       authorName: "St. John Chrysostom",
       authorAliases: ["john chrysostom", "jovan zlatousti", "sveti jovan zlatousti", "јован златоусти", "свети јован златоусти"],

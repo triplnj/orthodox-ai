@@ -6,13 +6,34 @@ import type { PatristicResearchSource } from "@/lib/patristics/build-patristic-r
 import { SourceCards } from "./SourceCards";
 import { errorMessage, newerQuota, type ClientQuota } from "@/lib/api/clientErrors";
 
-// Render Markdown emphasis in-place so streamed answers stay visible in the chat.
+// Render streamed or saved assistant answers as readable text, not raw Markdown.
 function renderAnswerEmphasis(value: string) {
-  return value.split(/(\*\*[\s\S]+?\*\*)/g).map((part, index) =>
+  const normalized = value
+    .replace(/&#(?:x([0-9a-f]+)|([0-9]+));/gi, (match, hex: string | undefined, decimal: string | undefined) => {
+      const n = Number.parseInt(hex ?? decimal ?? "", hex ? 16 : 10);
+      return Number.isFinite(n) && n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff)
+        ? String.fromCodePoint(n) : match;
+    })
+    .replace(/&(nbsp|amp|lt|gt|quot|apos);/gi, (_match, kind: string) =>
+      ({ nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" })[kind.toLowerCase() as "nbsp"])
+    .replace(/\\([\\#*_~.>\-])/g, "$1").replace(/\u00a0/g, " ");
+  const inline = (line: string) => line.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*|\`[^\`\n]+\`)/g).map((part, index) =>
     part.startsWith("**") && part.endsWith("**") && part.length > 4
-      ? <strong key={index} className="font-semibold">{part.slice(2, -2).replace(/\*/g, "")}</strong>
-      : <span key={index}>{part.replace(/\*/g, "")}</span>
+      ? <strong key={index} className="font-semibold">{part.slice(2, -2)}</strong>
+      : part.startsWith("*") && part.endsWith("*") && part.length > 2
+        ? <em key={index}>{part.slice(1, -1)}</em>
+        : <span key={index}>{part.replace(/[*\`]/g, "")}</span>
   );
+  return <div className="space-y-2 break-words">{normalized.replace(/\r\n?/g, "\n").split("\n").map((raw, index) => {
+    const line = raw.trim();
+    if (!line) return null;
+    if (/^(?:-{3,}|_{3,}|\*{3,})$/.test(line)) return <hr key={index} className="my-3 border-gray-200" />;
+    const heading = line.match(/^#{1,6}\s+(.+)$/);
+    if (heading) return <p key={index} className="font-semibold">{inline(heading[1])}</p>;
+    const item = line.match(/^(?:[-+*]|\d+[.)])\s+(.+)$/);
+    if (item) return <p key={index} className="pl-3">• {inline(item[1])}</p>;
+    return <p key={index} className="whitespace-pre-wrap">{inline(line.replace(/^#{1,6}(?=\S)/, ""))}</p>;
+  })}</div>;
 }
 
 type Message = { role: string; content: string; sources?: PatristicResearchSource[] };
@@ -224,7 +245,7 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
       className="max-h-[36rem] space-y-4 overflow-y-auto rounded-xl bg-gray-50 p-3 sm:p-4">
       {!messages.length && !busy && <p className="text-sm text-gray-600">Start a conversation with a question, or choose a saved conversation above.</p>}
       {messages.map((message, index) => <article key={index} className={`rounded-xl p-4 text-sm ${message.role === "user" ? "sm:ml-8 bg-gray-950 text-white" : "sm:mr-8 bg-white text-gray-900"}`}>
-        <p className="mb-2 text-xs font-semibold">{message.role === "user" ? "You" : "OrthodoxAI"}</p><p className="whitespace-pre-wrap break-words">{message.role === "assistant" ? renderAnswerEmphasis(message.content) : message.content}</p>
+        <p className="mb-2 text-xs font-semibold">{message.role === "user" ? "You" : "OrthodoxAI"}</p><div className="break-words">{message.role === "assistant" ? renderAnswerEmphasis(message.content) : <p className="whitespace-pre-wrap">{message.content}</p>}</div>
         {message.role === "assistant" && <SourceCards sources={message.sources ?? []} />}
       </article>)}
       {busy && <p>{loadingConversation ? "Loading saved conversation..." : "OrthodoxAI is working..."}</p>}
