@@ -6,13 +6,12 @@ import type { PatristicResearchSource } from "@/lib/patristics/build-patristic-r
 import { SourceCards } from "./SourceCards";
 import { errorMessage, newerQuota, type ClientQuota } from "@/lib/api/clientErrors";
 
-// Render limited Markdown emphasis safely, including during streamed responses.
-// Never inject HTML or show delimiter asterisks to the reader.
+// Render Markdown emphasis in-place so streamed answers stay visible in the chat.
 function renderAnswerEmphasis(value: string) {
-  return value.split(/(\\*\\*[\\s\\S]+?\\*\\*)/g).map((part, index) =>
+  return value.split(/(\*\*[\s\S]+?\*\*)/g).map((part, index) =>
     part.startsWith("**") && part.endsWith("**") && part.length > 4
-      ? <strong key={index} className="font-medium">{part.slice(2, -2)}</strong>
-      : <span key={index}>{part.replace(/\\*\\*$/g, "")}</span>
+      ? <strong key={index} className="font-semibold">{part.slice(2, -2).replace(/\*/g, "")}</strong>
+      : <span key={index}>{part.replace(/\*/g, "")}</span>
   );
 }
 
@@ -113,11 +112,13 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
     }
     try {
       const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "text/event-stream" }, body: JSON.stringify(payload) });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: Record<string, any>;
       if (response.headers.get("content-type")?.includes("text/event-stream") && response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let finalResult: Record<string, any> | undefined;
         let partialStarted = false;
         const parseEvent = (frame: string) => {

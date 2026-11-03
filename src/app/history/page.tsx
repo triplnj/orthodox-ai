@@ -8,6 +8,7 @@ import Link from "next/link";
 import { UpgradeBox } from "@/components/upgrade/UpgradeBox";
 import { productCopy } from "@/lib/productCopy";
 import { SourceCards } from "@/components/chat/SourceCards";
+import { AnswerText } from "@/components/chat/AnswerText";
 import type { PatristicResearchSource } from "@/lib/patristics/build-patristic-research-context";
 
 type HistoryMessage = {
@@ -151,7 +152,7 @@ export default function HistoryPage() {
               </div>
 
               <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-gray-800">
-                {message.content}
+                {message.role === "assistant" ? <AnswerText content={message.content} /> : message.content}
               </p>
               {message.role === "assistant" && <SourceCards sources={message.sources?.map(source => source.snapshot) ?? []} />}
               {message.conversationId ? <Link className="mt-3 inline-block text-sm underline" href={`/chat?conversationId=${encodeURIComponent(message.conversationId)}`}>Resume conversation</Link>
