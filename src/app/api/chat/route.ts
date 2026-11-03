@@ -75,9 +75,19 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       onPhase?.("Searching and checking patristic sources...");
       const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
       onPhase?.("Writing the answer...");
-      const result = await generateOrthodoxAnswer({ userMessage: message, contextKey,
-        extraContext: `${profile}\n\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
-        patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
+      // A source-dependent question must not silently fall back to a fluent,
+      // unsupported historical or patristic account when all providers fail.
+      // Preserve the turn and allow the user to retry later without fabricating facts.
+      const evidenceRequired = shouldRunPatristicResearch(query);
+      const evidenceUnavailable = evidenceRequired && !research?.sources.length;
+      const noSourceMessage = /\p{Script=Cyrillic}/u.test(message)
+        ? "Нисам успео да пронађем проверљив извор за овај одговор. Нећу нагађати о историјским личностима, покретима или учењу светих отаца. Покушајте поново касније."
+        : "No verifiable source could be retrieved for this question. I will not guess about Church history, movements, or patristic teachings. Please try again later.";
+      const result = evidenceUnavailable
+        ? { answer: noSourceMessage, budget: {} }
+        : await generateOrthodoxAnswer({ userMessage: message, contextKey,
+          extraContext: `${profile}\n\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
+          patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
       onPhase?.("Reviewing source evidence...");
       const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
       const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
