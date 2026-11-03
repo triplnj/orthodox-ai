@@ -266,6 +266,46 @@ export function expandCuratedSearchTerms(
   }
 
   /*
+   * Map common Serbian Scripture-reading queries to the vocabulary used
+   * by English patristic translations. This is a topic lexicon rather than
+   * an author or answer lookup; any retrieved passage must still match.
+   */
+  if (
+    /писм|писа[мњ]|sveto pismo|svetog pisma|scriptur|bible|biblij|библиј|еванђел|evanđel|gospel/i.test(normalized)
+  ) {
+    if (targetLanguage === "Greek") {
+      terms.push("γραφή", "γραφάς", "εὐαγγέλιον");
+    } else {
+      terms.push(
+        "scripture",
+        "scriptures",
+        "divine scriptures",
+        "holy scriptures",
+        "bible",
+        "gospel",
+        "gospels",
+      );
+    }
+  }
+
+  if (
+    /чита|читa|čita|cita|read|reading|лаик|лаиц|мирјан|mirjan|layman|laypeople|laymen/i.test(normalized)
+  ) {
+    if (targetLanguage === "Greek") {
+      terms.push("ἀνάγνωσις", "ἀναγινώσκειν");
+    } else {
+      terms.push(
+        "read",
+        "reading",
+        "read the scriptures",
+        "at home",
+        "laymen",
+        "worldly",
+      );
+    }
+  }
+
+  /*
    * Bibliographic questions need vocabulary that
    * actually occurs on edition/catalog pages.
    */
