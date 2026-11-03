@@ -1,0 +1,27 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const read = (path) => readFileSync(new URL("../" + path, import.meta.url), "utf8");
+
+test("Kollyvades movement recognition is connected to the active retrieval router", () => {
+  const source = read("src/lib/patristics/should-run-patristic-research.ts");
+  assert.match(source, /PATRISTIC_MOVEMENT_PATTERN\s*=\s*\n\s*\//);
+  const routerBody = source.slice(source.indexOf("export function shouldRunPatristicResearch"));
+  assert.match(routerBody, /PATRISTIC_MOVEMENT_PATTERN\.test\(query\)/);
+  assert.match(source, /кољивар/);
+});
+
+test("Kollyvades are indexed as historical sources, not fictional folk meanings", () => {
+  const curated = read("src/lib/patristics/curated-text-sources.ts");
+  assert.match(curated, /kollyvades-oca-church-history/);
+  assert.match(curated, /kollyvades-manna-from-athos-bibliography/);
+  assert.match(curated, /www\.oca\.org\/orthodoxy/);
+});
+
+test("source-dependent answers cannot silently proceed without evidence", () => {
+  const route = read("src/app/api/chat/route.ts");
+  assert.match(route, /evidenceRequired\s*=\s*shouldRunPatristicResearch\(query\)/);
+  assert.match(route, /evidenceUnavailable\s*=\s*evidenceRequired\s*&&\s*!research\?\.sources\.length/);
+  assert.match(route, /const result\s*=\s*evidenceUnavailable\s*\?/);
+});
