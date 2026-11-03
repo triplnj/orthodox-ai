@@ -17,6 +17,11 @@ const GENERIC_PATRISTIC_PATTERN =
 const DECLINED_PATRISTIC_PATTERN =
   /(?:^|[^\p{L}\p{N}_])(?:(?:sveti|svetog|svetom|svetih)\s+(?:otaca|oca|ocu|ocima|oci|otci)|crkvenih?\s+(?:otaca|oca|ocima)|(?:oca|otaca|ocima)\s+crkve|(?:свети|светог|светом|светих)\s+(?:отаца|оца|оцу|оцима|оци)|црквених?\s+(?:отаца|оца|оцима)|(?:оца|отаца|оцима)\s+цркве|(?:a|one|any|some)\s+(?:church|holy)\s+father|church\s+father['’]s?)(?=$|[^\p{L}\p{N}_])/iu;
 
+// Named patristic movements and historical concepts need researched evidence,
+// even when the query does not include the words "Church Fathers".
+const PATRISTIC_MOVEMENT_PATTERN =
+  /(?:кољивар[а-я]*|коливар[а-я]*|kollyvad\w*|kollybad\w*|kolivad\w*|коливад[а-я]*|κολλυβάδ\w*|често\s+причешћ|сталн\w*\s+причешћ|frequent\s+(?:holy\s+)?communion|concerning\s+frequent\s+communion)/iu;
+
 export function isGenericPatristicResearchQuery(
   query: string,
 ) {
