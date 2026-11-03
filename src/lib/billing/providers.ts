@@ -169,6 +169,35 @@ export async function createCheckout(provider: Provider, user: { id: string; ema
   if (!result.data?.id || !result.data.attributes.url) throw new BillingError("Checkout outcome is uncertain.", 503);
   return { id: String(result.data.id), url: result.data.attributes.url, expiresAt: date(result.data.attributes.expires_at), customerId: null };
 }
+/**
+ * A hosted Lemon checkout expiry alone does not establish that no payment
+ * happened. Consult the provider's order inventory for the checkout's email.
+ * A missing, malformed or incomplete inventory fails closed.
+ */
+export async function lemonOrdersSince(email: string, since: Date): Promise<boolean> {
+  for (let page = 1; page <= 100; page++) {
+    const result = await lemon(`orders?filter[user_email]=${encodeURIComponent(email)}&page[number]=${page}&page[size]=100`);
+    const orders = result.data as unknown as Array<{ attributes?: {
+      store_id?: number; created_at?: string; user_email?: string;
+    } }>;
+    if (!Array.isArray(orders) || !result.meta?.page ||
+        !Number.isInteger(result.meta.page.lastPage) || !Number.isInteger(result.meta.page.currentPage)) {
+      throw new BillingError("Provider order inventory could not be verified.", 503);
+    }
+    for (const order of orders) {
+      const attributes = order.attributes;
+      const created = date(attributes?.created_at);
+      if (!attributes || !created || !attributes.user_email ||
+          attributes.user_email.toLowerCase() !== email.toLowerCase()) {
+        throw new BillingError("Provider order evidence is incomplete.", 503);
+      }
+      if (String(attributes.store_id) === required("LEMONSQUEEZY_STORE_ID") && created >= since) return true;
+    }
+    if (result.meta.page.currentPage >= result.meta.page.lastPage) return false;
+  }
+  throw new BillingError("Provider order inventory exceeded safe pagination bounds.", 503);
+}
+
 export async function checkoutClosed(provider: Provider, id: string): Promise<boolean> {
   if (provider === "STRIPE") {
     const session = await getStripe().checkout.sessions.retrieve(id, {}, { timeout: 10000, maxNetworkRetries: 0 });
