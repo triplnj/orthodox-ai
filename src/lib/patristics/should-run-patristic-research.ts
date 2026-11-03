@@ -46,6 +46,7 @@ export function shouldRunPatristicResearch(
     PATRISTIC_WORK_PATTERN.test(
       query,
     ) ||
+    PATRISTIC_MOVEMENT_PATTERN.test(query) ||
     isGenericPatristicResearchQuery(
       query,
     )
