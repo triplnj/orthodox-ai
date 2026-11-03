@@ -9,7 +9,7 @@ const PATRISTIC_WORK_PATTERN =
   /(?:^|[^\p{L}\p{N}_])(?:ascetical homilies|ascetical works|homilies|homilije|ambigua|mystagogia|ladder of divine ascent|lestvica|лествица|аскетске беседе|подвижничке беседе|patrologia graeca|philokalia|филокалија)(?=$|[^\p{L}\p{N}_])/iu;
 
 const GENERIC_PATRISTIC_PATTERN =
-  /(?:^|[^\p{L}\p{N}_])(?:church fathers|holy fathers|sveti oci|sveti otci|свети оци|свети отци|patristic|patristics|patrologia|philokalia|филокалија)(?=$|[^\p{L}\p{N}_])/iu;
+  /(?:^|[^\p{L}\p{N}_])(?:church fathers|holy fathers|sveti oci|sveti otci|свети оци|свети отци|patristic|patristics|patrologia|philokalia|филокалија|патристик[аиуеом]?|патристичк[а-я]+|свет[ио]г?\s+оц[аауеом]|свети\s+отац|svet[io]g?\s+oc[auem]|sveti\s+otac)(?=$|[^\p{L}\p{N}_])/iu;
 
 // Match generic references in Serbian grammatical cases, not only nominative.
 // Examples: "po nekom od svetih otaca", "učenje svetih otaca",
