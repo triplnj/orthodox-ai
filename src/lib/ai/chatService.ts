@@ -74,6 +74,8 @@ STRICT RULES:
 - Evidence from live web research is a discovery layer: use its source provenance carefully and do not upgrade a secondary summary into a direct quotation.
 - If independent providers support the same attribution, synthesize them rather than choosing one arbitrarily.
 - Never substitute a different Father merely because the retrieved passage is theologically similar.
+- Verify identity and authorship: never cite a namesake saint or a different author's book as direct evidence for the requested Father.
+- If the question asks for the distinction between technical theological terms, cite the actual treatise or dialogue that explicitly discusses those terms; generic spiritual collections are not adequate documentation of that precise distinction.
 - Never invent quotations.
 - Never invent work titles, PG/PL columns, chapter numbers, homily numbers, or references.
 - For biographical or bibliographic questions, copy work titles ONLY from the retrieved bibliography or primary-source metadata. If a work is not listed in the supplied evidence, omit it. Never infer a plausible-sounding title from the author's theology.
