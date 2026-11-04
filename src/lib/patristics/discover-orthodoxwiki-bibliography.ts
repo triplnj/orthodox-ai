@@ -93,7 +93,7 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
         for (const result of data.query?.search ?? []) {
           if (result.title && samePerson(result.title, name)) candidates.unshift(result.title.replace(/ /g, "_"));
         }
-        if (candidates.length) break;
+        if (data.query?.search?.some(result => result.title && samePerson(result.title, name))) break;
       } catch {
         // The direct article candidates remain available independently.
       }
