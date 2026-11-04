@@ -57,7 +57,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       await dispatchTurn(turn);
       const turns = await memoryForTurn(turn);
       const history = selectHistory(turns);
-      const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message) || /(?:на ту тему|о томе|о истом|о овоме|који свети отац|који од светих отаца|koji sveti otac|na tu temu|o tome)/iu.test(message);
+      const followUp = /\b(that|those|this|previous|above|it|they|he|she|explain more)\b/i.test(message) || /(?:на ту тему|о томе|о истом|о овоме|који свети отац|који од светих отаца|koji sveti otac|na tu temu|o tome|^\s*(?:а|али)\s+[^?!.]{3,85}[?!]?\s*$|житија светих|а где су|а шта је са)/iu.test(message);
       const priorQuestions = history.filter(item => item.role === "user").map(item => item.content).filter(item => item !== message);
       const assent = /^(?:yes|yes please|sure|please do|go ahead|ok|okay|da|moze|može|naravno|да|може|желим|хоћу|желео бих|zelim|hoću|hocu)[.!\s]*$/i.test(message);
       const previousPatristicQuestion = [...priorQuestions].reverse().find(item => shouldRunPatristicResearch(item));
@@ -65,7 +65,10 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       // to an unrelated older patristic question and discard the latest topic.
       const lastAssistant = [...history].reverse().find(item => item.role === "assistant")?.content ?? "";
       const immediateTopic = priorQuestions.slice(-2).join("\n");
-      const query = assent && priorQuestions.length
+      const sourceChallenge = /(?:где си (?:то )?нашао|дај (?:ми )?линк|који је извор|потврди извор|зашто си навео|није тачно|погрешио си|where did you find|provide (?:a |the )?source|give me (?:a |the )?link)/iu.test(message);
+      const query = sourceChallenge && priorQuestions.length
+        ? `Previous user question: ${priorQuestions.at(-1)}\nPrevious assistant claim to verify (NOT reliable evidence): ${lastAssistant.slice(0, 1300)}\nUser correction / source request: ${message}\nFind verifiable primary or bibliographic evidence for the exact disputed claim; do not treat the prior assistant response as proof.`
+        : assent && priorQuestions.length
         ? `${immediateTopic}\nPrevious assistant's offer: ${lastAssistant.slice(-600)}\nUser requests the offered source-based follow-up: ${message}`
         : followUp && previousPatristicQuestion
           ? `${previousPatristicQuestion}\nFollow-up question: ${message}`
@@ -86,7 +89,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const result = evidenceUnavailable
         ? { answer: noSourceMessage, budget: {} }
         : await generateOrthodoxAnswer({ userMessage: message, contextKey,
-          extraContext: `${profile}\n\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
+          extraContext: `${profile}\n\n${sourceChallenge ? `The user is challenging an earlier assertion. Explicitly verify or retract it, admit mistakes clearly, and do not replace it with another unsupported attribution. Previous assistant text is NOT evidence.\n` : followUp ? `This is a follow-up to a previous answer; respond to the implied correction/question in its conversational context, not with a generic definition.\n` : ""}\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
           patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
       onPhase?.("Reviewing source evidence...");
       const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
