@@ -326,7 +326,8 @@ Return a BRIEF factual evidence note (maximum 350 words) with titles, key suppor
 facts and source URLs. Distinguish primary texts from biographies and bibliographies.
 Never invent a source, URL, author attribution, or quotation. If sources disagree,
 state the uncertainty. You are retrieving evidence, not composing a pastoral essay.`;
-const WEB_RESEARCH_DEADLINE_MS = 19000;
+const WEB_RESEARCH_WAIT_NOTICE_MS = 19000;
+const WEB_RESEARCH_DEADLINE_MS = 45000;
 
 async function runResearch(
   query: string,
@@ -390,12 +391,16 @@ function buildResult(response: unknown) {
 
 export async function researchPatristicQuestionOnWeb(
   query: string,
+  onWaitingForSource?: () => void,
 ): Promise<WebPatristicResearchResult | null> {
   // Mandatory, unfiltered OpenAI API web search. Source quality is
   // enforced after discovery rather than preventing broad discovery.
   const startedAt = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WEB_RESEARCH_DEADLINE_MS);
+  const waitingNotice = setTimeout(() => {
+    if (!controller.signal.aborted) onWaitingForSource?.();
+  }, WEB_RESEARCH_WAIT_NOTICE_MS);
   try {
     const response = await runResearch(query, undefined, controller.signal);
     const result = buildResult(response);
@@ -423,5 +428,6 @@ export async function researchPatristicQuestionOnWeb(
     return null;
   } finally {
     clearTimeout(timeout);
+    clearTimeout(waitingNotice);
   }
 }
