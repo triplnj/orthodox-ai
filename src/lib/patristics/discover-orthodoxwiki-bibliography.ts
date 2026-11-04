@@ -87,41 +87,43 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
     for (const term of terms) {
       candidates.push(term.split(" ").map(token => token[0]?.toUpperCase() + token.slice(1)).join("_"));
     }
-    for (const searchTerm of terms) {
-      try {
-        const endpoint = new URL("https://orthodoxwiki.org/api.php");
-        endpoint.searchParams.set("action", "query");
-        endpoint.searchParams.set("list", "search");
-        endpoint.searchParams.set("srsearch", searchTerm);
-        endpoint.searchParams.set("srlimit", "12");
-        endpoint.searchParams.set("format", "json");
-        const response = await safeSourceFetch(endpoint.toString(), { headers: { Accept: "application/json" } });
-        if (!response.ok) continue;
-        const data = await response.json() as { query?: { search?: Array<{ title?: string }> } };
-        for (const result of data.query?.search ?? []) {
-          if (result.title && samePerson(result.title, name)) candidates.unshift(result.title.replace(/ /g, "_"));
-        }
-        if (data.query?.search?.some(result => result.title && samePerson(result.title, name))) break;
-      } catch {
-        // The direct article candidates remain available independently.
-      }
-    }
     let page: Awaited<ReturnType<typeof fetchSourceText>> | null = null;
     let pageUrl = "";
     let resolvedTitle = "";
-    for (const title of [...new Set(candidates)].slice(0, 12)) {
+    const tryArticle = async (title: string): Promise<boolean> => {
       try {
         const url = `https://orthodoxwiki.org/${encodeURIComponent(title)}`;
         const fetched = await fetchSourceText(url);
-        // Reject search pages, missing articles and mistaken identity.
-        if (!samePerson(fetched.title.replace(/\\s*[-–|].*$/, ""), name)) continue;
-        if (!/\\b(?:orthodoxwiki|justin|saint|st\\.)\\b/i.test(fetched.title) && fetched.text.length < 200) continue;
+        if (!samePerson(fetched.title.replace(/\\s*[-–|].*$/, ""), name)) return false;
         page = fetched;
         pageUrl = url;
         resolvedTitle = fetched.title;
-        break;
-      } catch {
-        continue;
+        return true;
+      } catch { return false; }
+    };
+    // Fast deterministic lookup first. Do not spend a full web-search timeout
+    // before trying common transliterated article titles.
+    for (const title of [...new Set(candidates)].slice(0, 8)) {
+      if (await tryArticle(title)) break;
+    }
+    if (!page) {
+      for (const searchTerm of terms) {
+        try {
+          const endpoint = new URL("https://orthodoxwiki.org/api.php");
+          endpoint.searchParams.set("action", "query");
+          endpoint.searchParams.set("list", "search");
+          endpoint.searchParams.set("srsearch", searchTerm);
+          endpoint.searchParams.set("srlimit", "12");
+          endpoint.searchParams.set("format", "json");
+          const response = await safeSourceFetch(endpoint.toString(), { headers: { Accept: "application/json" } });
+          if (!response.ok) continue;
+          const data = await response.json() as { query?: { search?: Array<{ title?: string }> } };
+          for (const result of data.query?.search ?? []) {
+            if (result.title && samePerson(result.title, name) &&
+              await tryArticle(result.title.replace(/ /g, "_"))) break;
+          }
+          if (page) break;
+        } catch { continue; }
       }
     }
     if (!page) return [];
