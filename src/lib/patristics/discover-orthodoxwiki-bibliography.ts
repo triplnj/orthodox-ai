@@ -72,29 +72,56 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
   const name = subject(query);
   if (!name) return [];
   try {
-    let found: { title?: string } | undefined;
-    for (const searchTerm of orthodoxWikiSearchTerms(name)) {
-      const endpoint = new URL("https://orthodoxwiki.org/api.php");
-      endpoint.searchParams.set("action", "query");
-      endpoint.searchParams.set("list", "search");
-      endpoint.searchParams.set("srsearch", searchTerm);
-      endpoint.searchParams.set("srlimit", "12");
-      endpoint.searchParams.set("format", "json");
-      const response = await safeSourceFetch(endpoint.toString(), { headers: { Accept: "application/json" } });
-      if (!response.ok) continue;
-      const data = await response.json() as { query?: { search?: Array<{ title?: string }> } };
-      found = data.query?.search?.find(entry => entry.title && samePerson(entry.title, name));
-      if (found) break;
+    const terms = orthodoxWikiSearchTerms(name);
+    const candidates: string[] = [];
+    // Direct article requests are an independent fallback when MediaWiki's
+    // search endpoint is rate-limited, blocked, or returns no matching title.
+    for (const term of terms) {
+      candidates.push(term.split(" ").map(token => token[0]?.toUpperCase() + token.slice(1)).join("_"));
     }
-    if (!found?.title) return [];
-    const pageUrl = `https://orthodoxwiki.org/${encodeURIComponent(found.title.replace(/ /g, "_"))}`;
-    const page = await fetchSourceText(pageUrl);
-    if (!samePerson(found.title, name)) return [];
+    for (const searchTerm of terms) {
+      try {
+        const endpoint = new URL("https://orthodoxwiki.org/api.php");
+        endpoint.searchParams.set("action", "query");
+        endpoint.searchParams.set("list", "search");
+        endpoint.searchParams.set("srsearch", searchTerm);
+        endpoint.searchParams.set("srlimit", "12");
+        endpoint.searchParams.set("format", "json");
+        const response = await safeSourceFetch(endpoint.toString(), { headers: { Accept: "application/json" } });
+        if (!response.ok) continue;
+        const data = await response.json() as { query?: { search?: Array<{ title?: string }> } };
+        for (const result of data.query?.search ?? []) {
+          if (result.title && samePerson(result.title, name)) candidates.unshift(result.title.replace(/ /g, "_"));
+        }
+        if (candidates.length) break;
+      } catch {
+        // The direct article candidates remain available independently.
+      }
+    }
+    let page: Awaited<ReturnType<typeof fetchSourceText>> | null = null;
+    let pageUrl = "";
+    let resolvedTitle = "";
+    for (const title of [...new Set(candidates)].slice(0, 12)) {
+      try {
+        const url = `https://orthodoxwiki.org/${encodeURIComponent(title)}`;
+        const fetched = await fetchSourceText(url);
+        // Reject search pages, missing articles and mistaken identity.
+        if (!samePerson(fetched.title.replace(/\\s*[-–|].*$/, ""), name)) continue;
+        if (!/\\b(?:orthodoxwiki|justin|saint|st\\.)\\b/i.test(fetched.title) && fetched.text.length < 200) continue;
+        page = fetched;
+        pageUrl = url;
+        resolvedTitle = fetched.title;
+        break;
+      } catch {
+        continue;
+      }
+    }
+    if (!page) return [];
     const works = bibliography(page.html);
     // Do not report a generic article as bibliographic proof when no work list was extracted.
     if (!works.length) return [];
     const excerpt = [
-      `OrthodoxWiki entry: ${found.title}`,
+      `OrthodoxWiki entry: ${resolvedTitle}`,
       "This is a community-edited secondary reference, suitable for attributed biographical and bibliographic summaries, NOT a primary text.",
       "WORKS LISTED IN THIS PAGE (preserve titles exactly; do not invent additional titles):",
       ...works.map(title => `- ${title}`),
@@ -102,7 +129,7 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
       page.text.slice(0, 3500),
     ].join("\n");
     return [{
-      authorName: found.title,
+      authorName: resolvedTitle,
       workTitle: works.length ? "OrthodoxWiki — selected bibliography" : "OrthodoxWiki — biographical entry",
       originalLanguage: "English",
       sourceUrl: pageUrl,
