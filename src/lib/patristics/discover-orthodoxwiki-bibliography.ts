@@ -19,7 +19,7 @@ function latin(value: string) {
 }
 function words(value: string) {
   return latin(value).replace(/[^a-z\s-]/g, " ").split(/[\s-]+/)
-    .filter(t => t.length >= 4 && !["saint","sveti","svetog","who","what","works","writings","books","justinov","popovica","celijski","celijskog","orthodox","church","svetog","свети"].includes(t));
+    .filter(t => t.length >= 4 && !["saint","sveti","svetog","who","what","works","writings","books","justinov","celijski","celijskog","orthodox","church","svetog","свети"].includes(t));
 }
 function subject(query: string): string | null {
   if (!BIOGRAPHICAL_REQUEST.test(query)) return null;
@@ -45,11 +45,18 @@ export function orthodoxWikiSearchTerms(name: string): string[] {
   ];
   return [...new Set(variants.filter(Boolean))];
 }
+function canonicalNameToken(token: string) {
+  let t = token.toLowerCase();
+  // Serbian genitive/declined personal names: Justin-a, Popovic-a.
+  if (t.endsWith("a") && t.length > 5) t = t.slice(0, -1);
+  // Serbian surname ending -ic and English rendering -ich.
+  if (t.endsWith("ich")) t = t.slice(0, -1);
+  return t;
+}
 export function samePerson(title: string, name: string) {
-  const a = words(name), b = words(title);
-  return a.length >= 2 && a.every(token => b.some(candidate =>
-    candidate === token || (token.length >= 5 && candidate.length >= 5 &&
-      candidate.slice(0, 5) === token.slice(0, 5))));
+  const a = words(name).map(canonicalNameToken);
+  const b = words(title).map(canonicalNameToken);
+  return a.length >= 2 && a.every(token => b.some(candidate => candidate === token));
 }
 export function bibliography(html: string) {
   const $ = cheerio.load(html);
@@ -73,6 +80,7 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
   if (!name) return [];
   try {
     const terms = orthodoxWikiSearchTerms(name);
+    if (!terms.length) return [];
     const candidates: string[] = [];
     // Direct article requests are an independent fallback when MediaWiki's
     // search endpoint is rate-limited, blocked, or returns no matching title.
