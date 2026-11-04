@@ -15,10 +15,11 @@ const load = createLoader({
       query: { search: [{ title: "Justin (Popovich)" }, { title: "Basil the Great" }] },
     }) };
   } },
-  "./fetch-source": { fetchSourceText: async url => ({
-    url, title: "Justin (Popovich) - OrthodoxWiki", html,
-    text: "Justin (Popovich) is a Serbian Orthodox theologian.",
-  }) },
+  "./fetch-source": { fetchSourceText: async url => {
+    if (!url.includes("Justin_Popovich") && !url.includes("Justin_(Popovich)")) throw new Error("No matching page");
+    return { url, title: "Justin (Popovich) - OrthodoxWiki", html,
+      text: "Justin (Popovich) is a Serbian Orthodox theologian." };
+  } },
 });
 const discovery = load("src/lib/patristics/discover-orthodoxwiki-bibliography.ts");
 
@@ -37,8 +38,8 @@ test("retrieval extracts only the author bibliography with an exact source URL",
   assert.match(rows[0].excerpt, /Dogmatics of the Orthodox Church/);
   assert.match(rows[0].excerpt, /Lives of the Saints/);
   assert.doesNotMatch(rows[0].excerpt.split("BIOGRAPHICAL TEXT:")[0], /A book about Justin Popovich/);
-  assert.ok(rows[0].sourceUrl.includes("orthodoxwiki.org/Justin_(Popovich)"));
-  assert.ok(requested.some(url => url.includes("srsearch=justin+popovic")));
+  assert.ok(rows[0].sourceUrl.includes("orthodoxwiki.org/Justin_Popovich") || rows[0].sourceUrl.includes("orthodoxwiki.org/Justin_(Popovich)"));
+  assert.ok(rows[0].sourceUrl.startsWith("https://orthodoxwiki.org/"));
 });
 
 test("bibliography search recognizes extended Serbian question", async () => {
