@@ -179,6 +179,7 @@ function finalize(
 
 export async function buildPatristicResearchContext(
   query: string,
+  onWaitingForSource?: () => void,
 ): Promise<PatristicResearchContext | null> {
   if (!shouldRunPatristicResearch(query)) return null;
 
@@ -236,7 +237,7 @@ export async function buildPatristicResearchContext(
     (async () => {
       providersAttempted.push("WEB_RESEARCH");
       try {
-        return await researchPatristicQuestionOnWeb(query);
+        return await researchPatristicQuestionOnWeb(query, onWaitingForSource);
       } catch (error) {
         diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) });
         return null;
