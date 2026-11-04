@@ -11,6 +11,7 @@ import { aiSecurityResponse, readAiJson, validateAiStrings, AiInputError } from 
 import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
+import { isBibliographyListingQuestion, verifiedBibliographyAnswer } from "@/lib/patristics/bibliography-answer";
 import { shouldRunPatristicResearch } from "@/lib/patristics/should-run-patristic-research";
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
@@ -86,9 +87,20 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const noSourceMessage = /\p{Script=Cyrillic}/u.test(message)
         ? "Нисам успео да пронађем проверљив извор за овај одговор. Нећу нагађати о историјским личностима, покретима или учењу светих отаца. Покушајте поново касније."
         : "No verifiable source could be retrieved for this question. I will not guess about Church history, movements, or patristic teachings. Please try again later.";
-      const result = evidenceUnavailable
-        ? { answer: noSourceMessage, budget: {} }
-        : await generateOrthodoxAnswer({ userMessage: message, contextKey,
+      const verifiedListing = verifiedBibliographyAnswer(message, research);
+      // Bibliography questions must never fall back to model-created titles.
+      // A curated listing is copied deterministically from a fetched source.
+      const bibliographyUnavailable = isBibliographyListingQuestion(message) && !verifiedListing;
+      const bibliographyNoSource = /\p{Script=Cyrillic}/u.test(message)
+        ? "Нисам пронашао библиографски списак који могу да потврдим. Нећу приписивати аутору непроверене наслове."
+        : "I could not retrieve a verifiable bibliography. I will not attribute unverified titles to the author.";
+      const result = verifiedListing
+        ? { answer: verifiedListing, budget: {} }
+        : bibliographyUnavailable
+          ? { answer: bibliographyNoSource, budget: {} }
+        : evidenceUnavailable
+          ? { answer: noSourceMessage, budget: {} }
+          : await generateOrthodoxAnswer({ userMessage: message, contextKey,
           extraContext: `${profile}\n\n${sourceChallenge ? `The user is challenging an earlier assertion. Explicitly verify or retract it, admit mistakes clearly, and do not replace it with another unsupported attribution. Previous assistant text is NOT evidence.\n` : followUp ? `This is a follow-up to a previous answer; respond to the implied correction/question in its conversational context, not with a generic definition.\n` : ""}\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
           patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
       onPhase?.("Reviewing source evidence...");
