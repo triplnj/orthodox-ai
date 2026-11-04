@@ -6,7 +6,7 @@ import type { CuratedTextEvidence } from "./search-curated-texts";
 // OrthodoxWiki is a community-maintained bibliographic reference, not a
 // primary witness for exact theological quotations.
 const BIOGRAPHICAL_REQUEST = /(?:saint|st\.?|sveti|svetog|свети|светог|светиња|who was|who is|ко је|који је|works|writings|books|bibliograph|дела|делима|спис[аи]|књиг[ае]|биограф|живот|писао|писањ)/iu;
-const HEADING = /(?:bibliograph|selected works|written works|writings|publications|books|works|књиге|дела)/iu;
+const HEADING = /^(?:selected bibliography|selected works|written works|works|writings|publications|књиге|дела)$/iu;
 
 function latin(value: string) {
   const chars: Record<string, string> = {
@@ -26,8 +26,8 @@ function subject(query: string): string | null {
   // Parenthetical surname variant: Saint Justin Ćelijski (Popović).
   const match = query.match(/(?:saint|st\.?|sveti|svetog|свети|светог|св\.?)\s+([\p{L}][\p{L}.'’-]*(?:\s+[\p{L}][\p{L}.'’-]*){0,3})(?:\s*\(([\p{L}.'’-]+)\))?/iu);
   if (!match) return null;
-  const name = match[1].split(/\s+(?:was|is|who|који|која|је|и|and)\b/iu)[0].trim();
-  const parts = name.split(/\s+/).filter(Boolean);
+  const name = match[1].split(/\s+(?:was|is|who|који|која|је|и|and|чији|чија|чије|чијих|које|којих)(?=\s|$)/iu)[0].trim();
+  const parts = name.split(/\s+/).filter(Boolean).slice(0, 2);
   if (parts.length < 2) return null;
   const surname = match[2] || parts[parts.length - 1];
   return `${parts[0]} ${surname}`;
@@ -51,7 +51,7 @@ export function samePerson(title: string, name: string) {
     candidate === token || (token.length >= 5 && candidate.length >= 5 &&
       candidate.slice(0, 5) === token.slice(0, 5))));
 }
-function bibliography(html: string) {
+export function bibliography(html: string) {
   const $ = cheerio.load(html);
   const entries: string[] = [];
   $("h2, h3, h4").each((_i, el) => {
