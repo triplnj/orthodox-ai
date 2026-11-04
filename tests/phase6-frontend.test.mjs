@@ -3,6 +3,7 @@ import { test, mock } from "node:test";
 import { createLoader } from "./helpers/load-ts.mjs";
 import "./patristic-movement-routing.test.mjs";
 import "./official-saint-life.test.mjs";
+import "./fast-patristic-research.test.mjs";
 mock.method(globalThis,"fetch",()=>{throw new Error("Live network forbidden");});
 function nodes(tree,predicate){if(!tree||typeof tree!=="object")return[];return [...(predicate(tree)?[tree]:[]),...[].concat(tree.props?.children??[]).flatMap(child=>nodes(child,predicate))];}
 function text(tree){if(Array.isArray(tree))return tree.map(text).join("");if(typeof tree==="string"||typeof tree==="number")return String(tree);return tree&&typeof tree==="object"?text(tree.props?.children):"";}
