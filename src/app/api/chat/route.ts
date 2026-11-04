@@ -73,7 +73,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
             ? `${priorQuestions.slice(-2).join("\n")}\nFollow-up question: ${message}`
             : message;
       onPhase?.("Searching and checking patristic sources...");
-      const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query)]);
+      const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query, () => onPhase?.("Waiting for distant source..."))]);
       onPhase?.("Writing the answer...");
       // A source-dependent question must not silently fall back to a fluent,
       // unsupported historical or patristic account when all providers fail.
