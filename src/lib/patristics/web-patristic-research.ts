@@ -1,4 +1,5 @@
 import { getOpenAI } from "@/lib/ai/openaiClient";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 
 
 
@@ -315,7 +316,17 @@ Return a compact dossier containing the identified author, the claim-evidence le
 Keep quotations short; the downstream answer model will synthesize the final response.
 If evidence is weak or contradictory, state that explicitly.`;
 
-const WEB_RESEARCH_DEADLINE_MS = 35000;
+// A deliberately short source discovery task runs before full answer synthesis.
+// Long-form theological analysis happens only after verified links are found.
+const FAST_RESEARCH_SYSTEM_PROMPT = `Find real primary, official Orthodox, or scholarly web sources for the user's question.
+You MUST use web search. Search Serbian, Russian, and English spellings of a named saint when useful.
+For questions about a saint's life and published writings, locate at least one biography
+and one reliable bibliography if available. Do not guess authors or titles.
+Return a BRIEF factual evidence note (maximum 350 words) with titles, key supported
+facts and source URLs. Distinguish primary texts from biographies and bibliographies.
+Never invent a source, URL, author attribution, or quotation. If sources disagree,
+state the uncertainty. You are retrieving evidence, not composing a pastoral essay.`;
+const WEB_RESEARCH_DEADLINE_MS = 19000;
 
 async function runResearch(
   query: string,
@@ -323,7 +334,8 @@ async function runResearch(
   signal: AbortSignal,
 ) {
   return getOpenAI().responses.create({
-    model: "gpt-5-mini",
+    model: "gpt-4.1-mini",
+    max_output_tokens: 1000,
     tool_choice: "required",
     include: ["web_search_call.action.sources"],
     tools: [
@@ -342,22 +354,23 @@ async function runResearch(
     input: [
       {
         role: "system",
-        content: RESEARCH_SYSTEM_PROMPT,
+        content: FAST_RESEARCH_SYSTEM_PROMPT,
       },
       {
         role: "user",
         content: query,
       },
     ],
-  }, { signal });
+  }, { signal, maxRetries: 0, timeout: WEB_RESEARCH_DEADLINE_MS });
 }
 
 function buildResult(response: unknown) {
   const typed = response as {
     output_text?: string;
+    output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
   };
 
-  const context = typed.output_text?.trim();
+  const context = (typed.output_text ?? typed.output?.flatMap(item => item.content ?? []).filter(part => part.type === "output_text").map(part => part.text ?? "").join("\n") ?? "").trim();
   if (!context) return null;
 
   const sources = selectSources([
@@ -380,11 +393,13 @@ export async function researchPatristicQuestionOnWeb(
 ): Promise<WebPatristicResearchResult | null> {
   // Mandatory, unfiltered OpenAI API web search. Source quality is
   // enforced after discovery rather than preventing broad discovery.
+  const startedAt = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WEB_RESEARCH_DEADLINE_MS);
   try {
     const response = await runResearch(query, undefined, controller.signal);
     const result = buildResult(response);
+    diagnostic("operation_completed", { operation: "discovery", count: result?.sources.length ?? 0, durationMs: Date.now() - startedAt });
 
   if (!result) return null;
 
@@ -403,6 +418,9 @@ export async function researchPatristicQuestionOnWeb(
     ].join("\n"),
     sources: result.sources,
   };
+  } catch (error) {
+    diagnostic("operation_failed", { operation: "discovery", failure: controller.signal.aborted ? "timeout" : failureCategory(error), durationMs: Date.now() - startedAt });
+    return null;
   } finally {
     clearTimeout(timeout);
   }
