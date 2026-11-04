@@ -46,3 +46,13 @@ test("bibliography search recognizes extended Serbian question", async () => {
   assert.equal(items.length, 1);
   assert.match(items[0].excerpt, /Lives of the Saints/);
 });
+
+test("Serbian inflected name matches the actual OrthodoxWiki page title", () => {
+  assert.equal(discovery.samePerson("Justin Popovich", "Јустина Поповића"), true);
+  assert.equal(discovery.samePerson("Justin Popovich - OrthodoxWiki", "Јустина Поповића"), true);
+  assert.equal(discovery.samePerson("Nikolaj Velimirovich", "Јустина Поповића"), false);
+});
+test("works are not extracted from bibliography about the author", () => {
+  const document = '<h2>Bibliography</h2><ul><li>A biography of Justin by another writer</li></ul>';
+  assert.deepEqual(discovery.bibliography(document), []);
+});
