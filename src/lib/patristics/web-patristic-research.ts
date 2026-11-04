@@ -186,15 +186,12 @@ function collectUrlCitations(response: unknown) {
       }
     }
 
-    for (const source of item.action?.sources ?? []) {
-      const url = source.url
-        ? normalizeSourceUrl(source.url)
-        : null;
+    // Web-search action.sources lists pages inspected during discovery,
+    // NOT pages proving an assertion in the final evidence dossier.
+    // Exposing all of them created misleading source cards for namesakes.
+    // Only explicit URL citations (above) or dossier references (below)
+    // are eligible for display.
 
-      if (url && !urls.has(url)) {
-        urls.set(url, { title: null, originalSourceUrl: source.url! });
-      }
-    }
   }
 
   return [...urls.entries()].map(
