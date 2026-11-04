@@ -268,7 +268,9 @@ function selectSources(
 
 const RESEARCH_SYSTEM_PROMPT = `You are a source-retrieval researcher for an Orthodox Christian patristics application.
 
-Research the user's exact question about Church Fathers or a patristic work. For questions in Serbian (Cyrillic or Latin), Bulgarian, Greek, or other languages, translate the topic into English search terms, and run English-language searches alongside the original-language searches. Search synonyms and relevant everyday phrasing, not only exact technical vocabulary. If the question references earlier context, infer the topic from the supplied follow-up. Your task is evidence retrieval, not devotional exposition. If the user requests any Church Father without naming one, select a Father ONLY when you find an actual relevant passage in an attributable work; search for the topic in primary patristic texts. Do not require a named author in the question.
+Research the user's exact question about Orthodox saints, Church Fathers, patristic authors, Orthodox historical movements, or a patristic work. For questions about a saint and their writings, find both biography and a reliable bibliography; a biography alone does not establish an author's bibliography. For questions in Serbian (Cyrillic or Latin), Bulgarian, Greek, or other languages, translate the topic into English search terms, and run English-language searches alongside the original-language searches. Search synonyms and relevant everyday phrasing, not only exact technical vocabulary. If the question references earlier context, infer the topic from the supplied follow-up. Your task is evidence retrieval, not devotional exposition. If the user requests any Church Father without naming one, select a Father ONLY when you find an actual relevant passage in an attributable work; search for the topic in primary patristic texts. Do not require a named author in the question.
+
+Search transliterations in Serbian Cyrillic, Serbian Latin and English, including surname spelling variants. Prioritize official Orthodox institutions such as oca.org, spc.rs and svetosavlje.org but search other established sources if none is found. Always run a real live search; do not answer from memory alone.
 
 Priority order:
 1. Primary-source text of the named Father, or of a suitably evidenced Father when none was named, in a reputable digital edition or scan.
@@ -313,7 +315,7 @@ Return a compact dossier containing the identified author, the claim-evidence le
 Keep quotations short; the downstream answer model will synthesize the final response.
 If evidence is weak or contradictory, state that explicitly.`;
 
-const WEB_RESEARCH_DEADLINE_MS = 24000;
+const WEB_RESEARCH_DEADLINE_MS = 35000;
 
 async function runResearch(
   query: string,
@@ -322,6 +324,8 @@ async function runResearch(
 ) {
   return getOpenAI().responses.create({
     model: "gpt-5-mini",
+    tool_choice: "required",
+    include: ["web_search_call.action.sources"],
     tools: [
       {
         type: "web_search",
@@ -374,33 +378,13 @@ function buildResult(response: unknown) {
 export async function researchPatristicQuestionOnWeb(
   query: string,
 ): Promise<WebPatristicResearchResult | null> {
-  /*
-   * Pass 1: search a broad but curated set of reputable patristic,
-   * library, edition and academic domains. This solves the common
-   * case without letting low-quality mirrors into the evidence set.
-   */
-  // One deadline covers both research passes; abort the actual network call
-  // rather than merely racing a timer against an uncontrolled request.
+  // Mandatory, unfiltered OpenAI API web search. Source quality is
+  // enforced after discovery rather than preventing broad discovery.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WEB_RESEARCH_DEADLINE_MS);
   try {
-    const preferredResponse = await runResearch(
-      query,
-      PREFERRED_PATRISTIC_DOMAINS,
-      controller.signal,
-    );
-
-  let result = buildResult(preferredResponse);
-
-  /*
-   * Pass 2: only when the curated-domain search finds no usable
-   * evidence, widen discovery to the public web. The same quality
-   * gate still filters what can become downstream evidence.
-   */
-  if (!result) {
-    const broadResponse = await runResearch(query, undefined, controller.signal);
-    result = buildResult(broadResponse);
-  }
+    const response = await runResearch(query, undefined, controller.signal);
+    const result = buildResult(response);
 
   if (!result) return null;
 
