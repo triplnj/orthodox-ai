@@ -6,7 +6,7 @@ import type { CuratedTextEvidence } from "./search-curated-texts";
 // OrthodoxWiki is a community-maintained bibliographic reference, not a
 // primary witness for exact theological quotations.
 const BIOGRAPHICAL_REQUEST = /(?:saint|st\.?|sveti|svetog|свети|светог|светиња|who was|who is|ко је|који је|works|writings|books|bibliograph|дела|делима|спис[аи]|књиг[ае]|биограф|живот|писао|писањ)/iu;
-const HEADING = /(?:bibliograph|selected works|written works|writings|publications|књиге|дела)/iu;
+const HEADING = /(?:bibliograph|selected works|written works|writings|publications|books|works|књиге|дела)/iu;
 
 function latin(value: string) {
   const chars: Record<string, string> = {
@@ -32,10 +32,24 @@ function subject(query: string): string | null {
   const surname = match[2] || parts[parts.length - 1];
   return `${parts[0]} ${surname}`;
 }
-function samePerson(title: string, name: string) {
+export function orthodoxWikiSearchTerms(name: string): string[] {
+  const tokens = words(name);
+  if (tokens.length < 2) return [];
+  // Serbian genitive endings (Јустина Поповића) are not the article's
+  // English nominative (Justin Popovich). Search predictable variants.
+  const stems = tokens.map(token => token.endsWith("a") && token.length > 5 ? token.slice(0, -1) : token);
+  const variants = [
+    stems.join(" "),
+    stems.map(t => t.endsWith("c") ? t.slice(0,-1)+"ch" : t).join(" "),
+    tokens.join(" "),
+  ];
+  return [...new Set(variants.filter(Boolean))];
+}
+export function samePerson(title: string, name: string) {
   const a = words(name), b = words(title);
   return a.length >= 2 && a.every(token => b.some(candidate =>
-    candidate === token || (token.length >= 5 && candidate.length >= 5 && candidate.slice(0, 5) === token.slice(0, 5))));
+    candidate === token || (token.length >= 5 && candidate.length >= 5 &&
+      candidate.slice(0, 5) === token.slice(0, 5))));
 }
 function bibliography(html: string) {
   const $ = cheerio.load(html);
@@ -58,25 +72,31 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
   const name = subject(query);
   if (!name) return [];
   try {
-    const endpoint = new URL("https://orthodoxwiki.org/api.php");
-    endpoint.searchParams.set("action", "query");
-    endpoint.searchParams.set("list", "search");
-    endpoint.searchParams.set("srsearch", name);
-    endpoint.searchParams.set("srlimit", "8");
-    endpoint.searchParams.set("format", "json");
-    const response = await safeSourceFetch(endpoint.toString(), { headers: { Accept: "application/json" } });
-    if (!response.ok) return [];
-    const data = await response.json() as { query?: { search?: Array<{ title?: string }> } };
-    const found = data.query?.search?.find(entry => entry.title && samePerson(entry.title, name));
+    let found: { title?: string } | undefined;
+    for (const searchTerm of orthodoxWikiSearchTerms(name)) {
+      const endpoint = new URL("https://orthodoxwiki.org/api.php");
+      endpoint.searchParams.set("action", "query");
+      endpoint.searchParams.set("list", "search");
+      endpoint.searchParams.set("srsearch", searchTerm);
+      endpoint.searchParams.set("srlimit", "12");
+      endpoint.searchParams.set("format", "json");
+      const response = await safeSourceFetch(endpoint.toString(), { headers: { Accept: "application/json" } });
+      if (!response.ok) continue;
+      const data = await response.json() as { query?: { search?: Array<{ title?: string }> } };
+      found = data.query?.search?.find(entry => entry.title && samePerson(entry.title, name));
+      if (found) break;
+    }
     if (!found?.title) return [];
     const pageUrl = `https://orthodoxwiki.org/${encodeURIComponent(found.title.replace(/ /g, "_"))}`;
     const page = await fetchSourceText(pageUrl);
-    if (!samePerson(page.title.replace(/\s*[-–|].*$/, ""), name)) return [];
+    if (!samePerson(found.title, name)) return [];
     const works = bibliography(page.html);
+    // Do not report a generic article as bibliographic proof when no work list was extracted.
+    if (!works.length) return [];
     const excerpt = [
       `OrthodoxWiki entry: ${found.title}`,
       "This is a community-edited secondary reference, suitable for attributed biographical and bibliographic summaries, NOT a primary text.",
-      works.length ? "WORKS LISTED IN THIS PAGE (preserve titles exactly; do not invent additional titles):" : "NO PARSEABLE BIBLIOGRAPHY IN THIS PAGE.",
+      "WORKS LISTED IN THIS PAGE (preserve titles exactly; do not invent additional titles):",
       ...works.map(title => `- ${title}`),
       "BIOGRAPHICAL TEXT:",
       page.text.slice(0, 3500),
