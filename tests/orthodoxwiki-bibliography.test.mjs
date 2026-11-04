@@ -40,3 +40,9 @@ test("retrieval extracts only the author bibliography with an exact source URL",
   assert.ok(rows[0].sourceUrl.includes("orthodoxwiki.org/Justin_(Popovich)"));
   assert.ok(requested.some(url => url.includes("srsearch=justin+popovic")));
 });
+
+test("bibliography search recognizes extended Serbian question", async () => {
+  const items = await discovery.discoverOrthodoxWikiBibliography("Наведи сва дела светог Јустина Поповића чији се наслови могу пронаћи на интернету.");
+  assert.equal(items.length, 1);
+  assert.match(items[0].excerpt, /Lives of the Saints/);
+});
