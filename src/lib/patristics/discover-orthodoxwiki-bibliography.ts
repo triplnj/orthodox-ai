@@ -87,17 +87,17 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
     for (const term of terms) {
       candidates.push(term.split(" ").map(token => token[0]?.toUpperCase() + token.slice(1)).join("_"));
     }
-    let page: Awaited<ReturnType<typeof fetchSourceText>> | null = null;
-    let pageUrl = "";
-    let resolvedTitle = "";
+    const selected: { page: Awaited<ReturnType<typeof fetchSourceText>> | null; pageUrl: string; resolvedTitle: string } = {
+      page: null, pageUrl: "", resolvedTitle: "",
+    };
     const tryArticle = async (title: string): Promise<boolean> => {
       try {
         const url = `https://orthodoxwiki.org/${encodeURIComponent(title)}`;
         const fetched = await fetchSourceText(url);
         if (!samePerson(fetched.title.replace(/\\s*[-–|].*$/, ""), name)) return false;
-        page = fetched;
-        pageUrl = url;
-        resolvedTitle = fetched.title;
+        selected.page = fetched;
+        selected.pageUrl = url;
+        selected.resolvedTitle = fetched.title;
         return true;
       } catch { return false; }
     };
@@ -106,7 +106,7 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
     for (const title of [...new Set(candidates)].slice(0, 8)) {
       if (await tryArticle(title)) break;
     }
-    if (!page) {
+    if (!selected.page) {
       for (const searchTerm of terms) {
         try {
           const endpoint = new URL("https://orthodoxwiki.org/api.php");
@@ -122,27 +122,27 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
             if (result.title && samePerson(result.title, name) &&
               await tryArticle(result.title.replace(/ /g, "_"))) break;
           }
-          if (page) break;
+          if (selected.page) break;
         } catch { continue; }
       }
     }
-    if (!page) return [];
-    const works = bibliography(page.html);
+    if (!selected.page) return [];
+    const works = bibliography(selected.page.html);
     // Do not report a generic article as bibliographic proof when no work list was extracted.
     if (!works.length) return [];
     const excerpt = [
-      `OrthodoxWiki entry: ${resolvedTitle}`,
+      `OrthodoxWiki entry: ${selected.resolvedTitle}`,
       "This is a community-edited secondary reference, suitable for attributed biographical and bibliographic summaries, NOT a primary text.",
       "WORKS LISTED IN THIS PAGE (preserve titles exactly; do not invent additional titles):",
       ...works.map(title => `- ${title}`),
       "BIOGRAPHICAL TEXT:",
-      page.text.slice(0, 3500),
+      selected.page.text.slice(0, 3500),
     ].join("\n");
     return [{
-      authorName: resolvedTitle,
+      authorName: selected.resolvedTitle,
       workTitle: works.length ? "OrthodoxWiki — selected bibliography" : "OrthodoxWiki — biographical entry",
       originalLanguage: "English",
-      sourceUrl: pageUrl,
+      sourceUrl: selected.pageUrl,
       sourceName: "OrthodoxWiki",
       documentType: "BIBLIOGRAPHIC",
       verificationStatus: "COMMUNITY_EDITED_BIBLIOGRAPHIC_SOURCE",
