@@ -45,3 +45,16 @@ test("source challenges are explicitly re-researched rather than treated as prio
   assert.match(route, /Previous assistant claim to verify/);
   assert.match(route, /Explicitly verify or retract it/);
 });
+
+test("Maximus doctrinal question cannot be replaced by a Justin bibliography", () => {
+  const route = read("src/app/api/chat/route.ts");
+  assert.doesNotMatch(route, /verifiedBibliographyAnswer/);
+  assert.doesNotMatch(route, /bibliographyUnavailable/);
+  assert.match(route, /await generateOrthodoxAnswer\(/);
+  assert.match(route, /conversation: \{ turns \}, onDelta/);
+});
+test("fallback responses also emit streaming deltas", () => {
+  const route = read("src/app/api/chat/route.ts");
+  assert.match(route, /onDelta\?\.\(noSourceMessage\)/);
+  assert.match(route, /delta => emit\("delta", \{ text: delta \}\)/);
+});
