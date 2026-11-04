@@ -10,7 +10,7 @@ const baseHosts = ["azbyka.ru", "pravoslavie.ru", "doxologia.ro", "svetigora.com
 export const SOURCE_HOSTS = new Set([...baseHosts.flatMap(host => [host, `www.${host}`]),
   ...VERIFIED_SOURCE_HOSTS,
   "en.wikisource.org", "el.wikisource.org", "la.wikisource.org", "commons.wikimedia.org", "upload.wikimedia.org",
-  "onlinebooks.library.upenn.edu"]);
+  "onlinebooks.library.upenn.edu", "orthodoxwiki.org", "www.orthodoxwiki.org"]);
 const archiveShard = (host: string) => /^(?:ia\d+\.us|dn\d+\.ca)\.archive\.org$/.test(host);
 export function sourceUrl(value: string): URL {
   if (value.length > 4096 || /[\\\x00-\x20\x7f]/.test(value)) throw new Error("Invalid source URL.");
