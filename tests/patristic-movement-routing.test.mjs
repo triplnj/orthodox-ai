@@ -33,3 +33,15 @@ test("general OpenAI research uses required broad web search rather than a restr
   assert.match(research, /runResearch\(query, undefined, controller.signal\)/);
   assert.doesNotMatch(research, /runResearch\(\s*query,\s*PREFERRED_PATRISTIC_DOMAINS/);
 });
+
+test("Serbian follow-up about Lives of Saints retains author context", () => {
+  const route = read("src/app/api/chat/route.ts");
+  assert.match(route, /житија светих/);
+  assert.match(route, /followUp && previousPatristicQuestion/);
+});
+test("source challenges are explicitly re-researched rather than treated as prior evidence", () => {
+  const route = read("src/app/api/chat/route.ts");
+  assert.match(route, /const sourceChallenge/);
+  assert.match(route, /Previous assistant claim to verify/);
+  assert.match(route, /Explicitly verify or retract it/);
+});
