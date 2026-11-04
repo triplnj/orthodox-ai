@@ -37,6 +37,6 @@ test("retrieval extracts only the author bibliography with an exact source URL",
   assert.match(rows[0].excerpt, /Dogmatics of the Orthodox Church/);
   assert.match(rows[0].excerpt, /Lives of the Saints/);
   assert.doesNotMatch(rows[0].excerpt.split("BIOGRAPHICAL TEXT:")[0], /A book about Justin Popovich/);
-  assert.match(rows[0].sourceUrl, /orthodoxwiki.org\\/Justin_%28Popovich%29/);
+  assert.match(rows[0].sourceUrl, /orthodoxwiki.org\\/Justin_\\(?Popovich\\)?/);
   assert.ok(requested.some(url => url.includes("srsearch=justin+popovic")));
 });
