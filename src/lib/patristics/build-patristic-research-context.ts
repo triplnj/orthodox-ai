@@ -31,6 +31,7 @@ import {
   researchPatristicQuestionOnWeb,
 } from "./web-patristic-research";
 import { discoverOfficialSaintLife } from "./discover-official-saint-life";
+import { discoverOrthodoxWikiBibliography } from "./discover-orthodoxwiki-bibliography";
 
 export type PatristicResearchSource = {
   provider:
@@ -203,7 +204,7 @@ export async function buildPatristicResearchContext(
   // Independent retrieval providers run together. Web search is bounded by a\n  // nine-second abort budget; the other providers retain their results.\n  // Each provider handles its own
   // failure, preserving partial grounded evidence if another provider is unavailable.
   // Keep the final assembly in evidence-priority order, not completion order.
-  const [curated, verified, livePg, webResearch, officialSaintLife] = await Promise.all([
+  const [curated, verified, livePg, webResearch, officialSaintLife, orthodoxWiki] = await Promise.all([
     (async () => {
       if (curatedDocuments.length === 0) return null;
       providersAttempted.push("CURATED_TEXT");
@@ -252,9 +253,19 @@ export async function buildPatristicResearchContext(
         return [];
       }
     })(),
+    (async () => {
+      providersAttempted.push("ORTHODOXWIKI");
+      try { return await discoverOrthodoxWikiBibliography(query); }
+      catch (error) { diagnostic("operation_failed", { operation: "retrieval", failure: failureCategory(error) }); return []; }
+    })(),
   ]);
 
   // Maintain stable provenance ordering and keep every usable source.
+  if (orthodoxWiki.length) {
+    providersSucceeded.push("ORTHODOXWIKI");
+    contextParts.push(formatCuratedContext(orthodoxWiki));
+    sources.push(...mapCuratedSources(orthodoxWiki));
+  }
   if (officialSaintLife.length) {
     providersSucceeded.push("OFFICIAL_SAINT_LIVES");
     contextParts.push(formatCuratedContext(officialSaintLife));
