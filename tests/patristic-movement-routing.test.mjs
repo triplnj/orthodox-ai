@@ -25,3 +25,11 @@ test("source-dependent answers cannot silently proceed without evidence", () => 
   assert.match(route, /evidenceUnavailable\s*=\s*evidenceRequired\s*&&\s*!research\?\.sources\.length/);
   assert.match(route, /const result\s*=\s*evidenceUnavailable\s*\?/);
 });
+
+test("general OpenAI research uses required broad web search rather than a restricted timeout-starving first pass", () => {
+  const research = read("src/lib/patristics/web-patristic-research.ts");
+  assert.match(research, /tool_choice: "required"/);
+  assert.match(research, /include: \["web_search_call.action.sources"\]/);
+  assert.match(research, /runResearch\(query, undefined, controller.signal\)/);
+  assert.doesNotMatch(research, /runResearch\(\s*query,\s*PREFERRED_PATRISTIC_DOMAINS/);
+});
