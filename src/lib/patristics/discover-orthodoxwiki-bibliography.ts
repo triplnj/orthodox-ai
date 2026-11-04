@@ -5,7 +5,7 @@ import type { CuratedTextEvidence } from "./search-curated-texts";
 
 // OrthodoxWiki is a community-maintained bibliographic reference, not a
 // primary witness for exact theological quotations.
-const BIOGRAPHICAL_REQUEST = /(?:saint|st\\.?|sveti|svetog|свети|светог|светиња|who was|who is|ко је|који је|works|writings|books|bibliograph|дела|делима|спис[аи]|књиг[ае]|биограф|живот|писао|писањ)/iu;
+const BIOGRAPHICAL_REQUEST = /(?:saint|st\.?|sveti|svetog|свети|светог|светиња|who was|who is|ко је|који је|works|writings|books|bibliograph|дела|делима|спис[аи]|књиг[ае]|биограф|живот|писао|писањ)/iu;
 const HEADING = /(?:bibliograph|selected works|written works|writings|publications|књиге|дела)/iu;
 
 function latin(value: string) {
@@ -15,19 +15,19 @@ function latin(value: string) {
     т:"t",ћ:"c",у:"u",ф:"f",х:"h",ц:"c",ч:"c",џ:"dz",ш:"s",
   };
   return value.toLowerCase().split("").map(c => chars[c] ?? c).join("")
-    .normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/đ/g,"dj").replace(/ł/g,"l");
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g,"dj").replace(/ł/g,"l");
 }
 function words(value: string) {
-  return latin(value).replace(/[^a-z\\s-]/g, " ").split(/[\\s-]+/)
+  return latin(value).replace(/[^a-z\s-]/g, " ").split(/[\s-]+/)
     .filter(t => t.length >= 4 && !["saint","sveti","svetog","who","what","works","writings","books","justinov","popovica","celijski","celijskog","orthodox","church","svetog","свети"].includes(t));
 }
 function subject(query: string): string | null {
   if (!BIOGRAPHICAL_REQUEST.test(query)) return null;
   // Parenthetical surname variant: Saint Justin Ćelijski (Popović).
-  const match = query.match(/(?:saint|st\\.?|sveti|svetog|свети|светог|св\\.?)\\s+([\\p{L}][\\p{L}.'’-]*(?:\\s+[\\p{L}][\\p{L}.'’-]*){0,3})(?:\\s*\\(([\\p{L}.'’-]+)\\))?/iu);
+  const match = query.match(/(?:saint|st\.?|sveti|svetog|свети|светог|св\.?)\s+([\p{L}][\p{L}.'’-]*(?:\s+[\p{L}][\p{L}.'’-]*){0,3})(?:\s*\(([\p{L}.'’-]+)\))?/iu);
   if (!match) return null;
-  const name = match[1].split(/\\s+(?:was|is|who|који|која|је|и|and)\\b/iu)[0].trim();
-  const parts = name.split(/\\s+/).filter(Boolean);
+  const name = match[1].split(/\s+(?:was|is|who|који|која|је|и|and)\b/iu)[0].trim();
+  const parts = name.split(/\s+/).filter(Boolean);
   if (parts.length < 2) return null;
   const surname = match[2] || parts[parts.length - 1];
   return `${parts[0]} ${surname}`;
@@ -41,13 +41,13 @@ function bibliography(html: string) {
   const $ = cheerio.load(html);
   const entries: string[] = [];
   $("h2, h3, h4").each((_i, el) => {
-    const heading = $(el).text().replace(/\\[edit\\]/gi, "").trim();
+    const heading = $(el).text().replace(/\[edit\]/gi, "").trim();
     if (!HEADING.test(heading)) return;
     let node = $(el).next();
     // MediaWiki wraps heading text in a nested element but retains <h2>.
     for (let i = 0; i < 25 && node.length && !/^h[1-4]$/i.test(node.get(0)?.tagName || ""); i++, node = node.next()) {
       node.find("li").addBack("li").each((_j, li) => {
-        const title = $(li).text().replace(/\\[[0-9]+\\]/g, "").replace(/\\s+/g," ").trim();
+        const title = $(li).text().replace(/\[[0-9]+\]/g, "").replace(/\s+/g," ").trim();
         if (title.length >= 7 && title.length <= 300 && entries.length < 35) entries.push(title);
       });
     }
@@ -71,7 +71,7 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
     if (!found?.title) return [];
     const pageUrl = `https://orthodoxwiki.org/${encodeURIComponent(found.title.replace(/ /g, "_"))}`;
     const page = await fetchSourceText(pageUrl);
-    if (!samePerson(page.title.replace(/\\s*[-–|].*$/, ""), name)) return [];
+    if (!samePerson(page.title.replace(/\s*[-–|].*$/, ""), name)) return [];
     const works = bibliography(page.html);
     const excerpt = [
       `OrthodoxWiki entry: ${found.title}`,
@@ -80,7 +80,7 @@ export async function discoverOrthodoxWikiBibliography(query: string): Promise<C
       ...works.map(title => `- ${title}`),
       "BIOGRAPHICAL TEXT:",
       page.text.slice(0, 3500),
-    ].join("\\n");
+    ].join("\n");
     return [{
       authorName: found.title,
       workTitle: works.length ? "OrthodoxWiki — selected bibliography" : "OrthodoxWiki — biographical entry",
