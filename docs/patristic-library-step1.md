@@ -12,6 +12,8 @@ indexed.
 
 - Offline-only text segmenter: `src/lib/patristics/library/chunk-document.ts`
 - Additive SQL schema: `scripts/patristics/sql/001_additive_library.sql`
+- Source discovery registry (not automatically ingested): `src/lib/patristics/library/source-registry.ts`
+- Standalone ACTIVE-only semantic search (not wired into chat): `src/lib/patristics/library/search-library.ts`
 - Offline import planner with mandatory rights/attribution review: `src/lib/patristics/library/prepare-import.ts`
 - Transactional idempotent staging writer: `src/lib/patristics/library/stage-import.ts`
 - Bounded, injection-based embedding worker (1536 dimensions, STAGED editions only): `src/lib/patristics/library/stage-embeddings.ts`
@@ -42,11 +44,8 @@ indexed.
 
 ## Not done
 
-- No PG, PL, Philokalia or modern Orthodox editions have been imported
-  into the new tables; the staging tables were confirmed empty. Import and
-  embedding modules are not connected to a scheduled job or public API.
-- No background indexing jobs, live semantic search, reader UI or new
-  answer-generation path is wired up.
+- A **three-passage pilot** from the 1893 NPNF English translation of Gregory of Nyssa's\n  *On the Soul and the Resurrection* was staged on the isolated Neon branch.\n  Source: https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/\n  Locator: opening dialogue, paragraphs 1–3. SHA-256 of stored text verified for all 3 passages.\n  Pilot lexical query with the term 'Teacher' returned two matching passages and provenance.\n  The staging edition remains STAGED, with 0 embeddings and 0 ACTIVE passages.\n- No full PG, PL or Philokalia volumes, or modern Orthodox editions, have\n  been loaded into the new tables. Import and embedding modules are not\n  connected to a scheduled job or public API.
+- No background indexing jobs, reader UI or new answer-generation path is wired up.\n  Read-only vector search exists as an isolated module, but no actual vector\n  embeddings have been generated for the staged sample.
 - Automated tests are authored and CI workflow added; only mark tests as passed
   after reviewing an actual CI test run.
 - Staging data must not be treated as production evidence.
