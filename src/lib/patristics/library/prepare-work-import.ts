@@ -11,11 +11,13 @@ export type WorkImportPlan = {
   edition: LibraryImportPlan["edition"];
   passages: LibraryImportPlan["passages"];
   sectionCount: number;
+  coverage: "COMPLETE_MANIFEST" | "PARTIAL_SAMPLE";
 };
 
 export function planLibraryWorkImport(
   sections: readonly ImportDocument[],
   maxChars = 1800,
+  expectedSectionLocators?: readonly string[],
 ): WorkImportPlan {
   if (!Array.isArray(sections) || sections.length === 0 || sections.length > 2000) {
     throw new RangeError("A book import must contain 1–2000 identified sections");
@@ -51,6 +53,14 @@ export function planLibraryWorkImport(
       allPassages.push(passage);
     }
   }
+  if (expectedSectionLocators) {
+    const expected = new Set(expectedSectionLocators.map(value => value.trim()));
+    if (expected.size !== expectedSectionLocators.length ||
+        expected.size !== locators.size ||
+        [...expected].some(locator => !locator || !locators.has(locator))) {
+      throw new Error("Section manifest mismatch: do not report partial imports as complete");
+    }
+  }
   if (allPassages.length > 50000) throw new RangeError("Book is too large for a single import");
   return {
     author: first.author,
@@ -58,5 +68,6 @@ export function planLibraryWorkImport(
     edition: first.edition,
     passages: allPassages,
     sectionCount: plans.length,
+    coverage: expectedSectionLocators ? "COMPLETE_MANIFEST" : "PARTIAL_SAMPLE",
   };
 }
