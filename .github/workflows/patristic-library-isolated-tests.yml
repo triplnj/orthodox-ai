@@ -5,7 +5,9 @@ on:
     paths:
       - 'src/lib/patristics/library/**'
       - 'scripts/patristics/sql/**'
+      - 'scripts/patristics/index-staging.mjs'
       - 'tests/patristic-library-isolation.test.mjs'
+      - 'tests/patristic-library-index-cli.test.mjs'
       - '.github/workflows/patristic-library-isolated-tests.yml'
   workflow_dispatch:
 
@@ -23,4 +25,4 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node --test tests/patristic-library-isolation.test.mjs
+      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs
