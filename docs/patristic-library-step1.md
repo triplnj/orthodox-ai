@@ -12,7 +12,11 @@ indexed.
 
 - Offline-only text segmenter: `src/lib/patristics/library/chunk-document.ts`
 - Additive SQL schema: `scripts/patristics/sql/001_additive_library.sql`
+- Offline import planner with mandatory rights/attribution review: `src/lib/patristics/library/prepare-import.ts`
+- Transactional idempotent staging writer: `src/lib/patristics/library/stage-import.ts`
+- Bounded, injection-based embedding worker (1536 dimensions, STAGED editions only): `src/lib/patristics/library/stage-embeddings.ts`
 - Isolated regression test: `tests/patristic-library-isolation.test.mjs`
+- GitHub Actions isolated testing: `.github/workflows/patristic-library-isolated-tests.yml`
 - The existing Prisma schema, existing PatristicQuote table,
   chat route, streaming pipeline and current source discovery are unchanged.
 - SQL applied **only** to Neon branch `patristic-library-staging-2026-11-05`
@@ -39,10 +43,12 @@ indexed.
 ## Not done
 
 - No PG, PL, Philokalia or modern Orthodox editions have been imported
-  into the new tables.
+  into the new tables; the staging tables were confirmed empty. Import and
+  embedding modules are not connected to a scheduled job or public API.
 - No background indexing jobs, live semantic search, reader UI or new
   answer-generation path is wired up.
-- Automated tests are authored but not yet independently executed.
+- Automated tests are authored and CI workflow added; only mark tests as passed
+  after reviewing an actual CI test run.
 - Staging data must not be treated as production evidence.
 
 ## Rollout
