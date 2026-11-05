@@ -97,3 +97,28 @@ node scripts/patristics/index-staging.mjs \
 
 Do not commit or log secrets. Never supply the application's production
 `DATABASE_URL`; the CLI intentionally does not read that variable.
+
+## 2026-11-05 — Latin (PL) staging pilot
+
+A second author and work were added on the same isolated Neon staging branch:
+Augustine of Hippo, *Confessiones*, Book I, chapter 1, four short Latin
+excerpts grouped under two explicit passage locators, classified as PL.
+The transcription is checked against the Migne PL 32 Latin text at
+https://patrologia-lib.ru/patrolog/augustin/confess.htm (also crosschecked
+with Latin Wikisource). Text and control hashes checked using SQL.
+
+Read-only validation after insertion:
+- Gregory of Nyssa: 4 excerpts / 2 locators / CURATED_OTHER
+- Augustine: 4 excerpts / 2 locators / PL
+- Both editions: STAGED; 0 embeddings; 0 ACTIVE excerpts
+- Original production branch lacks both LibraryPassage and
+  LibraryStagingGuard, confirmed by read-only to_regclass check.
+
+IMPORTANT: four excerpts do not constitute a book or PL volume import;
+the pilot Latin edition uses pilot-specific IDs and the safety-guarded CLI
+currently accepts only plan-generated edition_<SHA-prefix> IDs. Reimport
+via the deterministic import planner when moving beyond the pilot.
+
+Neon's staging AI Gateway is enabled, but no generation or embedding call
+has been made through it. Availability of a gateway is not evidence of
+successful semantic retrieval or permission to use its billing credentials.
