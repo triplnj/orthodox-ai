@@ -61,3 +61,39 @@ a passing regression suite, verified attribution and rollback procedure.
 ## Full-work completeness rule
 
 The new work planner preserves separate section locators, rejects duplicate sections and edition-metadata mismatches, and uses an explicit expected section manifest to distinguish COMPLETE_MANIFEST from PARTIAL_SAMPLE. This label is derived from the supplied manifest, not a guarantee that the source edition itself was complete. Before approving a full-work import, compare the manifest against the printed table of contents. The staging writer accepts at most 2500 passage chunks per transaction; larger volumes should be split into verified units.
+
+## Staging embedding runner — fail-closed
+
+- Added `scripts/patristics/index-staging.mjs`. Uses actual
+  `text-embedding-3-small` 1536-dimensional embedding requests,
+  but requires separate `LIBRARY_STAGING_DB_URL`,
+  `LIBRARY_STAGING_BRANCH_ID`, and `OPENAI_API_KEY`.
+- Before any OpenAI call or write, it checks for a special
+  `LibraryStagingGuard` row matching the expected branch ID. The guard
+  was created **only** on branch `br-spring-frost-assfzje6`. On
+  2026-11-05 SQL confirmed the production branch has neither
+  `LibraryStagingGuard` nor `LibraryPassage`.
+- CLI writes only to editions with status `STAGED`, performs
+  1536-dimension validation, and rolls back on concurrent changes.
+  Requests are manual and bounded to 1–20 passages per call.
+- `tests/patristic-library-index-cli.test.mjs` mocks database and
+  embedding requests to test fail-closed guards and valid responses.
+- A read-only SQL check confirmed pgvector cosine distance works with
+  1536-dimensional vectors on the staging branch. **This is not a
+  real semantic relevance evaluation.**
+- No actual API embeddings have yet been generated for the pilot passages.
+  Do not call the source corpus semantically indexed until real
+  embeddings are generated and independently evaluated.
+
+### Operator command (only on an isolated staging workspace)
+
+```bash
+LIBRARY_STAGING_DB_URL='postgresql://<staging-neon-only>' \
+LIBRARY_STAGING_BRANCH_ID='br-spring-frost-assfzje6' \
+OPENAI_API_KEY='<secret>' \
+node scripts/patristics/index-staging.mjs \
+  --edition edition_a5ab16669e87b05abd9219553343d318 --batch 4
+```
+
+Do not commit or log secrets. Never supply the application's production
+`DATABASE_URL`; the CLI intentionally does not read that variable.
