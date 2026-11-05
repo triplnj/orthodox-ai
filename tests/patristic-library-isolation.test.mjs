@@ -42,3 +42,32 @@ test("chunker preserves author provenance, fixed locators and neighboring contex
   assert.equal(rows.at(-1).nextOrdinal, null);
   assert.equal(rows.at(-1).previousOrdinal, rows.length - 2);
 });
+
+test("offline import planning requires reviewed rights and authorship and is deterministic", () => {
+  const load = createLoader();
+  const { planLibraryImport } = load("src/lib/patristics/library/prepare-import.ts");
+  const base = {
+    corpus: "PG", authorKey: "gregory-nyssa", authorName: "Gregory of Nyssa",
+    workKey: "on-the-soul", workTitle: "On the Soul and Resurrection",
+    editionKey: "pg46", editionTitle: "PG volume 46", originalLanguage: "Greek",
+    sourceUrl: "https://example.org/pg46", licenseNote: "example; test only",
+    passageLocator: "PG 46: 11-14",
+    text: "A source passage with a theological argument. ".repeat(24),
+    licenseReviewed: true, attributionReviewed: true,
+  };
+  const one = planLibraryImport(base, 300);
+  const two = planLibraryImport(base, 300);
+  assert.deepEqual(one, two);
+  assert.equal(one.edition.importStatus, "STAGED");
+  assert.equal(one.edition.corpus, "PG");
+  assert.ok(one.passages.length > 2);
+  assert.ok(one.passages.every(p => /^[a-f0-9]{64}$/.test(p.contentSha256)));
+  assert.ok(one.passages.every(p => p.embedding === undefined));
+  assert.throws(() => planLibraryImport({...base, licenseReviewed: false}), /reviewed/);
+  assert.throws(() => planLibraryImport({...base, attributionReviewed: false}), /reviewed/);
+  assert.throws(() => planLibraryImport({...base, corpus: "UNKNOWN"}), /corpus/);
+  assert.throws(() => planLibraryImport({...base, sourceUrl: "http://example.org"}), /HTTPS/);
+  assert.throws(() => planLibraryImport({...base, passageLocator: ""}), /passageLocator/);
+  assert.notEqual(planLibraryImport({...base, authorKey: "other-author"}).author.id, one.author.id);
+  assert.notEqual(planLibraryImport({...base, editionKey: "another-edition"}).edition.id, one.edition.id);
+});
