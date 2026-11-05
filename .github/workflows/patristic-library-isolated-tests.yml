@@ -1,0 +1,26 @@
+name: Patristic Library Isolated Tests
+
+on:
+  push:
+    paths:
+      - 'src/lib/patristics/library/**'
+      - 'scripts/patristics/sql/**'
+      - 'tests/patristic-library-isolation.test.mjs'
+      - '.github/workflows/patristic-library-isolated-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-library-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test tests/patristic-library-isolation.test.mjs
