@@ -170,3 +170,75 @@ test("source registry is additive discovery metadata, not imported content", () 
   assert.ok(LIBRARY_COLLECTION_CANDIDATES.every(x => x.review === "EDITION_BY_EDITION"));
   assert.ok(LIBRARY_COLLECTION_CANDIDATES.every(x => x.catalogueUrl.startsWith("https://")));
 });
+
+test("whole-work planning keeps chapter locators separate and rejects edition mixing", () => {
+  const load = createLoader();
+  const { planLibraryWorkImport } = load("src/lib/patristics/library/prepare-work-import.ts");
+  const base = {
+    corpus:"CURATED_OTHER", authorKey:"gregory-nyssa", authorName:"St. Gregory of Nyssa",
+    workKey:"soul-resurrection", workTitle:"On the Soul and the Resurrection",
+    editionKey:"npnf-1893", editionTitle:"NPNF 1893", originalLanguage:"English",
+    sourceUrl:"https://example.org/primary-source", licenseNote:"1893 translation reviewed",
+    licenseReviewed:true, attributionReviewed:true,
+  };
+  const sections = [
+    {...base,passageLocator:"Chapter 1",text:"The initial argument. ".repeat(45)},
+    {...base,passageLocator:"Chapter 2",text:"The response to the objection. ".repeat(45)},
+  ];
+  const plan = planLibraryWorkImport(sections,300);
+  assert.equal(plan.sectionCount,2);
+  assert.equal(plan.edition.importStatus,"STAGED");
+  assert.ok(plan.passages.some(p => p.locator === "Chapter 1" && p.ordinal === 0));
+  assert.ok(plan.passages.some(p => p.locator === "Chapter 2" && p.ordinal === 0));
+  assert.equal(new Set(plan.passages.map(p=>p.id)).size,plan.passages.length);
+  assert.throws(()=>planLibraryWorkImport([...sections, sections[0]],300),/Duplicate section/);
+  assert.throws(()=>planLibraryWorkImport([
+    sections[0],{...sections[1],editionKey:"different-edition"}
+  ],300),/same author/);
+  assert.throws(()=>planLibraryWorkImport([]),/identified sections/);
+});
+
+test("whole-work staging verifies metadata and hashes before committing", async () => {
+  const load = createLoader();
+  const { planLibraryWorkImport } = load("src/lib/patristics/library/prepare-work-import.ts");
+  const { stageLibraryWorkImport } = load("src/lib/patristics/library/stage-work-import.ts");
+  const base = {
+    corpus:"PL",authorKey:"test",authorName:"Test Author",
+    workKey:"work",workTitle:"Test Work",editionKey:"ed",editionTitle:"Test Edition",
+    originalLanguage:"Latin",sourceUrl:"https://example.org/source",
+    licenseNote:"test",licenseReviewed:true,attributionReviewed:true,
+  };
+  const plan = planLibraryWorkImport([
+    {...base,passageLocator:"section A",text:"Latin sentence for testing."},
+    {...base,passageLocator:"section B",text:"Another Latin sentence for testing."},
+  ]);
+  const e=plan.edition;
+  const stored={
+    workId:e.workId,corpus:e.corpus,editionTitle:e.editionTitle,
+    originalLanguage:e.originalLanguage,sourceUrl:e.sourceUrl,
+    licenseNote:e.licenseNote,importStatus:"STAGED",
+    title:plan.work.title,authorId:plan.author.id,
+    canonicalName:plan.author.canonicalName,
+  };
+  const calls=[];
+  const db={query:async (sql,args)=>{
+    calls.push({sql,args});
+    if (sql.includes('SELECT e."workId"')) return {rows:[stored]};
+    if (sql.includes('SELECT p."locator"')) return {rows:plan.passages.map(p=>({
+      locator:p.locator,ordinal:p.ordinal,contentSha256:p.contentSha256,language:p.language
+    }))};
+    return {rowCount:1};
+  }};
+  assert.deepEqual(await stageLibraryWorkImport(db,plan),{sections:2,passages:2});
+  assert.equal(calls[0].sql,"BEGIN");
+  assert.equal(calls.at(-1).sql,"COMMIT");
+  const rollbackCalls=[];
+  const wrongDb={query:async (sql)=>{
+    rollbackCalls.push(sql);
+    if (sql.includes('SELECT e."workId"')) return {rows:[{...stored,sourceUrl:"https://different.org"}]};
+    return {rowCount:1};
+  }};
+  await assert.rejects(stageLibraryWorkImport(wrongDb,plan),/metadata mismatch/);
+  assert.equal(rollbackCalls.at(-1),"ROLLBACK");
+  assert.ok(!rollbackCalls.some(sql=>sql.startsWith('INSERT INTO "LibraryPassage"')));
+});
