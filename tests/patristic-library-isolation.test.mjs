@@ -71,3 +71,43 @@ test("offline import planning requires reviewed rights and authorship and is det
   assert.notEqual(planLibraryImport({...base, authorKey: "other-author"}).author.id, one.author.id);
   assert.notEqual(planLibraryImport({...base, editionKey: "another-edition"}).edition.id, one.edition.id);
 });
+
+test("staging writer is transactional, idempotent, and rejects mismatched sources", async () => {
+  const load = createLoader();
+  const { planLibraryImport } = load("src/lib/patristics/library/prepare-import.ts");
+  const { stageLibraryImport } = load("src/lib/patristics/library/stage-import.ts");
+  const doc = {
+    corpus: "PHILOKALIA", authorKey: "sample-father", authorName: "Sample Father",
+    workKey: "sample-work", workTitle: "Sample Work",
+    editionKey: "sample-edition", editionTitle: "Source Edition", originalLanguage: "Greek",
+    sourceUrl: "https://example.org/sample", licenseNote: "verified for test",
+    passageLocator: "1.1", text: "A passage to test integrity.",
+    licenseReviewed: true, attributionReviewed: true,
+  };
+  const plan = planLibraryImport(doc);
+  const statements = [];
+  const client = { query: async (sql, args) => {
+    statements.push({ sql, args });
+    if (sql.startsWith("SELECT count(*)")) return { rows: [{ total: plan.passages.length }] };
+    if (sql.startsWith('SELECT "ordinal"')) return { rows: plan.passages.map(p => ({
+      ordinal: p.ordinal, contentSha256: p.contentSha256,
+    })) };
+    return { rowCount: 1 };
+  }};
+  const result = await stageLibraryImport(client, plan);
+  assert.equal(result.passages, plan.passages.length);
+  assert.equal(statements[0].sql, "BEGIN");
+  assert.equal(statements.at(-1).sql, "COMMIT");
+  assert.ok(statements.every(x => !x.sql.includes("UPDATE")));
+  assert.ok(statements.every(x => !x.sql.includes("DELETE")));
+  assert.ok(statements.filter(x => x.sql.includes("INSERT")).every(x => x.sql.includes("ON CONFLICT")));
+  const damaged = { query: async (sql) => {
+    if (sql.startsWith("SELECT count(*)")) return {rows:[{total:1}]};
+    if (sql.startsWith('SELECT "ordinal"')) return {rows:[{ordinal:0,contentSha256:"invalid"}]};
+    return {};
+  }};
+  const attempted = [];
+  const rejectClient = {query: async (sql,...args) => {attempted.push(sql);return damaged.query(sql,...args);}};
+  await assert.rejects(stageLibraryImport(rejectClient,plan), /differs/);
+  assert.equal(attempted.at(-1),"ROLLBACK");
+});
