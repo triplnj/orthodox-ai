@@ -18,9 +18,8 @@ test("library schema only introduces new names and does not mutate the live chat
 });
 
 test("chunker preserves author provenance, fixed locators and neighboring context", () => {
-  const { chunkLibraryDocument } = createLoader().load
-    ? createLoader().load("src/lib/patristics/library/chunk-document.ts")
-    : (() => { throw new Error("Unexpected TS loader interface"); })();
+  const load = createLoader();
+  const { chunkLibraryDocument } = load("src/lib/patristics/library/chunk-document.ts");
   const doc = {
     corpus: "MODERN_ORTHODOX",
     authorKey: "saint-john-kronstadt",
