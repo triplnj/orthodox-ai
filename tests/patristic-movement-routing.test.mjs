@@ -58,3 +58,16 @@ test("fallback responses also emit streaming deltas", () => {
   assert.match(route, /onDelta\?\.\(noSourceMessage\)/);
   assert.match(route, /delta => emit\("delta", \{ text: delta \}\)/);
 });
+
+test("PG text has priority over secondary bibliography and interpretation uses context", () => {
+  const research = read("src/lib/patristics/build-patristic-research-context.ts");
+  const pg = research.indexOf('if (livePg?.context) {', research.indexOf("Source-first order"));
+  const wiki = research.indexOf('if (orthodoxWiki.length) {', research.indexOf("Source-first order"));
+  assert.ok(pg >= 0 && wiki > pg);
+  assert.match(research, /SYNTHESIS METHOD/);
+  const service = read("src/lib/ai/chatService.ts");
+  assert.match(service, /Patrologia Graeca \(PG\)/);
+  assert.match(service, /Patrologia Latina \(PL/);
+  assert.match(service, /Philokalia/);
+  assert.match(service, /For dialogues identify who is speaking/);
+});
