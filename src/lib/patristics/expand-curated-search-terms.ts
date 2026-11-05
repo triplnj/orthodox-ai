@@ -164,6 +164,17 @@ export function expandCuratedSearchTerms(
     }
   }
 
+  // Cross-language semantic terms for soul/body continuity after death.
+  // Matches translation vocabulary; does not assert any doctrinal answer.
+  if (/душ|soul|seele|ψυχ/.test(normalized) &&
+      /тел|телес|body|corporeal|распад|dissolv|васкрс|resurrect/.test(normalized)) {
+    if (targetLanguage === "English") {
+      terms.push("atoms", "elements", "dissolved", "dissolution",
+        "remains", "remain", "body", "soul", "separated",
+        "presence", "union", "decomposed", "resurrection");
+    }
+  }
+
   if (
     /спас|spasen|salvation|heil|σωτηρ/.test(
       normalized,
