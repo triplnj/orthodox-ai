@@ -152,7 +152,9 @@ function buildFinalContext(contextParts: string[]) {
     "- Attribute a specific teaching to a Church Father only when supported by the evidence below.",
     "- Do not replace missing evidence with generic Orthodox teaching and imply that it belongs to the named Father.",
     "- Prefer primary-source evidence over secondary summaries when providers disagree.",
-    "- Core sources: Patrologia Graeca (Greek) and, when separately indexed, Patrologia Latina (Latin); Philokalia for the ascetic works it actually contains. Never assume that every Father or treatise appears in these collections.",
+    "- Additive source corpus: keep all existing verified and curated writings, including modern Orthodox saints, alongside Patrologia Graeca, Patrologia Latina when indexed, and Philokalia where available.",
+    "- A directly relevant authentic work by the named author outranks an unrelated ancient excerpt, regardless of collection or publication date. Never exclude a nineteenth- or twentieth-century Father merely because PG and PL cover earlier centuries.",
+    "- The retrieved corpus is NOT complete: no PL or Philokalia passage may be claimed unless it was actually retrieved and attributed.",
     "- These collections are historical editions/anthologies, not automatic critical editions or guarantees of authorship; note pseudepigraphy, editorial variants, and OCR damage.",
     "- SYNTHESIS METHOD: identify the exact author and question; read each relevant passage in its surrounding argument; distinguish what the author affirms, quotes, rejects or asks; compare independent passages; present the narrow conclusion supported by the evidence.",
     "- A passage about another topic or another Father is not evidence for the requested claim. A quotation matching text is not automatically the author\u0027s own position.",
@@ -265,14 +267,9 @@ export async function buildPatristicResearchContext(
     })(),
   ]);
 
-  // Source-first order: PG original excerpts, curated primary translations,
-  // verified quotations, then discovery and biographical/bibliographic aids.
-  // The order reflects evidence quality, not provider completion time.
-  if (livePg?.context) {
-    providersSucceeded.push("PATROLOGIA_GRAECA");
-    contextParts.push(livePg.context);
-    sources.push(...mapPgSources(livePg.sources));
-  }
+  // Additive federation: preserve curated editions, verified database passages,
+  // PG scans, and live discovery. No corpus replaces or excludes another.
+  // Source relevance, exact authorship, and passage context decide evidential weight.
   if (curated?.length) {
     providersSucceeded.push("CURATED_TEXT");
     contextParts.push(formatCuratedContext(curated));
@@ -292,6 +289,11 @@ export async function buildPatristicResearchContext(
       verificationStatus: source.verificationStatus,
       metadata: source.metadata,
     })));
+  }
+  if (livePg?.context) {
+    providersSucceeded.push("PATROLOGIA_GRAECA");
+    contextParts.push(livePg.context);
+    sources.push(...mapPgSources(livePg.sources));
   }
   if (webResearch?.context) {
     providersSucceeded.push("WEB_RESEARCH");
