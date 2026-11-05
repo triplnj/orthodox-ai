@@ -71,3 +71,17 @@ test("PG text has priority over secondary bibliography and interpretation uses c
   assert.match(service, /Philokalia/);
   assert.match(service, /For dialogues identify who is speaking/);
 });
+
+test("PG, PL and Philokalia supplement modern Orthodox Fathers, rather than replace them", () => {
+  const research = read("src/lib/patristics/build-patristic-research-context.ts");
+  assert.match(research, /Additive federation/);
+  assert.match(research, /keep all existing verified and curated writings/);
+  for (const provider of ["curated?.length", "verified", "livePg?.context", "webResearch?.context"]) {
+    assert.ok(research.includes("if (" + provider + ") {"), "missing provider: " + provider);
+  }
+  const service = read("src/lib/ai/chatService.ts");
+  assert.match(service, /expand, NEVER replace/);
+  assert.match(service, /John of Kronstadt/);
+  assert.match(service, /Nikolaj Velimirovich/);
+  assert.match(service, /Justin Popovich/);
+});
