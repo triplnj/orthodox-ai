@@ -111,3 +111,24 @@ test("staging writer is transactional, idempotent, and rejects mismatched source
   await assert.rejects(stageLibraryImport(rejectClient,plan), /differs/);
   assert.equal(attempted.at(-1),"ROLLBACK");
 });
+
+test("embedding worker only processes staged passages and validates vector size", async () => {
+  const { indexStagedPassages } = createLoader()("src/lib/patristics/library/stage-embeddings.ts");
+  const statements = [];
+  const client = {query: async (sql, params) => {
+    statements.push({sql,params});
+    if (sql.startsWith('SELECT')) return {rows:[{id:"p1",content:"Greek patristic passage"}]};
+    if (sql.startsWith('UPDATE')) return {rowCount:1};
+    return {};
+  }};
+  const count = await indexStagedPassages(client,"ed1",async () => Array(1536).fill(0.01));
+  assert.equal(count,1);
+  assert.ok(statements[0].sql.includes("e.\"importStatus\"='STAGED'"));
+  assert.ok(statements.some(q => q.sql.startsWith("UPDATE") && q.sql.includes("e.\"importStatus\"='STAGED'")));
+  assert.equal(statements.at(-1).sql,"COMMIT");
+  const bad = {query:async sql => sql.startsWith("SELECT") ?
+    {rows:[{id:"p1",content:"sample"}]} : {}};
+  await assert.rejects(indexStagedPassages(bad,"ed1",async () => [0.1]),/1536/);
+  await assert.rejects(indexStagedPassages(bad,"ed1",async () =>
+    Array(1536).fill(Number.NaN)),/finite/);
+});
