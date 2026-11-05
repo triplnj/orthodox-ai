@@ -38,6 +38,19 @@ export type CuratedPatristicDocument = {
 export const CURATED_PATRISTIC_DOCUMENTS:
   CuratedPatristicDocument[] = [
     {
+      key: "gregory-nyssa-on-soul-resurrection",
+      authorName: "St. Gregory of Nyssa",
+      authorAliases: ["gregory of nyssa", "gregory nyssen", "grigorije niski", "sveti grigorije niski", "григорије ниски", "свети григорије ниски"],
+      workTitle: "On the Soul and the Resurrection",
+      workAliases: ["on the soul and the resurrection", "о души и васкрсењу", "о души и васкрсењу", "de anima et resurrectione"],
+      subjects: ["душа", "душе", "души", "васкрсење", "васкрсења", "телo", "тело", "тела", "распада", "распадања", "смрти", "soul", "resurrection", "body", "death", "dissolution", "atoms", "elements", "macrina"],
+      sourceUrl: "https://www.newadvent.org/fathers/2915.htm",
+      sourceName: "New Advent — Gregory of Nyssa, On the Soul and the Resurrection",
+      sourceLanguage: "English",
+      documentType: "TRANSLATION",
+      verificationStatus: "CURATED_PATRISTIC_TEXT_REPOSITORY",
+    },
+    {
       key: "kollyvades-oca-church-history",
       authorName: "Orthodox Church in America",
       authorAliases: [],
