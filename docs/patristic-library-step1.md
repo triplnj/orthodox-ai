@@ -122,3 +122,27 @@ via the deterministic import planner when moving beyond the pilot.
 Neon's staging AI Gateway is enabled, but no generation or embedding call
 has been made through it. Availability of a gateway is not evidence of
 successful semantic retrieval or permission to use its billing credentials.
+
+## Read-only semantic evaluation (isolated)
+
+Added `scripts/patristics/evaluate-staging.mjs`: it requires the same
+staging-only branch marker and credentials as the indexer. It generates an
+embedding for a test question, retrieves STAGED passages by cosine similarity,
+and returns author, work, edition, source URL, locator, and neighboring
+passages. It has **no write SQL** and is never imported into live chat.
+It is checked by `tests/patristic-library-evaluate.test.mjs`.
+
+After the indexed sample has real vectors, run in the same isolated workspace:
+
+```bash
+node scripts/patristics/evaluate-staging.mjs \
+  --question "What is the heart seeking in God?" --corpus PL
+node scripts/patristics/evaluate-staging.mjs \
+  --question "How does Macrina console her grieving brother?" --corpus CURATED_OTHER
+```
+
+Do not interpret a numeric cosine score alone as correct theology. Check
+the author, the attributed passage, surrounding text and citation manually.
+These example queries currently produce no meaningful semantic results,
+because the sample embeddings are still NULL. Never use the existing app
+DATABASE_URL in either staging command.
