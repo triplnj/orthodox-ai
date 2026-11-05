@@ -14,6 +14,8 @@ indexed.
 - Additive SQL schema: `scripts/patristics/sql/001_additive_library.sql`
 - Source discovery registry (not automatically ingested): `src/lib/patristics/library/source-registry.ts`
 - Standalone ACTIVE-only semantic search (not wired into chat): `src/lib/patristics/library/search-library.ts`
+- Work import manifest planner: `src/lib/patristics/library/prepare-work-import.ts`
+- Atomic multi-section work staging writer: `src/lib/patristics/library/stage-work-import.ts`
 - Offline import planner with mandatory rights/attribution review: `src/lib/patristics/library/prepare-import.ts`
 - Transactional idempotent staging writer: `src/lib/patristics/library/stage-import.ts`
 - Bounded, injection-based embedding worker (1536 dimensions, STAGED editions only): `src/lib/patristics/library/stage-embeddings.ts`
@@ -44,7 +46,7 @@ indexed.
 
 ## Not done
 
-- A **three-passage pilot** from the 1893 NPNF English translation of Gregory of Nyssa's\n  *On the Soul and the Resurrection* was staged on the isolated Neon branch.\n  Source: https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/\n  Locator: opening dialogue, paragraphs 1–3. SHA-256 of stored text verified for all 3 passages.\n  Pilot lexical query with the term 'Teacher' returned two matching passages and provenance.\n  The staging edition remains STAGED, with 0 embeddings and 0 ACTIVE passages.\n- No full PG, PL or Philokalia volumes, or modern Orthodox editions, have\n  been loaded into the new tables. Import and embedding modules are not\n  connected to a scheduled job or public API.
+- A **four-passage pilot** from the 1893 NPNF English translation of Gregory of Nyssa's\n  *On the Soul and the Resurrection* was staged on the isolated Neon branch.\n  Source: https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/\n  Locators: opening dialogue, paragraphs 1–3, and separately paragraph 4. SHA-256 of stored text verified for all 4 passages.\n  Pilot lexical query with the term 'Teacher' returned two matching passages and provenance. The second locator demonstrates separate section storage.\n  The staging edition remains STAGED, with 0 embeddings and 0 ACTIVE passages.\n- No full PG, PL or Philokalia volumes, or modern Orthodox editions, have\n  been loaded into the new tables. Import and embedding modules are not\n  connected to a scheduled job or public API.
 - No background indexing jobs, reader UI or new answer-generation path is wired up.\n  Read-only vector search exists as an isolated module, but no actual vector\n  embeddings have been generated for the staged sample.
 - Automated tests are authored and CI workflow added; only mark tests as passed
   after reviewing an actual CI test run.
@@ -55,3 +57,7 @@ indexed.
 Introduce a read-only, independently tested search function, behind a default-off
 flag. Compare retrieval results against existing behavior. Enable only after
 a passing regression suite, verified attribution and rollback procedure.
+
+## Full-work completeness rule
+
+The new work planner preserves separate section locators, rejects duplicate sections and edition-metadata mismatches, and uses an explicit expected section manifest to distinguish COMPLETE_MANIFEST from PARTIAL_SAMPLE. This label is derived from the supplied manifest, not a guarantee that the source edition itself was complete. Before approving a full-work import, compare the manifest against the printed table of contents. The staging writer accepts at most 2500 passage chunks per transaction; larger volumes should be split into verified units.
