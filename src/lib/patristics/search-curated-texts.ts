@@ -371,6 +371,8 @@ export async function searchCuratedPatristicTexts(
             return {
               excerpt: body.slice(Math.max(0, at - 1050), Math.min(body.length, at + 1450)),
               matchedTerms: ["soul", "body", "atoms"],
+              index: -1,
+              score: 100,
             };
           })()
         : null;
