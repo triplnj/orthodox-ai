@@ -187,6 +187,11 @@ test("whole-work planning keeps chapter locators separate and rejects edition mi
   ];
   const plan = planLibraryWorkImport(sections,300);
   assert.equal(plan.sectionCount,2);
+  assert.equal(plan.coverage,"PARTIAL_SAMPLE");
+  const complete=planLibraryWorkImport(sections,300,["Chapter 1","Chapter 2"]);
+  assert.equal(complete.coverage,"COMPLETE_MANIFEST");
+  assert.throws(()=>planLibraryWorkImport(sections,300,["Chapter 1","Chapter 3"]),/manifest mismatch/);
+  assert.throws(()=>planLibraryWorkImport(sections,300,["Chapter 1"]),/manifest mismatch/);
   assert.equal(plan.edition.importStatus,"STAGED");
   assert.ok(plan.passages.some(p => p.locator === "Chapter 1" && p.ordinal === 0));
   assert.ok(plan.passages.some(p => p.locator === "Chapter 2" && p.ordinal === 0));
