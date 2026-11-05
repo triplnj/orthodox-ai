@@ -132,3 +132,41 @@ test("embedding worker only processes staged passages and validates vector size"
   await assert.rejects(indexStagedPassages(bad,"ed1",async () =>
     Array(1536).fill(Number.NaN)),/finite/);
 });
+
+test("new semantic library search reads only ACTIVE editions with author filters", async () => {
+  const load = createLoader();
+  const { searchLibraryPassages } = load("src/lib/patristics/library/search-library.ts");
+  const received = [];
+  const db = { query: async (sql, args) => {
+    received.push({ sql, args });
+    return { rows: [{
+      passageId: "p", authorName: "St. Gregory of Nyssa",
+      workTitle: "On the Soul and the Resurrection", corpus: "PG",
+      editionTitle: "Historical edition", sourceUrl: "https://example.org",
+      locator: "PG 46", content: "Main excerpt",
+      previousContent: "Previous argument", nextContent: "Next argument", score: 0.9,
+    }] };
+  } };
+  const vector = [1, ...Array(1535).fill(0)];
+  const result = await searchLibraryPassages(db, vector, { authorId: "gregory", corpus: "PG", limit: 3 });
+  assert.equal(result.length, 1);
+  assert.equal(result[0].previousContent, "Previous argument");
+  assert.ok(received[0].sql.includes('e."importStatus" = \'ACTIVE\''));
+  assert.ok(received[0].sql.includes('w."authorId" = $2'));
+  assert.ok(received[0].sql.includes('e."corpus" = $3'));
+  assert.equal(received[0].args[1], "gregory");
+  assert.equal(received[0].args[2], "PG");
+  assert.equal(received[0].args[3], 3);
+  await assert.rejects(searchLibraryPassages(db, [1,2]), /1536/);
+  await assert.rejects(searchLibraryPassages(db, vector, { limit: 999 }), /limit/);
+});
+test("source registry is additive discovery metadata, not imported content", () => {
+  const load = createLoader();
+  const { LIBRARY_COLLECTION_CANDIDATES } = load("src/lib/patristics/library/source-registry.ts");
+  const types = LIBRARY_COLLECTION_CANDIDATES.map(x => x.corpus);
+  for (const type of ["PG", "PL", "PHILOKALIA", "MODERN_ORTHODOX"]) {
+    assert.ok(types.includes(type));
+  }
+  assert.ok(LIBRARY_COLLECTION_CANDIDATES.every(x => x.review === "EDITION_BY_EDITION"));
+  assert.ok(LIBRARY_COLLECTION_CANDIDATES.every(x => x.catalogueUrl.startsWith("https://")));
+});
