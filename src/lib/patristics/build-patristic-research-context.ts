@@ -152,6 +152,11 @@ function buildFinalContext(contextParts: string[]) {
     "- Attribute a specific teaching to a Church Father only when supported by the evidence below.",
     "- Do not replace missing evidence with generic Orthodox teaching and imply that it belongs to the named Father.",
     "- Prefer primary-source evidence over secondary summaries when providers disagree.",
+    "- Core sources: Patrologia Graeca (Greek) and, when separately indexed, Patrologia Latina (Latin); Philokalia for the ascetic works it actually contains. Never assume that every Father or treatise appears in these collections.",
+    "- These collections are historical editions/anthologies, not automatic critical editions or guarantees of authorship; note pseudepigraphy, editorial variants, and OCR damage.",
+    "- SYNTHESIS METHOD: identify the exact author and question; read each relevant passage in its surrounding argument; distinguish what the author affirms, quotes, rejects or asks; compare independent passages; present the narrow conclusion supported by the evidence.",
+    "- A passage about another topic or another Father is not evidence for the requested claim. A quotation matching text is not automatically the author\u0027s own position.",
+    "- If primary text and secondary synopsis disagree, do not silently prefer the summary; disclose the conflict and preserve the primary passage\u0027s meaning.",
     "- Distinguish the Father's own teaching from quotations, opponents, heresies, historical narration, and rhetorical objections.",
     "- Never invent quotations, work titles, references, columns, chapter numbers, homily numbers, or URLs.",
     "- A live PG OCR passage may contain recognition errors; translate cautiously.",
@@ -260,16 +265,13 @@ export async function buildPatristicResearchContext(
     })(),
   ]);
 
-  // Maintain stable provenance ordering and keep every usable source.
-  if (orthodoxWiki.length) {
-    providersSucceeded.push("ORTHODOXWIKI");
-    contextParts.push(formatCuratedContext(orthodoxWiki));
-    sources.push(...mapCuratedSources(orthodoxWiki));
-  }
-  if (officialSaintLife.length) {
-    providersSucceeded.push("OFFICIAL_SAINT_LIVES");
-    contextParts.push(formatCuratedContext(officialSaintLife));
-    sources.push(...mapCuratedSources(officialSaintLife));
+  // Source-first order: PG original excerpts, curated primary translations,
+  // verified quotations, then discovery and biographical/bibliographic aids.
+  // The order reflects evidence quality, not provider completion time.
+  if (livePg?.context) {
+    providersSucceeded.push("PATROLOGIA_GRAECA");
+    contextParts.push(livePg.context);
+    sources.push(...mapPgSources(livePg.sources));
   }
   if (curated?.length) {
     providersSucceeded.push("CURATED_TEXT");
@@ -291,11 +293,6 @@ export async function buildPatristicResearchContext(
       metadata: source.metadata,
     })));
   }
-  if (livePg?.context) {
-    providersSucceeded.push("PATROLOGIA_GRAECA");
-    contextParts.push(livePg.context);
-    sources.push(...mapPgSources(livePg.sources));
-  }
   if (webResearch?.context) {
     providersSucceeded.push("WEB_RESEARCH");
     contextParts.push(webResearch.context);
@@ -313,6 +310,16 @@ export async function buildPatristicResearchContext(
     })));
   }
 
+  if (officialSaintLife.length) {
+    providersSucceeded.push("OFFICIAL_SAINT_LIVES");
+    contextParts.push(formatCuratedContext(officialSaintLife));
+    sources.push(...mapCuratedSources(officialSaintLife));
+  }
+  if (orthodoxWiki.length) {
+    providersSucceeded.push("ORTHODOXWIKI");
+    contextParts.push(formatCuratedContext(orthodoxWiki));
+    sources.push(...mapCuratedSources(orthodoxWiki));
+  }
   const result =
     contextParts.length > 0
       ? finalize(
