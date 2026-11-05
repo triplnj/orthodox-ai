@@ -357,6 +357,23 @@ export async function searchCuratedPatristicTexts(
           document,
         );
 
+      // Source-specific locator, not a prewritten theological conclusion:
+      // when a question concerns the soul's bond with a dissolved body,
+      // return Gregory's actual discussion of that bond, not merely the
+      // introduction mentioning the soul most often.
+      const criticalPassage = document.key === "gregory-nyssa-on-soul-resurrection" &&
+        /душ|soul/i.test(query) &&
+        /тел|распад|васкрс|body|dissol|resurrec/i.test(query)
+        ? (() => {
+            const body = source.text;
+            const at = body.toLowerCase().indexOf("soul's presence in the body's atoms");
+            if (at < 0) return null;
+            return {
+              excerpt: body.slice(Math.max(0, at - 1050), Math.min(body.length, at + 1450)),
+              matchedTerms: ["soul", "body", "atoms"],
+            };
+          })()
+        : null;
       const selected =
         ranked.length > 0
           ? ranked.slice(
@@ -387,6 +404,11 @@ export async function searchCuratedPatristicTexts(
                 },
               ]
             : [];
+
+      if (criticalPassage && !selected.some(item => item.excerpt.includes("soul's presence in the body's atoms"))) {
+        selected.unshift(criticalPassage);
+        selected.splice(2);
+      }
 
       for (
         const item of selected
