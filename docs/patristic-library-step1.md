@@ -196,3 +196,22 @@ DATABASE_URL in either staging command.
 - Evaluation requires a local git pull. No new key or env variables
   are needed if the previous PowerShell staging session remains
   open; the previous four embeddings remain stored.
+
+## Doctrinal evidence quarantine after 175-chunk retrieval test
+
+- The question about bodily identity, aging, and disability returned
+  relevant chunks 84, 85 and 86. Chunks 84–85 present challenges and
+  objections, while the following response addresses the questions.
+- These full-work chunks retain `speaker: null`, because the preliminary
+  extraction did not validate speakers at every passage boundary.
+- The offline evaluator now adds `evidenceRole`,
+  `mayPresentAsAuthorTeaching`, and `reason` from the conservative
+  `assess-passage-evidence.mjs` policy. All existing staged chunks stay
+  `mayPresentAsAuthorTeaching: false` until a separate, source-grounded,
+  full-dialogue doctrinal review is available.
+- Verified speaker labels alone cannot turn quoted objections, questions,
+  or dialectical speech into a saint's endorsed proposition.
+- This is only an **offline audit guard**, not a production answer policy:
+  no live chat code, source schema, or rollout status has changed.
+- Run: `node --test tests/patristic-evidence-policy.test.mjs`
+  after updating your checkout to test the gate locally.
