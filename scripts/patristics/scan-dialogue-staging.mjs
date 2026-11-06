@@ -52,6 +52,24 @@ export async function scan(env = process.env, deps = {}) {
       for (const flag of c.flags) counts[flag.marker] = (counts[flag.marker] ?? 0) + 1;
     }
 
+    const reviewAll = deps.reviewAll === true;
+    const byKey = new Map(chunks.map((c,i) => [`${c.locator}:${c.ordinal}`, {chunk:c,index:i}]));
+    const reviewEntries = candidates.map(c => {
+      const entry = byKey.get(`${c.locator}:${c.ordinal}`);
+      return {
+        locator:c.locator,
+        ordinal:c.ordinal,
+        status:"CANDIDATE_ONLY",
+        flags:c.flags.map(f => ({
+          marker:f.marker, offset:f.offset, evidenceText:f.evidenceText,
+          speaker:"UNDETERMINED", requiresHumanReview:true,
+          contextBefore:entry.chunk.content.slice(Math.max(0,f.offset-180), f.offset),
+          contextAfter:entry.chunk.content.slice(f.offset+f.evidenceText.length, f.offset+f.evidenceText.length+180)
+        })),
+        previousChunkEnd:chunks[entry.index-1]?.content.slice(-180) ?? null,
+        nextChunkStart:chunks[entry.index+1]?.content.slice(0,180) ?? null
+      };
+    });
     return {
       editionId: EDITION,
       status: "READ_ONLY_CANDIDATES",
@@ -59,7 +77,7 @@ export async function scan(env = process.env, deps = {}) {
       flaggedPassages: candidates.length,
       unflaggedPassages: chunks.length - candidates.length,
       flagCounts: counts,
-      reviewSamples: candidates.slice(0, 15),
+      reviewSamples: reviewAll ? reviewEntries : candidates.slice(0, 15),
       limitation: "Lexical markers are incomplete and can appear inside quoted speech. Neither flagged nor unflagged passages establish a verified speaker.",
       databaseWrites: 0
     };
@@ -69,6 +87,6 @@ export async function scan(env = process.env, deps = {}) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  scan().then(output => process.stdout.write(JSON.stringify(output, null, 2) + "\n"))
+  scan(process.env, {reviewAll: process.argv.includes("--review-all")}).then(output => process.stdout.write(JSON.stringify(output, null, 2) + "\n"))
     .catch(error => { process.stderr.write("SCAN_FAILED: " + error.message + "\n"); process.exitCode = 1; });
 }
