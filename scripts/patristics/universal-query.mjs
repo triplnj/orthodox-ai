@@ -10,13 +10,13 @@ export const QUERY_INTENTS = Object.freeze([
 ]);
 
 const patterns = [
-  ["BIBLIOGRAPHY", /\b(?:works|writings|books|bibliography|wrote|authored|spisi|dela|knjige|napisao|написао|дела|списи|књиге|делима)\b/iu],
-  ["BIOGRAPHY", /\b(?:who was|who is|life of|biography|born|died|ko je|ko bio|život|biografija|ко је|живот|биографија|рођен)\b/iu],
-  ["SCRIPTURE_COMMENTARY", /\b(?:interpret|commentary|explain (?:john|matthew|romans|psalm|corinthians)|tumač|tumačenje|тумач|тумачење|стих|verse|scripture|свето писмо)\b/iu],
-  ["SOURCE_LOCATION", /\b(?:find|locate|source|citation|quote|where does|pronađi|izvor|citat|gde piše|пронађи|извор|цитат|где пише|одломак|passage)\b/iu],
-  ["COMPARATIVE_TEACHING", /\b(?:compare|difference between|vs\.?|contrast|uporedi|razlika|упореди|разлика|поређење)\b/iu],
-  ["DOCTRINAL_EXPLANATION", /\b(?:teach|teaches|teaching|doctrine|understand|uči|učenje|учење|учи|шта каже|what does)\b/iu],
-  ["ORTHODOX_TRADITION", /\b(?:tradition|liturgy|fasting|prayer|icon|sacrament|orthodox|предање|литургија|пост|молитва|икона|тајна|православ)\b/iu],
+  ["BIBLIOGRAPHY", /(?:works|writings|books|bibliography|wrote|authored|spisi|dela|knjige|napisao|написао|дела|списи|књиге|делима)/iu],
+  ["BIOGRAPHY", /(?:who was|who is|life of|biography|born|died|ko je|ko bio|život|biografija|ко је|живот|биографија|рођен)/iu],
+  ["SCRIPTURE_COMMENTARY", /(?:interpret|commentary|explain (?:john|matthew|romans|psalm|corinthians)|tumač|tumačenje|тумач|тумачење|стих|verse|scripture|свето писмо)/iu],
+  ["SOURCE_LOCATION", /(?:find|locate|source|citation|quote|where does|pronađi|izvor|citat|gde piše|пронађи|извор|цитат|где пише|одломак|passage)/iu],
+  ["COMPARATIVE_TEACHING", /(?:compare|difference between|vs\.?|contrast|uporedi|razlika|упореди|разлика|поређење)/iu],
+  ["DOCTRINAL_EXPLANATION", /(?:teach|teaches|teaching|doctrine|understand|uči|učenje|учење|учи|шта каже|what does)/iu],
+  ["ORTHODOX_TRADITION", /(?:tradition|liturgy|fasting|prayer|icon|sacrament|orthodox|предање|литургија|пост|молитва|икона|тајна|православ)/iu],
 ];
 
 export function planUniversalQuery(question, options = {}) {
