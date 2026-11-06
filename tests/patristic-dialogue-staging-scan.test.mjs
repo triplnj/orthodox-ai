@@ -44,3 +44,14 @@ test("incomplete source fails closed",async()=>{
 test("invalid destination rejected without DB connection",async()=>{
   await assert.rejects(scan({LIBRARY_STAGING_DB_URL:"postgresql://a:b@localhost/test",LIBRARY_STAGING_BRANCH_ID:BRANCH}),/Invalid Neon/);
 });
+
+test("review-all includes exact offsets and surrounding context without changing database",async()=>{
+  const {db,queries}=fakeDb();
+  const result=await scan(env,{db,reviewAll:true});
+  assert.equal(result.flaggedPassages,1);
+  assert.equal(result.reviewSamples[0].flags[0].evidenceText,"said I");
+  assert.ok(result.reviewSamples[0].flags[0].contextBefore.includes("But that"));
+  assert.equal(result.reviewSamples[0].flags[0].speaker,"UNDETERMINED");
+  assert.equal(result.databaseWrites,0);
+  assert.ok(queries.every(q=>/^SELECT /i.test(q)));
+});
