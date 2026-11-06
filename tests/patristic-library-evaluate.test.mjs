@@ -22,7 +22,8 @@ function mockDb(valid = true) {
         locator:"I.1.1",content:"inquietum est cor nostrum",importStatus:"STAGED",
         similarity:0.91,previousContent:"",nextContent:null,
         speakerName:"Augustine of Hippo",speakerRole:"DIALOGUE_SPEAKER",statementKind:"QUESTION",
-        attributionStatus:"TEXT_VERIFIED",attributionEvidenceUrl:"https://example.org/proof"}]};
+        attributionStatus:"TEXT_VERIFIED",attributionEvidenceUrl:"https://example.org/proof",
+        followingReplyContent:"Macrina offers a reply",followingReplySpeaker:"Macrina",followingReplyStatus:"TEXT_VERIFIED"}]};
     },
   };
   return db;
@@ -40,6 +41,7 @@ test("staging evaluation has hard branch guard and no writes",async()=>{
   assert.equal(got.hits[0].speaker,"Augustine of Hippo");
   assert.equal(got.hits[0].statementKind,"QUESTION");
   assert.equal(got.hits[0].attributionEvidenceUrl,"https://example.org/proof");
+  assert.deepEqual(got.hits[0].followingReply,{speaker:"Macrina",excerpt:"Macrina offers a reply"});
   const sql=db.queries.filter(x=>typeof x==="object").map(x=>x.sql);
   assert.ok(sql.some(x=>x.includes("e.\"importStatus\"='STAGED'")));
   assert.ok(sql.every(x=>/^\s*SELECT\b/.test(x)));
@@ -67,6 +69,7 @@ test("unreviewed speaker attribution is never presented as verified",async()=>{
       result.rows[0].attributionStatus="UNREVIEWED";
       result.rows[0].speakerName="A guessed speaker";
       result.rows[0].statementKind="TEACHING";
+      result.rows[0].followingReplyStatus="UNREVIEWED";
     }
     return result;
   };
@@ -75,4 +78,5 @@ test("unreviewed speaker attribution is never presented as verified",async()=>{
   assert.equal(output.hits[0].speaker,null);
   assert.equal(output.hits[0].statementKind,"UNDETERMINED");
   assert.equal(output.hits[0].attributionEvidenceUrl,null);
+  assert.equal(output.hits[0].followingReply,null);
 });
