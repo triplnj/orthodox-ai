@@ -20,7 +20,9 @@ function mockDb(valid = true) {
       return {rows:[{authorName:"Augustine of Hippo",workTitle:"Confessiones",
         corpus:"PL",editionTitle:"PL 32",sourceUrl:"https://example.org",
         locator:"I.1.1",content:"inquietum est cor nostrum",importStatus:"STAGED",
-        similarity:0.91,previousContent:"",nextContent:null}]};
+        similarity:0.91,previousContent:"",nextContent:null,
+        speakerName:"Augustine of Hippo",speakerRole:"DIALOGUE_SPEAKER",statementKind:"QUESTION",
+        attributionStatus:"TEXT_VERIFIED",attributionEvidenceUrl:"https://example.org/proof"}]};
     },
   };
   return db;
@@ -35,6 +37,9 @@ test("staging evaluation has hard branch guard and no writes",async()=>{
   assert.equal(got.hits[0].author,"Augustine of Hippo");
   assert.equal(got.hits[0].locator,"I.1.1");
   assert.equal(got.hits[0].similarity,0.91);
+  assert.equal(got.hits[0].speaker,"Augustine of Hippo");
+  assert.equal(got.hits[0].statementKind,"QUESTION");
+  assert.equal(got.hits[0].attributionEvidenceUrl,"https://example.org/proof");
   const sql=db.queries.filter(x=>typeof x==="object").map(x=>x.sql);
   assert.ok(sql.some(x=>x.includes("e.\"importStatus\"='STAGED'")));
   assert.ok(sql.every(x=>/^\s*SELECT\b/.test(x)));
@@ -51,4 +56,23 @@ test("staging evaluation rejects invalid question embeddings",async()=>{
   const ai={embeddings:{async create(){return {data:[{embedding:[1]}]}}}};
   await assert.rejects(evaluate(["--question","God"],env,{db,ai}),/Invalid question embedding/);
   assert.ok(!db.queries.some(x=>typeof x==="object" && x.sql.includes('JOIN "LibraryEdition"')));
+});
+
+test("unreviewed speaker attribution is never presented as verified",async()=>{
+  const db=mockDb();
+  const original=db.query.bind(db);
+  db.query=async (sql,args)=>{
+    const result=await original(sql,args);
+    if (sql.includes('JOIN "LibraryEdition"')) {
+      result.rows[0].attributionStatus="UNREVIEWED";
+      result.rows[0].speakerName="A guessed speaker";
+      result.rows[0].statementKind="TEACHING";
+    }
+    return result;
+  };
+  const ai={embeddings:{async create(){return {data:[{index:0,embedding:vector}]}}}};
+  const output=await evaluate(["--question","Who is speaking?"],env,{db,ai});
+  assert.equal(output.hits[0].speaker,null);
+  assert.equal(output.hits[0].statementKind,"UNDETERMINED");
+  assert.equal(output.hits[0].attributionEvidenceUrl,null);
 });
