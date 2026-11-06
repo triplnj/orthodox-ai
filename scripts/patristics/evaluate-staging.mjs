@@ -5,6 +5,7 @@
  */
 import pg from "pg";
 import OpenAI from "openai";
+import { assessPassageEvidence } from "./assess-passage-evidence.mjs";
 import { pathToFileURL } from "node:url";
 
 const { Client } = pg;
@@ -113,6 +114,7 @@ export async function evaluate(argv = process.argv.slice(2), env = process.env, 
         followingReply: row.followingReplyStatus === "TEXT_VERIFIED"
           ? { speaker: row.followingReplySpeaker, excerpt: row.followingReplyContent }
           : null,
+        ...assessPassageEvidence(row),
       })),
     };
   } finally {
