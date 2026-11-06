@@ -12,6 +12,8 @@ on:
       - 'scripts/patristics/scan-dialogue-staging.mjs'
       - 'scripts/patristics/universal-query.mjs'
       - 'scripts/patristics/catalog-staging.mjs'
+      - 'scripts/patristics/research-staging.mjs'
+      - 'tests/patristic-research-staging.test.mjs'
       - 'tests/patristic-universal-query.test.mjs'
       - 'tests/patristic-dialogue-staging-scan.test.mjs'
       - 'tests/patristic-dialogue-boundaries.test.mjs'
@@ -42,4 +44,4 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs tests/patristic-evidence-policy.test.mjs tests/patristic-dialogue-boundaries.test.mjs tests/patristic-dialogue-staging-scan.test.mjs tests/patristic-universal-query.test.mjs
+      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs tests/patristic-evidence-policy.test.mjs tests/patristic-dialogue-boundaries.test.mjs tests/patristic-dialogue-staging-scan.test.mjs tests/patristic-universal-query.test.mjs tests/patristic-research-staging.test.mjs
