@@ -29,7 +29,7 @@ export function extractPreview(html) {
     const container = $(selector).first();
     if (!container.length) continue;
     const rows = container.find("p").toArray().map(el =>
-      $(el).text().replace(/\\s+/g, " ").trim()).filter(Boolean);
+      $(el).text().replace(/\s+/g, " ").trim()).filter(Boolean);
     if (rows.some(p => START.test(p))) {
       paragraphs = rows;
       selected = selector;
@@ -43,11 +43,11 @@ export function extractPreview(html) {
   paragraphs = paragraphs.slice(opening);
   // Exclude bibliography/footer matter by stopping at the end of article
   // only if the source uses explicit trailing labels. If unsure, flag review.
-  const words = paragraphs.join(" ").split(/\\s+/).length;
+  const words = paragraphs.join(" ").split(/\s+/).length;
   if (paragraphs.length < 20 || words < 5000) {
     throw new Error("Source too short for a reliable long-form preview");
   }
-  const allText = paragraphs.join("\\n\\n");
+  const allText = paragraphs.join("\n\n");
   const sha256 = createHash("sha256").update(allText).digest("hex");
   return {
     sourceUrl: SOURCE_URL,
@@ -80,6 +80,6 @@ export async function prepareSource(fetcher = fetch) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   prepareSource()
-    .then(result => process.stdout.write(JSON.stringify(result, null, 2) + "\\n"))
-    .catch(error => { process.stderr.write("SOURCE_PREVIEW_FAILED: " + error.message + "\\n"); process.exitCode = 1; });
+    .then(result => process.stdout.write(JSON.stringify(result, null, 2) + "\n"))
+    .catch(error => { process.stderr.write("SOURCE_PREVIEW_FAILED: " + error.message + "\n"); process.exitCode = 1; });
 }
