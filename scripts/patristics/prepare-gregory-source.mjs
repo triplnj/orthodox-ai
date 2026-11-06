@@ -13,6 +13,8 @@ import { pathToFileURL } from "node:url";
 
 export const SOURCE_URL = "https://www.newadvent.org/fathers/2915.htm";
 const START = /Basil, great among the saints/i;
+const END_START = /When such, then, have been purged from it/i;
+const END_FINAL = /and in His Image, man as he was made\./i;
 
 export function extractPreview(html) {
   if (typeof html !== "string" || html.length < 1000) {
@@ -41,8 +43,19 @@ export function extractPreview(html) {
   }
   let opening = paragraphs.findIndex(p => START.test(p));
   paragraphs = paragraphs.slice(opening);
-  // Exclude bibliography/footer matter by stopping at the end of article
-  // only if the source uses explicit trailing labels. If unsure, flag review.
+  // Fail closed unless the verified final paragraph is present.
+  // A site redesign must not silently import navigation or a truncated book.
+  const end = paragraphs.findIndex(p => END_START.test(p) && END_FINAL.test(p));
+  if (end < 0) throw new Error("Ending passage not found; source incomplete or changed");
+  paragraphs = paragraphs.slice(0, end + 1);
+  const final = paragraphs.at(-1);
+  const endMatch = final.match(END_FINAL);
+  if (!endMatch || final.slice(endMatch.index + endMatch[0].length).trim()) {
+    throw new Error("Book ending mixed with website material; manual review required");
+  }
+  if (paragraphs.some(p => /About this page|Contact information|ADVERTISE WITH NEW ADVENT|Copyright ©/.test(p))) {
+    throw new Error("Non-book website material detected inside extracted text");
+  }
   const words = paragraphs.join(" ").split(/\s+/).length;
   if (paragraphs.length < 20 || words < 5000) {
     throw new Error("Source too short for a reliable long-form preview");
