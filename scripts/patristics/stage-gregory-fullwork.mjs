@@ -27,7 +27,7 @@ function config(env){
     throw new Error("Missing staging DB URL or expected branch ID");
   const url=new URL(env.LIBRARY_STAGING_DB_URL);
   if(!["postgres:","postgresql:"].includes(url.protocol)||
-      !/\\.neon\\.tech$/i.test(url.hostname)||
+      !/\.neon\.tech$/i.test(url.hostname)||
       !/^br-[a-z0-9-]+$/.test(env.LIBRARY_STAGING_BRANCH_ID))
     throw new Error("Invalid staging DB configuration");
   return {url:env.LIBRARY_STAGING_DB_URL,branch:env.LIBRARY_STAGING_BRANCH_ID};
@@ -110,6 +110,6 @@ export async function stage(argv=process.argv.slice(2),env=process.env,deps={}){
   }finally{await db.end();}
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
-  stage().then(r=>process.stdout.write(JSON.stringify(r,null,2)+"\\n"))
-    .catch(e=>{process.stderr.write("STAGING_FAILED: "+e.message+"\\n");process.exitCode=1;});
+  stage().then(r=>process.stdout.write(JSON.stringify(r,null,2)+"\n"))
+    .catch(e=>{process.stderr.write("STAGING_FAILED: "+e.message+"\n");process.exitCode=1;});
 }
