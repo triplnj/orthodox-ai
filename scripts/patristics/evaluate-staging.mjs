@@ -69,6 +69,9 @@ export async function evaluate(argv = process.argv.slice(2), env = process.env, 
         p."locator",p."content",p."id" AS "passageId",
         attr."speakerName",attr."speakerRole",attr."statementKind",
         attr."attributionStatus",attr."evidenceUrl" AS "attributionEvidenceUrl",
+        reply."content" AS "followingReplyContent",
+        replyAttr."speakerName" AS "followingReplySpeaker",
+        replyAttr."attributionStatus" AS "followingReplyStatus",
         1 - (p."embedding" <=> $1::vector) AS "similarity",
         prev."content" AS "previousContent",nxt."content" AS "nextContent"
       FROM "LibraryPassage" p
@@ -76,6 +79,12 @@ export async function evaluate(argv = process.argv.slice(2), env = process.env, 
       JOIN "LibraryWork" w ON w."id"=e."workId"
       JOIN "LibraryAuthor" a ON a."id"=w."authorId"
       LEFT JOIN "LibraryPassageAttribution" attr ON attr."passageId"=p."id"
+      LEFT JOIN "LibraryDialogueTurnLink" turnlink
+        ON turnlink."fromPassageId"=p."id"
+        AND turnlink."relation"='QUESTION_FOLLOWED_BY_REPLY'
+        AND turnlink."reviewed"=true
+      LEFT JOIN "LibraryPassage" reply ON reply."id"=turnlink."toPassageId"
+      LEFT JOIN "LibraryPassageAttribution" replyAttr ON replyAttr."passageId"=reply."id"
       LEFT JOIN "LibraryPassage" prev
         ON prev."editionId"=p."editionId" AND prev."locator"=p."locator"
         AND prev."ordinal"=p."ordinal"-1
@@ -101,6 +110,9 @@ export async function evaluate(argv = process.argv.slice(2), env = process.env, 
         speakerRole: row.attributionStatus === "TEXT_VERIFIED" ? row.speakerRole : "UNDETERMINED",
         statementKind: row.attributionStatus === "TEXT_VERIFIED" ? row.statementKind : "UNDETERMINED",
         attributionEvidenceUrl: row.attributionStatus === "TEXT_VERIFIED" ? row.attributionEvidenceUrl : null,
+        followingReply: row.followingReplyStatus === "TEXT_VERIFIED"
+          ? { speaker: row.followingReplySpeaker, excerpt: row.followingReplyContent }
+          : null,
       })),
     };
   } finally {
