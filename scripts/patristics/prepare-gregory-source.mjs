@@ -16,7 +16,7 @@ const START = /Basil, great among the saints/i;
 const END_START = /When such, then, have been purged from it/i;
 const END_FINAL = /and in His Image, man as he was made\./i;
 
-export function extractPreview(html) {
+export function extractDocument(html) {
   if (typeof html !== "string" || html.length < 1000) {
     throw new Error("Source HTML is unexpectedly short");
   }
@@ -62,7 +62,7 @@ export function extractPreview(html) {
   }
   const allText = paragraphs.join("\n\n");
   const sha256 = createHash("sha256").update(allText).digest("hex");
-  return {
+  const metadata = {
     sourceUrl: SOURCE_URL,
     work: "On the Soul and the Resurrection",
     author: "St. Gregory of Nyssa",
@@ -74,9 +74,14 @@ export function extractPreview(html) {
     first: paragraphs.slice(0,2),
     last: paragraphs.slice(-2),
   };
+  return {metadata,paragraphs};
 }
 
-export async function prepareSource(fetcher = fetch) {
+export function extractPreview(html) {
+  return extractDocument(html).metadata;
+}
+
+export async function fetchSourceDocument(fetcher = fetch) {
   const response = await fetcher(SOURCE_URL, {
     headers: { "User-Agent": "OrthodoxAI-PatristicSourcePreview/1.0" },
     signal: AbortSignal.timeout(20000),
@@ -88,7 +93,11 @@ export async function prepareSource(fetcher = fetch) {
   }
   const html = await response.text();
   if (html.length > 5_000_000) throw new Error("Source HTML exceeds 5MB safety limit");
-  return extractPreview(html);
+  return extractDocument(html);
+}
+
+export async function prepareSource(fetcher = fetch) {
+  return (await fetchSourceDocument(fetcher)).metadata;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
