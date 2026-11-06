@@ -30,7 +30,7 @@ test("network preview fails on non-html response", async () => {
 
 test("footer material after final paragraph is never included", () => {
   const html="<html><body><p>Basil, great among the saints " + "Gregory grieves. ".repeat(25) + "</p>" +
-    Array.from({length:24},()=>"<p>"+ "A theological conversation continues. ".repeat(50)+"</p>").join("") +
+    Array.from({length:24},()=>"<p>"+ "A theological conversation continues. ".repeat(70)+"</p>").join("") +
     "<p>When such, then, have been purged from it, the good is restored and in His Image, man as he was made.</p>" +
     "<h2>About this page</h2><p>Contact information. The editor of New Advent is Kevin Knight.</p></body></html>";
   const output=extractPreview(html);
