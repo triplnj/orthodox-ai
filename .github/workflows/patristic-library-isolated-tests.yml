@@ -7,6 +7,12 @@ on:
       - 'scripts/patristics/sql/**'
       - 'scripts/patristics/index-staging.mjs'
       - 'scripts/patristics/evaluate-staging.mjs'
+      - 'scripts/patristics/prepare-gregory-source.mjs'
+      - 'scripts/patristics/plan-gregory-sections.mjs'
+      - 'scripts/patristics/stage-gregory-fullwork.mjs'
+      - 'tests/patristic-source-preview.test.mjs'
+      - 'tests/patristic-section-manifest.test.mjs'
+      - 'tests/patristic-fullwork-staging.test.mjs'
       - 'tests/patristic-library-isolation.test.mjs'
       - 'tests/patristic-library-index-cli.test.mjs'
       - 'tests/patristic-library-evaluate.test.mjs'
@@ -27,4 +33,4 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs
+      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs
