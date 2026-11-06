@@ -146,3 +146,28 @@ the author, the attributed passage, surrounding text and citation manually.
 These example queries currently produce no meaningful semantic results,
 because the sample embeddings are still NULL. Never use the existing app
 DATABASE_URL in either staging command.
+
+## Dialogue speaker attribution, staging-only (November 2026)
+
+- New additive table: `scripts/patristics/sql/002_passage_attribution_staging.sql`.
+  Applied **only** to branch `br-spring-frost-assfzje6`; not a Prisma or
+  production migration. It contains speaker name, role, statement kind,
+  verification status, and source evidence URL and note.
+- Four Gregory of Nyssa opening passages were individually attributed
+  against the opening of *On the Soul and the Resurrection*
+  (https://www.newadvent.org/fathers/2915.htm).
+  Three are first-person narration by Gregory; the distinct passage
+  'How can that ever be practised by mankind?' is explicitly Gregory's
+  question after 'I asked'. Its wording is not Macrina's answer and not
+  by itself a complete statement of the author's doctrine.
+- `scripts/patristics/evaluate-staging.mjs` now LEFT JOINs the optional
+  attribution record and only exposes a speaker/kind if status is
+  `TEXT_VERIFIED`. Unreviewed or absent attribution stays UNDETERMINED.
+- No automatic speaker inference has been activated, and the live
+  chat and source-retrieval pipeline remain unchanged. A correct
+  speaker label does **not** establish which philosophical claims the
+  author ultimately accepts or rejects; interpreting the dialogue
+  requires later question-and-answer turns.
+- To inspect locally: update your checkout, then run the existing
+  `evaluate-staging.mjs` command with the existing local staging
+  environment variables. No API keys or database secrets belong in git.
