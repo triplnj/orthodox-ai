@@ -171,3 +171,28 @@ DATABASE_URL in either staging command.
 - To inspect locally: update your checkout, then run the existing
   `evaluate-staging.mjs` command with the existing local staging
   environment variables. No API keys or database secrets belong in git.
+
+## Reviewed question → immediate reply, staging only
+
+- Added `scripts/patristics/sql/003_dialogue_turn_links_staging.sql`;
+  only the isolated Neon staging branch has this table.
+- Verified the exchange in NPNF/CCEL:
+  https://ccel.org/ccel/schaff/npnf205/npnf205.x.iii.ii.html
+  Gregory asks why humans fear death. Macrina (the Teacher)
+  responds by asking what specifically pains him about the
+  necessity of death. This is an **initial clarifying question**,
+  not the whole doctrinal answer.
+- Added Macrina's immediately following passage as an unactivated
+  staging excerpt, with TEXT_VERIFIED speaker and QUESTION kind.
+  It currently has **no embedding**.
+- The previous Gregory question now has a manually verified
+  QUESTION_FOLLOWED_BY_REPLY link. The staging evaluator includes
+  `followingReply` only if the linked passage attribution is
+  TEXT_VERIFIED; no fabricated connection is used.
+- There are now **five Gregory sample passages**, four previously
+  embedded and one newly staged without an embedding. Both the
+  speaker annotations and the dialogue links are separate
+  staging-only tables, outside the existing production schema.
+- Evaluation requires a local git pull. No new key or env variables
+  are needed if the previous PowerShell staging session remains
+  open; the previous four embeddings remain stored.
