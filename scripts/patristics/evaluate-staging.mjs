@@ -67,12 +67,15 @@ export async function evaluate(argv = process.argv.slice(2), env = process.env, 
       SELECT a."canonicalName" AS "authorName",w."title" AS "workTitle",
         e."corpus",e."editionTitle",e."sourceUrl",e."importStatus",
         p."locator",p."content",p."id" AS "passageId",
+        attr."speakerName",attr."speakerRole",attr."statementKind",
+        attr."attributionStatus",attr."evidenceUrl" AS "attributionEvidenceUrl",
         1 - (p."embedding" <=> $1::vector) AS "similarity",
         prev."content" AS "previousContent",nxt."content" AS "nextContent"
       FROM "LibraryPassage" p
       JOIN "LibraryEdition" e ON e."id"=p."editionId"
       JOIN "LibraryWork" w ON w."id"=e."workId"
       JOIN "LibraryAuthor" a ON a."id"=w."authorId"
+      LEFT JOIN "LibraryPassageAttribution" attr ON attr."passageId"=p."id"
       LEFT JOIN "LibraryPassage" prev
         ON prev."editionId"=p."editionId" AND prev."locator"=p."locator"
         AND prev."ordinal"=p."ordinal"-1
@@ -94,6 +97,10 @@ export async function evaluate(argv = process.argv.slice(2), env = process.env, 
         sourceUrl: row.sourceUrl, locator: row.locator,
         similarity: Number(row.similarity),
         excerpt: row.content, before: row.previousContent, after: row.nextContent,
+        speaker: row.attributionStatus === "TEXT_VERIFIED" ? row.speakerName : null,
+        speakerRole: row.attributionStatus === "TEXT_VERIFIED" ? row.speakerRole : "UNDETERMINED",
+        statementKind: row.attributionStatus === "TEXT_VERIFIED" ? row.statementKind : "UNDETERMINED",
+        attributionEvidenceUrl: row.attributionStatus === "TEXT_VERIFIED" ? row.attributionEvidenceUrl : null,
       })),
     };
   } finally {
