@@ -36,13 +36,13 @@ test("long paragraphs split into bounded, lossless chunks",()=>{
  assert.equal(r.passages.map(p=>p.content).join(""),long);
 });
 test("preserves trailing spaces and line breaks in source passages",()=>{
- const text="Original passage with a trailing space and line ending. \\n";
+ const text="Original passage with a trailing space and line ending. \n";
  const m={schemaVersion:1,works:[make("St. Basil the Great","Hexaemeron",text)]};
  const prepared=prepareSourceBatch(m);
  assert.equal(prepared.passages[0].content,text);
 });
 test("rejects whitespace-only passages instead of admitting empty content",()=>{
- const m={schemaVersion:1,works:[make("St. Basil the Great","Hexaemeron","  \\n  ")]};
+ const m={schemaVersion:1,works:[make("St. Basil the Great","Hexaemeron","  \n  ")]};
  assert.throws(()=>prepareSourceBatch(m),/invalid paragraph/);
 });
 test("invalid or undocumented usage rights fail before staging",()=>{
