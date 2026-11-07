@@ -33,9 +33,9 @@ export function auditFirstSourceBatch(manifest){
     // The Wikisource transcription has several introductory headings, which
     // can each become a standalone paragraph. Search the early *text*, not
     // a brittle fixed number of paragraphs.
-    const fullText=input.paragraphs.map(p=>p.text).join("\\n\\n");
+    const fullText=input.paragraphs.map(p=>p.text).join("\n\n");
     const normalizedOpening=fullText.slice(0,Math.min(20000,Math.ceil(fullText.length*0.25)))
-      .replace(/\\s+/g," ");
+      .replace(/\s+/g," ");
     const last=input.paragraphs.at(-1).text;
     if(!expected.startsWith.test(normalizedOpening))
       throw Error("Source beginning marker is missing near start: "+key+
