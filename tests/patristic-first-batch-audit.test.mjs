@@ -48,3 +48,15 @@ test("rejects a source with a missing homily ending",()=>{
  src.works[1].paragraphs.at(-1).text="Unfinished final paragraph.";
  assert.throws(()=>auditFirstSourceBatch(src),/final doxology/);
 });
+
+test("accepts heading and biblical epigraph before the genuine opening",()=>{
+ const src=good();
+ src.works[0].paragraphs[0].text="Homily I. In the Beginning God made the Heaven and the Earth.";
+ src.works[0].paragraphs[1].text="1. It is right that any one beginning to narrate the formation of the world should begin with the good order of created things.";
+ assert.equal(auditFirstSourceBatch(src).results.length,2);
+});
+test("rejects a source missing its real opening even with enough paragraphs",()=>{
+ const src=good();
+ src.works[0].paragraphs[0].text="Unrelated material about a different work.";
+ assert.throws(()=>auditFirstSourceBatch(src),/beginning marker/);
+});
