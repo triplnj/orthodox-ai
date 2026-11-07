@@ -1,0 +1,74 @@
+name: Patristic Library - Approved Two-Work Staging Import 2026-11-07
+
+# Explicitly authorized one-time staging import. This push trigger only fires
+# when this workflow file itself is first committed/edited, not on other pushes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-approved-import-2026-11-07.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-staging-import
+  cancel-in-progress: false
+
+jobs:
+  import-approved-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: patristic-library-staging
+    env:
+      REVIEWED_SHA: '013651125f3793b49b2340b4f43b054a88d232d1780198b736e40ca1455eb867'
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run source validation and staging safety tests
+        run: |
+          node --test tests/patristic-first-source-batch.test.mjs tests/patristic-first-batch-audit.test.mjs tests/patristic-source-batch.test.mjs tests/patristic-approved-source-staging.test.mjs tests/patristic-staging-connection.test.mjs
+      - name: Fetch two sources into temporary file
+        run: node scripts/patristics/build-first-source-batch.mjs "$RUNNER_TEMP/patristic-approved-source.json"
+      - name: Verify exact reviewed source hash before any writes
+        shell: bash
+        run: |
+          node scripts/patristics/audit-first-source-batch.mjs "$RUNNER_TEMP/patristic-approved-source.json" > "$RUNNER_TEMP/patristic-approved-audit.json"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const report=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/patristic-approved-audit.json","utf8"));
+            if(report.manifestSha256!==process.env.REVIEWED_SHA) {
+              console.error("STOP: fetched source does not match the expressly approved review archive.");
+              console.error("Expected:",process.env.REVIEWED_SHA,"Observed:",report.manifestSha256);
+              process.exitCode=1;
+            }else{
+              console.log("Exact approved source SHA-256 verified.");
+            }
+          '
+      - name: Verify isolated Neon branch using read-only guard
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Import exact approved 101 chunks to STAGED only
+        shell: bash
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          PATRISTIC_STAGING_APPROVAL: STAGE_REVIEWED_SOURCE_ONLY
+        run: |
+          node scripts/patristics/approved-source-staging.mjs "$RUNNER_TEMP/patristic-approved-source.json" "$REVIEWED_SHA" > "$RUNNER_TEMP/patristic-import-result.json"
+          cat "$RUNNER_TEMP/patristic-import-result.json"
+          cat "$RUNNER_TEMP/patristic-import-result.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Post-import read-only staging inventory
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
