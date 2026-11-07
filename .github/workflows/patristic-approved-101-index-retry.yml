@@ -1,0 +1,67 @@
+name: Patristic Library - Approved 101 Embeddings Staging Retry
+
+# Explicitly approved one-time execution following successful isolated safety tests.
+# Push event restricted to this workflow file; ordinary pushes never run this job.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-approved-101-index-retry.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-approved-101-embeddings
+  cancel-in-progress: false
+
+jobs:
+  index-approved-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: patristic-library-staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify approved embedding tests again before using API
+        run: node --test tests/patristic-approved-index.test.mjs tests/patristic-staging-connection.test.mjs
+      - name: Guard Neon staging database (read only)
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Index only 101 approved passages within 1 USD preflight budget
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PATRISTIC_INDEX_APPROVAL: INDEX_101_STAGING_ONLY
+        run: node scripts/patristics/index-approved-batch.mjs
+      - name: Verify all 101 indexed on guarded staging (read only)
+        shell: bash
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: |
+          node scripts/patristics/check-staging-connection.mjs
+          node --input-type=module -e '
+            import pg from "pg";
+            const c=new pg.Client({connectionString:process.env.LIBRARY_STAGING_DB_URL,ssl:{rejectUnauthorized:true}});
+            await c.connect();
+            try {
+              const guard=await c.query("SELECT \"branchId\", \"purpose\" FROM \"LibraryStagingGuard\"");
+              if(guard.rows.length!==1 || guard.rows[0].branchId!==process.env.LIBRARY_STAGING_BRANCH_ID || guard.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")throw Error("Wrong Neon branch");
+              const ids=["edition_b0cd850e255cf4bd4310094ce8625dec","edition_55ef4de453f96a6f885f78a83e01edc0"];
+              const q=await c.query("SELECT count(*)::int AS total, count(embedding)::int AS embedded FROM \"LibraryPassage\" WHERE \"editionId\"=ANY($1::text[])",[ids]);
+              const x=q.rows[0];
+              if(x.total!==101||x.embedded!==101)throw Error("Incomplete embeddings: "+JSON.stringify(x));
+              console.log("Verified 101/101 embeddings on isolated staging.");
+            } finally { await c.end(); }
+          '
