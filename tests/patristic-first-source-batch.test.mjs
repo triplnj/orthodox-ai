@@ -56,5 +56,5 @@ test("preserves a word boundary where Wikisource inserts a footnote",()=>{
  const ps=extractPrimaryParagraphs(joined);
  assert.match(ps[0].text,/require the aid/);
  assert.doesNotMatch(ps[0].text,/requirethe/);
- assert.doesNotMatch(ps[0].text,/\\[1\\]/);
+ assert.doesNotMatch(ps[0].text,/\[1\]/);
 });
