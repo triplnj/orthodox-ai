@@ -1,0 +1,52 @@
+name: Patristic Library - Approved 101 Embeddings (Staging Only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Enter INDEX_101_STAGING_ONLY (approved maximum $1 USD)'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-approved-101-embeddings
+  cancel-in-progress: false
+
+jobs:
+  index-two-reviewed-editions:
+    if: ${{ github.event.inputs.confirmation == 'INDEX_101_STAGING_ONLY' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: patristic-library-staging
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install isolated dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test no-production branch and cost protection
+        run: node --test tests/patristic-approved-index.test.mjs tests/patristic-staging-connection.test.mjs
+      - name: Verify Neon branch is staging (read-only)
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Generate embeddings for exactly 101 approved passages, up to 1 USD
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PATRISTIC_INDEX_APPROVAL: ${{ github.event.inputs.confirmation }}
+        run: node scripts/patristics/index-approved-batch.mjs
+      - name: Verify staging inventory after indexing (read-only)
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
