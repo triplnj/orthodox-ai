@@ -12,10 +12,16 @@ const make=(author,title,count)=>({
   text:"This is a realistic test paragraph about scripture and theological history, with multiple clauses. ".repeat(3)
  }))
 });
-const good=()=>({schemaVersion:1,works:[
+const good=()=>{
+ const works=[
  make("St. Basil the Great","Hexaemeron, Homily I",18),
  make("St. John Chrysostom","Homilies on Matthew, Homily I",70)
-]});
+ ];
+ works[0].paragraphs[0].text="1. It is right that any one beginning to narrate the formation of the world should begin with visible things.";
+ works[1].paragraphs[0].text="It were indeed meet for us not at all to require the aid of the written Word.";
+ for(const w of works) w.paragraphs.at(-1).text="To whom be all honour and glory world without end. Amen.";
+ return {schemaVersion:1,works};
+};
 test("audits both authors and returns source fingerprints without DB access",()=>{
  const report=auditFirstSourceBatch(good());
  assert.equal(report.results.length,2);
@@ -35,4 +41,10 @@ test("rejects replaced host or unknown edition",()=>{
  assert.throws(()=>auditFirstSourceBatch(src),/Unexpected source domain/);
  const swapped=good();swapped.works[1].title="Unrelated title";
  assert.throws(()=>auditFirstSourceBatch(swapped),/Unknown edition/);
+});
+
+test("rejects a source with a missing homily ending",()=>{
+ const src=good();
+ src.works[1].paragraphs.at(-1).text="Unfinished final paragraph.";
+ assert.throws(()=>auditFirstSourceBatch(src),/final doxology/);
 });
