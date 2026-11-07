@@ -12,6 +12,16 @@ test("extracts primary paragraphs without footnotes or page furniture",()=>{
  assert.ok(ps.every(p=>!p.text.includes("references")));
 });
 
+test("preserves short paragraphs, including brief transitions",()=>{
+ const shortPage="<div class='mw-parser-output'>"+
+   Array.from({length:5},(_,i)=>"<p>"+para.repeat(6)+"</p>").join("")+
+   "<p>But why?</p><p>Therefore.</p></div>";
+ const extracted=extractPrimaryParagraphs(shortPage);
+ assert.equal(extracted.length,7);
+ assert.equal(extracted[5].text,"But why?");
+ assert.equal(extracted[6].text,"Therefore.");
+});
+
 test("rejects missing primary text",()=>{
  assert.throws(()=>extractPrimaryParagraphs("<div>Article unavailable</div>"),/article body/);
  assert.throws(()=>extractPrimaryParagraphs("<div class='mw-parser-output'><p>Short</p></div>"),/incomplete/);
