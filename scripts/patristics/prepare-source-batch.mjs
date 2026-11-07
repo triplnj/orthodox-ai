@@ -37,7 +37,8 @@ function validateWork(w){
   }
   const seen=new Set();
   for(const p of w.paragraphs){
-    if(!p || !proper(p.locator,250)||!proper(p.text,200000)||
+    if(!p || !proper(p.locator,250)||typeof p.text!=="string" ||
+      p.text.length>200000 || !p.text.trim() ||
       seen.has(p.locator)) throw Error("Empty, duplicate or invalid paragraph/locator");
     seen.add(p.locator);
   }
