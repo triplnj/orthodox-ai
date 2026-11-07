@@ -12,7 +12,9 @@ test("library schema only introduces new names and does not mutate the live chat
   }
   assert.doesNotMatch(sql, /\b(?:DROP|TRUNCATE|DELETE|ALTER TABLE|UPDATE)\b/i);
   assert.match(sql, /'PG', 'PL', 'PHILOKALIA', 'MODERN_ORTHODOX', 'CURATED_OTHER'/);
-  assert.match(sql, /"importStatus" = 'ACTIVE'/);
+  // The migration defines the allowed status values; ACTIVE-only retrieval
+  // is enforced and tested separately in searchLibraryPassages.
+  assert.match(sql, /CHECK \\("importStatus" IN \\('STAGED', 'REVIEWED', 'ACTIVE', 'REJECTED'\\)\\)/);
   const route = read("src/app/api/chat/route.ts");
   assert.doesNotMatch(route, /LibraryPassage|chunkLibraryDocument/);
 });
