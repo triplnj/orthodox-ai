@@ -17,6 +17,9 @@ on:
       - 'scripts/patristics/stage-source-batch.mjs'
       - 'scripts/patristics/build-first-source-batch.mjs'
       - 'tests/patristic-first-source-batch.test.mjs'
+      - 'scripts/patristics/approved-source-staging.mjs'
+      - 'tests/patristic-approved-source-staging.test.mjs'
+      - '.github/workflows/patristic-staging-ingest.yml'
       - 'tests/patristic-source-batch.test.mjs'
       - 'tests/patristic-research-staging.test.mjs'
       - 'tests/patristic-universal-query.test.mjs'
@@ -49,4 +52,4 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs tests/patristic-evidence-policy.test.mjs tests/patristic-dialogue-boundaries.test.mjs tests/patristic-dialogue-staging-scan.test.mjs tests/patristic-universal-query.test.mjs tests/patristic-research-staging.test.mjs tests/patristic-source-batch.test.mjs tests/patristic-first-source-batch.test.mjs
+      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs tests/patristic-evidence-policy.test.mjs tests/patristic-dialogue-boundaries.test.mjs tests/patristic-dialogue-staging-scan.test.mjs tests/patristic-universal-query.test.mjs tests/patristic-research-staging.test.mjs tests/patristic-source-batch.test.mjs tests/patristic-first-source-batch.test.mjs tests/patristic-first-batch-audit.test.mjs tests/patristic-approved-source-staging.test.mjs
