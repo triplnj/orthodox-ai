@@ -24,7 +24,14 @@ test("fetches two independent authors but only writes a preview",async()=>{
   assert.match(pageName,/Homily 1$/);
   return {ok:true,json:async()=>({parse:{text:page}})};
  };
- const result=await buildFirstSourceBatch({fetchImpl,outFile:"/tmp/not-written-by-test"});
- // This would write in unit test; test should not call the writer without injection.
+ const result=await buildFirstSourceBatch({fetchImpl,outFile:"preview.json",writeImpl:async (name,data,options)=>{
+  assert.equal(name,"preview.json");
+  assert.equal(options.flag,"wx");
+  writes.push(JSON.parse(data));
+ }});
  assert.equal(result.works.length,2);
+ assert.equal(writes.length,1);
+ assert.equal(writes[0].works.length,2);
+ assert.notEqual(writes[0].works[0].author,writes[0].works[1].author);
+ assert.equal(result.status,"LOCAL_PREVIEW_ONLY");
 });
