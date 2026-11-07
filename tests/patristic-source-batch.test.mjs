@@ -35,6 +35,16 @@ test("long paragraphs split into bounded, lossless chunks",()=>{
  assert.ok(r.passages.every(p=>p.content.length<=1500));
  assert.equal(r.passages.map(p=>p.content).join(""),long);
 });
+test("preserves trailing spaces and line breaks in source passages",()=>{
+ const text="Original passage with a trailing space and line ending. \\n";
+ const m={schemaVersion:1,works:[make("St. Basil the Great","Hexaemeron",text)]};
+ const prepared=prepareSourceBatch(m);
+ assert.equal(prepared.passages[0].content,text);
+});
+test("rejects whitespace-only passages instead of admitting empty content",()=>{
+ const m={schemaVersion:1,works:[make("St. Basil the Great","Hexaemeron","  \\n  ")]};
+ assert.throws(()=>prepareSourceBatch(m),/invalid paragraph/);
+});
 test("invalid or undocumented usage rights fail before staging",()=>{
  assert.throws(()=>prepareSourceBatch({schemaVersion:1,works:[{...manifest.works[0],rightsReviewed:false}]}),/rights/);
  assert.throws(()=>prepareSourceBatch({schemaVersion:1,works:[{...manifest.works[0],paragraphs:[]}]}),/rights/);
