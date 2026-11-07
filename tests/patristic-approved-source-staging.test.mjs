@@ -13,10 +13,16 @@ const make=(author,title,count)=>({
   text:"The writings of the Fathers contain homilies concerning the creation of the world. ".repeat(4)
  }))
 });
-const manifest=()=>({schemaVersion:1,works:[
+const manifest=()=>{
+ const works=[
  make("St. Basil the Great","Hexaemeron, Homily I",18),
  make("St. John Chrysostom","Homilies on Matthew, Homily I",70)
-]});
+ ];
+ works[0].paragraphs[0].text="1. It is right that any one beginning to narrate the formation of the world should begin with the divine creation.";
+ works[1].paragraphs[0].text="It were indeed meet for us not at all to require the aid of the written Word.";
+ for(const w of works)w.paragraphs.at(-1).text="Glory to God now and ever and for ever and ever. Amen.";
+ return {schemaVersion:1,works};
+};
 test("matching hash and explicit approval permit staging only",async()=>{
  const m=manifest(),hash=auditFirstSourceBatch(m).manifestSha256;
  let called=0;
