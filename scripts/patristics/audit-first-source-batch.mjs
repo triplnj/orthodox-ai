@@ -11,8 +11,8 @@ import {pathToFileURL} from "node:url";
 import {prepareSourceBatch} from "./prepare-source-batch.mjs";
 
 const EXPECTED = new Map([
-  ["St. Basil the Great|Hexaemeron, Homily I",{paragraphs:18, source:"en.wikisource.org"}],
-  ["St. John Chrysostom|Homilies on Matthew, Homily I",{paragraphs:70, source:"en.wikisource.org"}]
+  ["St. Basil the Great|Hexaemeron, Homily I",{paragraphs:18, source:"en.wikisource.org",startsWith:/\\bIt is right that any one beginning to narrate the formation of the world\\b/i}],
+  ["St. John Chrysostom|Homilies on Matthew, Homily I",{paragraphs:70, source:"en.wikisource.org",startsWith:/\\bIt were indeed meet for us not at all to require\\b/i}]
 ]);
 const sha256=s=>createHash("sha256").update(s,"utf8").digest("hex");
 
@@ -30,6 +30,12 @@ export function auditFirstSourceBatch(manifest){
     const input=manifest.works.find(w=>w.author===edition.author&&w.title===edition.title);
     if(input.paragraphs.length<expected.paragraphs)
       throw Error("Regression: fewer extracted paragraphs than previously seen for "+key);
+    const first=input.paragraphs[0].text;
+    const last=input.paragraphs.at(-1).text;
+    if(!expected.startsWith.test(first))
+      throw Error("Source beginning marker is missing: "+key);
+    if(!/\\bAmen\\s*\\.?\\s*$/i.test(last))
+      throw Error("Source final doxology marker is missing: "+key);
     const chunks=prepared.passages.filter(p=>p.editionId===edition.editionId);
     for(const para of input.paragraphs){
       const originals=chunks.filter(c=>c.locator===para.locator).sort((a,b)=>a.ordinal-b.ordinal);
