@@ -1,0 +1,23 @@
+{
+  "description": "Real external sources identified for editorial assessment, not yet imported or approved for bulk copying.",
+  "reviewStatus": "URL_CANDIDATES_ONLY",
+  "candidates": [
+    {
+      "author": "St. Basil the Great",
+      "work": "Hexaemeron, Homily I",
+      "sourceUrl": "https://www.newadvent.org/fathers/32011.htm",
+      "priority": "HIGH",
+      "rightsStatus": "REQUIRES_SITE_AND_TRANSLATION_RIGHTS_REVIEW",
+      "action": "Verify base translation and rights; then prepare manifest and staged indexing."
+    },
+    {
+      "author": "St. John Chrysostom",
+      "work": "Homilies on the Gospel of John",
+      "sourceUrl": "https://www.newadvent.org/fathers/2401.htm",
+      "priority": "HIGH",
+      "rightsStatus": "REQUIRES_SITE_AND_TRANSLATION_RIGHTS_REVIEW",
+      "action": "Verify base translation and rights; enumerate 88 homilies with stable locators."
+    }
+  ],
+  "liveChatIntegrated": false
+}
