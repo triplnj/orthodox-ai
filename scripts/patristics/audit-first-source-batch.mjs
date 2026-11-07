@@ -47,8 +47,10 @@ export function auditFirstSourceBatch(manifest){
       status:"REQUIRES_EDITORIAL_REVIEW"
     });
   }
+  const manifestSha256=sha256(JSON.stringify(manifest));
   return {
     status:"AUTOMATED_PREVIEW_QA_PASSED_NOT_IMPORTED",
+    manifestSha256,
     results, totalChunks:prepared.passages.length,
     reviewerRequired:true, databaseWrites:0,embeddingRequests:0,
     caveat:"Count/hash validation does not prove edition completeness, text accuracy or permission for each use."
