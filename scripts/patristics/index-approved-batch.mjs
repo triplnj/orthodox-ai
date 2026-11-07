@@ -24,12 +24,13 @@ export async function indexApprovedBatch(env=process.env,deps={}){
     throw Error("Missing staging-only database or OpenAI API secret");
   const url=new URL(env.LIBRARY_STAGING_DB_URL);
   if(!["postgres:","postgresql:"].includes(url.protocol)||
-    !/\\.neon\\.tech$/i.test(url.hostname)||
+    !/\.neon\.tech$/i.test(url.hostname)||
     !/^br-[a-z0-9-]+$/.test(env.LIBRARY_STAGING_BRANCH_ID))
     throw Error("Only a guarded Neon staging branch is accepted");
   const db=deps.db??new Client({connectionString:env.LIBRARY_STAGING_DB_URL,ssl:{rejectUnauthorized:true}});
   await db.connect();
   let expectedBytes=0;
+  let dbClosed=false;
   try{
     const marker=await db.query('SELECT "branchId","purpose" FROM "LibraryStagingGuard"');
     if(marker.rows.length!==1 || marker.rows[0].branchId!==env.LIBRARY_STAGING_BRANCH_ID ||
@@ -69,6 +70,7 @@ export async function indexApprovedBatch(env=process.env,deps={}){
     }
     // Close preflight connection before calling existing guarded per-batch indexer.
     await db.end();
+    dbClosed=true;
     let indexed=0;
     const runBatch=deps.runBatch??indexOneBatch;
     for(let e=0;e<EDITIONS.length;e++){
@@ -90,11 +92,10 @@ export async function indexApprovedBatch(env=process.env,deps={}){
       maxBudgetUSD:APPROVED_MAX_USD,conservativePreflightUSD:maximumProjectedUSD,
       sourceUtf8Bytes:expectedBytes};
   }finally{
-    // For real pg Client, end() is idempotently guarded by the completed connection state.
-    if(!db.ended)await db.end();
+    if(!dbClosed)await db.end();
   }
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- indexApprovedBatch().then(x=>process.stdout.write(JSON.stringify(x,null,2)+"\\n"))
-  .catch(e=>{process.stderr.write("INDEX_APPROVED_BATCH_FAILED: "+e.message+"\\n");process.exitCode=1;});
+ indexApprovedBatch().then(x=>process.stdout.write(JSON.stringify(x,null,2)+"\n"))
+  .catch(e=>{process.stderr.write("INDEX_APPROVED_BATCH_FAILED: "+e.message+"\n");process.exitCode=1;});
 }
