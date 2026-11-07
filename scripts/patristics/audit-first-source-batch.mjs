@@ -30,12 +30,17 @@ export function auditFirstSourceBatch(manifest){
     const input=manifest.works.find(w=>w.author===edition.author&&w.title===edition.title);
     if(input.paragraphs.length<expected.paragraphs)
       throw Error("Regression: fewer extracted paragraphs than previously seen for "+key);
-    // Wikisource may include the homily title and biblical epigraph as
-    // leading paragraphs before the first numbered homily passage.
-    const opening=input.paragraphs.slice(0,8).map(p=>p.text).join(" ");
+    // The Wikisource transcription has several introductory headings, which
+    // can each become a standalone paragraph. Search the early *text*, not
+    // a brittle fixed number of paragraphs.
+    const fullText=input.paragraphs.map(p=>p.text).join("\\n\\n");
+    const normalizedOpening=fullText.slice(0,Math.min(20000,Math.ceil(fullText.length*0.25)))
+      .replace(/\\s+/g," ");
     const last=input.paragraphs.at(-1).text;
-    if(!expected.startsWith.test(opening))
-      throw Error("Source beginning marker is missing in opening paragraphs: "+key);
+    if(!expected.startsWith.test(normalizedOpening))
+      throw Error("Source beginning marker is missing near start: "+key+
+        " (paragraphs="+input.paragraphs.length+
+        ", openingSample="+JSON.stringify(normalizedOpening.slice(0,180))+")");
     if(!/\bAmen\s*\.?\s*$/i.test(last))
       throw Error("Source final doxology marker is missing: "+key);
     const chunks=prepared.passages.filter(p=>p.editionId===edition.editionId);
@@ -44,7 +49,6 @@ export function auditFirstSourceBatch(manifest){
       if(originals.map(c=>c.content).join("")!==para.text)
         throw Error("Source-to-chunk reconstruction failed: "+key+" "+para.locator);
     }
-    const fullText=input.paragraphs.map(p=>p.text).join("\n\n");
     results.push({
       author:edition.author, title:edition.title,
       sourceUrl:edition.sourceUrl,editionId:edition.editionId,
