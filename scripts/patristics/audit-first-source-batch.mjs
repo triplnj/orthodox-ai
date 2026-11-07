@@ -12,7 +12,7 @@ import {prepareSourceBatch} from "./prepare-source-batch.mjs";
 
 const EXPECTED = new Map([
   ["St. Basil the Great|Hexaemeron, Homily I",{paragraphs:18, source:"en.wikisource.org",startsWith:/\bIt is right that any one beginning to narrate the formation of the world\b/i}],
-  ["St. John Chrysostom|Homilies on Matthew, Homily I",{paragraphs:70, source:"en.wikisource.org",startsWith:/\bIt were indeed meet for us not at all to require\b/i}]
+  ["St. John Chrysostom|Homilies on Matthew, Homily I",{paragraphs:70, source:"en.wikisource.org",startsWith:/\bIt were indeed meet for us not at all to require\s*the\b/i}]
 ]);
 const sha256=s=>createHash("sha256").update(s,"utf8").digest("hex");
 
