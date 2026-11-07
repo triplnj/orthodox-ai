@@ -31,7 +31,10 @@ export function extractPrimaryParagraphs(html){
   // MediaWiki API returns parsed article HTML, not full site navigation.
   const root=$(".mw-parser-output").first();
   if(!root.length) throw Error("Cannot locate Wikisource article body");
-  // A reference footnote is often inserted between two words in Wikisource.\n  // Replace its node with whitespace rather than joining the surrounding words.\n  root.find("sup.reference").replaceWith(" ");\n  root.find(".mw-references-wrap, .reflist, .references, .mw-editsection, .noprint, .navigation-not-searchable, .ws-noexport, style, script, table, nav, figure").remove();
+  // Footnotes may appear between two words in Wikisource.
+  // Preserve word separation when removing reference nodes.
+  root.find("sup.reference").replaceWith(" ");
+  root.find(".mw-references-wrap, .reflist, .references, .mw-editsection, .noprint, .navigation-not-searchable, .ws-noexport, style, script, table, nav, figure").remove();
   // Only top-level paragraphs and blockquotes; not references, page furniture
   const nodes=root.children("p, blockquote").toArray();
   const paragraphs=nodes.map(el=>$(el).text().replace(/\u00a0/g," ").replace(/[ \t]+/g," ").trim())
