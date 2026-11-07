@@ -1,0 +1,65 @@
+name: Patristic Library - Approved Staging Import
+
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_manifest_sha256:
+        description: 'Exact 64-character SHA256 from a previously reviewed Patristic Source Preview QA report'
+        type: string
+        required: true
+      confirmation:
+        description: 'Enter STAGE_REVIEWED_SOURCE_ONLY to authorize writes to the isolated Neon staging branch'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-staging-import
+  cancel-in-progress: false
+
+jobs:
+  approved-staging-only:
+    if: ${{ github.event.inputs.confirmation == 'STAGE_REVIEWED_SOURCE_ONLY' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: patristic-library-staging
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install isolated dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify importer and source safety tests
+        run: node --test tests/patristic-source-batch.test.mjs tests/patristic-first-batch-audit.test.mjs tests/patristic-approved-source-staging.test.mjs
+      - name: Fetch latest source batch locally
+        run: node scripts/patristics/build-first-source-batch.mjs "$RUNNER_TEMP/patristic-source-batch.json"
+      - name: Verify editorial audit and content digest (no writes)
+        shell: bash
+        env:
+          REVIEWED_SHA: ${{ github.event.inputs.reviewed_manifest_sha256 }}
+        run: |
+          node scripts/patristics/audit-first-source-batch.mjs "$RUNNER_TEMP/patristic-source-batch.json" > "$RUNNER_TEMP/patristic-audit.json"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const audit=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/patristic-audit.json","utf8"));
+            if(!/^[a-f0-9]{64}$/.test(process.env.REVIEWED_SHA??"") || audit.manifestSha256!==process.env.REVIEWED_SHA) {
+              throw Error("Text differs from the reviewed manifest; refusing staging");
+            }
+            console.log("Reviewed SHA256 matches the current source.");
+          '
+      - name: Import reviewed source to isolated Neon staging only
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          PATRISTIC_STAGING_APPROVAL: ${{ github.event.inputs.confirmation }}
+          REVIEWED_SHA: ${{ github.event.inputs.reviewed_manifest_sha256 }}
+        shell: bash
+        run: |
+          node scripts/patristics/approved-source-staging.mjs "$RUNNER_TEMP/patristic-source-batch.json" "$REVIEWED_SHA"
+          echo "Imported into guarded STAGED records only; no production change or embeddings." >> "$GITHUB_STEP_SUMMARY"
