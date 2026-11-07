@@ -18,7 +18,7 @@ function fakeDb({wrongBranch=false,tooLarge=false}={}){
    if(sql.includes('"LibraryStagingGuard"'))return {rows:[{
       branchId:wrongBranch?"br-wrong":env.LIBRARY_STAGING_BRANCH_ID,
       purpose:"PATRISTIC_LIBRARY_STAGING"}]};
-   if(sql.includes('max(octet_length'))){
+   if(sql.includes('max(octet_length')){
      const count=edition++===0?29:72;
      return {rows:[{status:"STAGED",total:count,embedded:0,
        bytes:tooLarge?"2000000":String(count*1000),max_bytes:1000}]};
