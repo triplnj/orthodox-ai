@@ -45,3 +45,16 @@ test("fetches two independent authors but only writes a preview",async()=>{
  assert.notEqual(writes[0].works[0].author,writes[0].works[1].author);
  assert.equal(result.status,"LOCAL_PREVIEW_ONLY");
 });
+
+test("preserves a word boundary where Wikisource inserts a footnote",()=>{
+ const joined="<div class='mw-parser-output'><p>"+
+  "It were indeed meet for us not at all to require"+
+  "<sup class='reference'><a href='#cite_note-1'>[1]</a></sup>"+
+  "the aid of the written Word. "+
+  para.repeat(50)+"</p>"+
+  Array.from({length:5},()=>"<p>"+para.repeat(6)+"</p>").join("")+"</div>";
+ const ps=extractPrimaryParagraphs(joined);
+ assert.match(ps[0].text,/require the aid/);
+ assert.doesNotMatch(ps[0].text,/requirethe/);
+ assert.doesNotMatch(ps[0].text,/\\[1\\]/);
+});
