@@ -1,0 +1,36 @@
+name: Patristic Staging - Connection Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/patristics/check-staging-connection.mjs'
+      - 'tests/patristic-staging-connection.test.mjs'
+      - '.github/workflows/patristic-staging-connection.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-staging-connection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: patristic-library-staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test fail-closed branch guard
+        run: node --test tests/patristic-staging-connection.test.mjs
+      - name: Verify staging connection (read only)
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
