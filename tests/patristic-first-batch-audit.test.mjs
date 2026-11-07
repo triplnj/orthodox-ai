@@ -60,3 +60,10 @@ test("rejects a source missing its real opening even with enough paragraphs",()=
  src.works[0].paragraphs[0].text="Unrelated material about a different work.";
  assert.throws(()=>auditFirstSourceBatch(src),/beginning marker/);
 });
+
+test("accepts a genuine opening after more than eight short preliminary paragraphs",()=>{
+ const src=good();
+ for(let i=0;i<9;i++)src.works[1].paragraphs[i].text="Homily introduction heading "+(i+1)+".";
+ src.works[1].paragraphs[9].text="It were indeed meet for us not at all to require the aid of the written Word.";
+ assert.equal(auditFirstSourceBatch(src).results.length,2);
+});
