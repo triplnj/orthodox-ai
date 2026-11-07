@@ -67,3 +67,9 @@ test("accepts a genuine opening after more than eight short preliminary paragrap
  src.works[1].paragraphs[9].text="It were indeed meet for us not at all to require the aid of the written Word.";
  assert.equal(auditFirstSourceBatch(src).results.length,2);
 });
+
+test("accepts Wikisource word-join artifact in Chrysostom opening",()=>{
+ const src=good();
+ src.works[1].paragraphs[0].text="Homilies of St. John Chrysostom, archbishop of constantinople, on the gospel according to st. matthew. Homily I. It were indeed meet for us not at all to requirethe aid of the written Word.";
+ assert.equal(auditFirstSourceBatch(src).results.length,2);
+});
