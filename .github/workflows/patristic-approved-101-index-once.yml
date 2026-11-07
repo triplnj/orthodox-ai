@@ -1,0 +1,67 @@
+name: Patristic Approved 101 Embeddings - One-Time Staging Execution
+
+# One-off push activation only for this newly created file.
+# Never scheduled; cannot trigger on ordinary repo pushes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-approved-101-index-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-approved-101-embeddings
+  cancel-in-progress: false
+
+jobs:
+  index-exact-two-editions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: patristic-library-staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run approval, budget, and safety unit tests
+        run: node --test tests/patristic-approved-index.test.mjs tests/patristic-staging-connection.test.mjs
+      - name: Verify branch is isolated staging
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Embed approved 101 passages with preflight 1 USD budget cap
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PATRISTIC_INDEX_APPROVAL: INDEX_101_STAGING_ONLY
+        run: node scripts/patristics/index-approved-batch.mjs
+      - name: Confirm embedding coverage and never touch production
+        shell: bash
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: |
+          node scripts/patristics/check-staging-connection.mjs
+          node --input-type=module -e '
+            import pg from "pg";
+            const c=new pg.Client({connectionString:process.env.LIBRARY_STAGING_DB_URL,ssl:{rejectUnauthorized:true}});
+            await c.connect();
+            try {
+              const guard=await c.query("SELECT \"branchId\", \"purpose\" FROM \"LibraryStagingGuard\"");
+              if(guard.rows.length!==1 || guard.rows[0].branchId!==process.env.LIBRARY_STAGING_BRANCH_ID || guard.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")throw Error("Wrong branch");
+              const ids=["edition_b0cd850e255cf4bd4310094ce8625dec","edition_55ef4de453f96a6f885f78a83e01edc0"];
+              const q=await c.query("SELECT count(*)::int AS total, count(embedding)::int AS embedded FROM \"LibraryPassage\" WHERE \"editionId\"=ANY($1::text[])",[ids]);
+              const x=q.rows[0];
+              if(x.total!==101||x.embedded!==101)throw Error("Expected exactly 101 new embeddings, got "+JSON.stringify(x));
+              console.log("Verified 101 of 101 embeddings on staging.");
+            }finally{await c.end();}
+          '
