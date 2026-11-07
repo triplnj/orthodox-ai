@@ -54,7 +54,7 @@ async function fetchPage(page,fetchImpl){
   if(body.error || !body.parse?.text)throw Error("Wikisource API returned no parsed text");
   return body.parse.text;
 }
-export async function buildFirstSourceBatch({fetchImpl=fetch,outFile="patristic-first-batch.preview.json"}={}){
+export async function buildFirstSourceBatch({fetchImpl=fetch,writeImpl=writeFile,outFile="patristic-first-batch.preview.json"}={}){
  const works=[];
  for(const p of PAGES){
   const html=await fetchPage(p.page,fetchImpl);
@@ -69,7 +69,7 @@ export async function buildFirstSourceBatch({fetchImpl=fetch,outFile="patristic-
  }
  const manifest={schemaVersion:1,works};
  const prepared=prepareSourceBatch(manifest);
- await writeFile(outFile,JSON.stringify(manifest,null,2)+"\n",{flag:"wx"});
+ await writeImpl(outFile,JSON.stringify(manifest,null,2)+"\n",{flag:"wx"});
  return {status:"LOCAL_PREVIEW_ONLY",file:outFile,
    works:works.map(w=>({author:w.author,title:w.title,paragraphs:w.paragraphs.length,sourceUrl:w.sourceUrl})),
    chunks:prepared.counts.passages,
