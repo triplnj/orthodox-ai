@@ -35,9 +35,9 @@ export function extractPrimaryParagraphs(html){
   // Only top-level paragraphs and blockquotes; not references, page furniture
   const nodes=root.children("p, blockquote").toArray();
   const paragraphs=nodes.map(el=>$(el).text().replace(/\u00a0/g," ").replace(/[ \t]+/g," ").trim())
-    .filter(t=>t.length>=70 && !/^(?:previous|next|this page|return to|footnotes|references)/i.test(t));
+    .filter(t=>t.length>0 && !/^(?:previous|next|this page|return to|footnotes|references)$/i.test(t));
   if(paragraphs.length<5 || paragraphs.join(" ").length<3000){
-    throw Error("Extraction incomplete: fewer than five substantial paragraphs or 3000 characters");
+    throw Error("Extraction incomplete: fewer than five paragraphs or 3000 characters");
   }
   return paragraphs.map((text,i)=>({locator:"Source paragraph "+String(i+1).padStart(3,"0"),text}));
 }
