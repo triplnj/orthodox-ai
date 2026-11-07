@@ -48,7 +48,18 @@ jobs:
           echo '' >> "$GITHUB_STEP_SUMMARY"
           echo 'Validated two Wikisource edition previews. No Neon database or OpenAI keys were used.' >> "$GITHUB_STEP_SUMMARY"
           echo '' >> "$GITHUB_STEP_SUMMARY"
-          cat "$RUNNER_TEMP/patristic-source-audit.json" >> "$GITHUB_STEP_SUMMARY"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const report=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/patristic-source-audit.json","utf8"));
+            console.log("### Reviewed content candidate hash");
+            console.log("\\`"+report.manifestSha256+"\\`");
+            console.log("");
+            console.log("**Not yet editorially approved.** Verify the source preview and permissions before importing.");
+            console.log("");
+            for(const work of report.results){
+              console.log("- "+work.author+" — "+work.title+": "+work.paragraphs+" paragraphs, "+work.chunks+" chunks; "+work.status);
+            }
+          ' >> "$GITHUB_STEP_SUMMARY"
       - name: Archive audit and review-only preview
         uses: actions/upload-artifact@v4
         with:
