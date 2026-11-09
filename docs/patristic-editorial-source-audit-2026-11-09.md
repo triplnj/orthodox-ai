@@ -37,3 +37,14 @@ SQL enumeration confirmed **9 edition records, 6 distinct canonical authors, 297
 ## Outcome
 **Historical bibliographic audit and staging metadata corrections completed.**
 **Full per-passage textual review and editorial signoff not yet complete**, pending successful external-source audit execution and resolution of mismatches. Therefore the first release gate remains **NOT APPROVED**. No user credential or action is needed for the corrections made here; subsequent production approval is not requested.
+
+## Post-review amendments and final staging snapshot
+
+- The author inventory consists of **6 distinct canonical names but 7 author IDs**, because St Gregory of Nyssa has two separately indexed author rows. There are 9 editions, 297 passages.
+- Both pilot translations now have consistent `originalLanguage=English` and verified historical edition/translator data. Five edition metadata records were corrected with a staging guard. The two pilot `licenseNote` fields now explicitly distinguish the public-domain historical translation from modern online editorial changes and Scripture cited within commentary.
+- Nine identified fragments shorter than 30 characters (editorial headings, fragments of titles, or contextless dialogue) are fingerprinted in `tests/fixtures/patristic-staging-quarantined-fragments.json`. They are not acceptable as standalone evidence. None were deleted.
+- `audit-staging-transcriptions.mjs` now identifies only hash-matched, allowlisted short fragments as `QUARANTINED_NON_EVIDENCE`, and matches long passages by complete normalized text or **ordered nearby source anchors**. The audit has guard and read-only regression tests.
+- An isolated mocked source-audit replay with two actual staging pilot records and one quarantined short fragment returned **2 FULL_NORMALIZED_MATCH, 1 QUARANTINED_NON_EVIDENCE, 0 bad hashes**, with only SELECT queries and connection cleanup. This is a **mock-page smoke test**, not confirmation of a complete external-source fetch.
+- Final Neon staging SQL snapshot after corrections: guard matched, 9 editions, 7 author IDs representing 6 named authors, 297 passages, **0 bad content hashes**, 9 short fragments, 0 non-STAGED editions, 7 UNREVIEWED work rows, and both pilot metadata records corrected.
+
+**Still blocking completion:** GitHub Actions report of fetching and comparing all external source pages has not been independently accessed. Remaining 295 non-pilot passage texts must not be claimed certified on the basis of hashes or mock page content. Any mismatch/partial matching needs editorial correction. All editions stay STAGED and publication gate stays closed. The user may need to share the latest workflow run URL so results and logs can be inspected through the connected GitHub tool.
