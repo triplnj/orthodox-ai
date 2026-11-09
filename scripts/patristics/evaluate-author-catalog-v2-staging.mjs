@@ -8,7 +8,7 @@ const {Client}=pg;
 export async function evaluateCatalogAuthorHoldout(env=process.env,deps={}){
  if(env.LIBRARY_STAGING_BRANCH_ID!==BRANCH||!env.LIBRARY_STAGING_DB_URL)throw Error("Protected staging required");
  const url=new URL(env.LIBRARY_STAGING_DB_URL);
- if(!["postgres:","postgresql:"].includes(url.protocol)||!/\\.neon\\.tech$/i.test(url.hostname)||!url.username||url.pathname==="/")throw Error("Invalid staging endpoint");
+ if(!["postgres:","postgresql:"].includes(url.protocol)||!url.hostname.toLowerCase().endsWith(".neon.tech")||!url.username||url.pathname==="/")throw Error("Invalid staging endpoint");
  const fixture=deps.fixture??JSON.parse(readFileSync("tests/fixtures/patristic-author-catalog-v2-holdout.json","utf8"));
  if(fixture.schemaVersion!==2||fixture.purpose!=="INDEPENDENT_AUTHOR_SCOPE_HOLDOUT_NO_ANSWER_GENERATION"||
  fixture.stagingBranch!==BRANCH||fixture.cases.length!==18||new Set(fixture.cases.map(x=>x.id)).size!==18)throw Error("Wrong holdout fixture");
