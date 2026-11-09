@@ -28,6 +28,10 @@ on:
       - 'src/lib/preview/chat-isolation.ts'
       - 'src/app/api/chat/route.ts'
       - 'src/lib/patristics/preview-gregory-research.ts'
+      - 'src/lib/email.ts'
+      - 'src/lib/billing/providers.ts'
+      - 'src/lib/security/auth-http.ts'
+      - 'tests/patristic-preview-outbound-safety.test.mjs'
       - 'tests/fixtures/patristic-gregory-logical-identity-review.json'
       - 'tests/fixtures/patristic-gregory-speaker-evidence-review.json'
       - 'tests/fixtures/patristic-staging-quarantined-fragments.json'
@@ -55,7 +59,7 @@ jobs:
           npx prisma generate
           npx tsc --noEmit
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs tests/patristic-reviewed-logical-author.test.mjs tests/patristic-chat-preview-isolation.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs tests/patristic-reviewed-logical-author.test.mjs tests/patristic-chat-preview-isolation.test.mjs tests/patristic-preview-outbound-safety.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
