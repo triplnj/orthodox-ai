@@ -11,6 +11,10 @@ export type Subscription = {
   currentPeriodEndsAt: Date | null; cancelAtPeriodEnd: boolean;
   providerUpdatedAt: Date | null; paidVerified: boolean; portalUrl?: string;
 };
+function assertNoPreviewBilling() {
+  if (process.env.ORTHODOXAI_CHAT_ISOLATED_PREVIEW === "1")
+    throw new BillingError("External billing disabled in isolated Chat Preview.", 403);
+}
 type LemonData = { id: string; type: string; attributes: {
   customer_id?: number; variant_id?: number; store_id?: number; status?: string;
   trial_ends_at?: string; renews_at?: string; ends_at?: string; updated_at?: string;
@@ -29,6 +33,7 @@ function required(name: string): string {
   return value;
 }
 async function providerRequest<T>(operation: () => Promise<T>): Promise<T> {
+  assertNoPreviewBilling();
   try { return await operation(); }
   catch (error) {
     if (error instanceof BillingError) throw error;
@@ -36,6 +41,7 @@ async function providerRequest<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 export async function lemon(path: string, method = "GET", body?: unknown): Promise<LemonResponse> {
+  assertNoPreviewBilling();
   // Paths are constructed locally; never follow provider-supplied pagination URLs.
   const response = await providerRequest(() => fetch(`https://api.lemonsqueezy.com/v1/${path}`, {
     method, cache: "no-store", signal: AbortSignal.timeout(10000),
@@ -61,6 +67,7 @@ function fromLemon(data: LemonData): Subscription {
     portalUrl: a.urls?.customer_portal };
 }
 export async function assertLiveLemonConfiguration(): Promise<void> {
+  assertNoPreviewBilling();
   // Fail before creating any local checkout attempt. Test credentials must not
   // reach the live purchase endpoint, even if a checkout could be created.
   const variantId = required("LEMONSQUEEZY_PRO_VARIANT_ID");
@@ -72,6 +79,7 @@ export async function assertLiveLemonConfiguration(): Promise<void> {
 }
 
 export async function retrieve(provider: Provider, id: string): Promise<Subscription> {
+  assertNoPreviewBilling();
   if (provider === "LEMONSQUEEZY") {
     const subscription = fromLemon((await lemon(`subscriptions/${encodeURIComponent(id)}`)).data);
     subscription.paidVerified = false;
@@ -99,6 +107,7 @@ export async function retrieve(provider: Provider, id: string): Promise<Subscrip
     providerUpdatedAt: null, paidVerified: Boolean(invoice?.status === "paid" && invoice.amount_paid > 0) };
 }
 export async function inventory(provider: Provider, customerId: string): Promise<Subscription[]> {
+  assertNoPreviewBilling();
   const ids: string[] = [];
   if (provider === "STRIPE") {
     let cursor: string | undefined;
@@ -128,11 +137,13 @@ export function terminal(s: Subscription): boolean {
     : ["cancelled", "expired"].includes(s.status);
 }
 export async function cancel(s: Subscription) {
+  assertNoPreviewBilling();
   if (terminal(s)) return;
   if (s.provider === "STRIPE") await getStripe().subscriptions.cancel(s.providerSubscriptionId, {}, { timeout: 10000, maxNetworkRetries: 0 });
   else await lemon(`subscriptions/${encodeURIComponent(s.providerSubscriptionId)}`, "DELETE");
 }
 export async function assertNoDebt(provider: Provider, customerId: string) {
+  assertNoPreviewBilling();
   if (provider === "STRIPE") {
     for (const status of ["open", "draft"] as const) {
       const invoices = await getStripe().invoices.list({ customer: customerId, status, limit: 1 }, { timeout: 10000, maxNetworkRetries: 0 });
@@ -157,6 +168,7 @@ export async function assertNoDebt(provider: Provider, customerId: string) {
   }
 }
 export async function createCheckout(provider: Provider, user: { id: string; email: string; name: string | null; stripeCustomerId: string | null }, attemptId: string) {
+  assertNoPreviewBilling();
   const appUrl = required("NEXT_PUBLIC_APP_URL");
   if (provider === "STRIPE") {
     const price = required("STRIPE_PRO_PRICE_ID");
@@ -186,6 +198,7 @@ export async function createCheckout(provider: Provider, user: { id: string; ema
  * A missing, malformed or incomplete inventory fails closed.
  */
 export async function lemonOrdersSince(email: string, since: Date): Promise<boolean> {
+  assertNoPreviewBilling();
   for (let page = 1; page <= 100; page++) {
     const result = await lemon(`orders?filter[user_email]=${encodeURIComponent(email)}&page[number]=${page}&page[size]=100`);
     const orders = result.data as unknown as Array<{ attributes?: {
@@ -210,6 +223,7 @@ export async function lemonOrdersSince(email: string, since: Date): Promise<bool
 }
 
 export async function checkoutClosed(provider: Provider, id: string): Promise<boolean> {
+  assertNoPreviewBilling();
   if (provider === "STRIPE") {
     const session = await getStripe().checkout.sessions.retrieve(id, {}, { timeout: 10000, maxNetworkRetries: 0 });
     return session.status === "expired" || session.status === "complete";
@@ -220,6 +234,7 @@ export async function checkoutClosed(provider: Provider, id: string): Promise<bo
   return Boolean(expires && expires.getTime() <= Date.now());
 }
 export async function portal(provider: Provider, customerId: string, subscriptionId?: string): Promise<string> {
+  assertNoPreviewBilling();
   if (provider === "STRIPE") return (await getStripe().billingPortal.sessions.create({ customer: customerId,
     return_url: `${required("NEXT_PUBLIC_APP_URL")}/pro` }, { timeout: 10000, maxNetworkRetries: 0 })).url;
   if (!subscriptionId) throw new BillingError("Subscription reference missing.");
