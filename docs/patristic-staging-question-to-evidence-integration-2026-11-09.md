@@ -56,3 +56,20 @@ Using fresh read-only Neon staging rows and the updated integration script with 
 All executed mock-transport SQL requests remained SELECT-only, the staging guard matched, and connection cleanup ran. These direct source evaluations do not establish CI success, real Chat model generation, or editorial authentication of `UNREVIEWED` material.
 
 **Release remains blocked at 6/8.** The new report includes `NO_TOPIC_MATCHED_PASSAGE`, `MISSING_COMPARISON_AUTHOR_EVIDENCE`, and `EDITORIAL_SOURCE_REVIEW_PENDING` flags. Do not dilute the fixture to get 8/8: add verifiable topical work editions, editorially verify their provenance, and independently evaluate the resulting citations before enabling any live Chat path.
+
+## 2026-11-09 — two source excerpts added and all eight evidence cases recovered
+
+The remaining two failures were traced to **source coverage**, not author resolution. Two short source-checked English excerpts from historical NPNF translations were inserted **only into Neon protected staging**, without a vector embedding, while retaining `LibraryWork.authenticity=UNREVIEWED`, `LibraryEdition.importStatus=STAGED`, and `LibraryPassage.ocrQuality=UNREVIEWED`:
+
+1. John Chrysostom, *Homily 24 on Ephesians*, commentary on Ephesians 6:18, source `https://www.newadvent.org/fathers/230124.htm`, pilot passage `pilot_passage_john_eph24_prayer_20261109`. The passage discusses prayer at all seasons and continual prayer.
+2. Basil the Great, *On the Holy Spirit*, chapter 10, section 24, source `https://www.newadvent.org/fathers/3203.htm`, pilot passage `pilot_passage_basil_holyspirit_baptism_20261109`. The passage discusses baptism in the name of Father, Son, and Holy Spirit, in a polemical argument.
+
+Exact text, source URL and editorial status are versioned in `tests/fixtures/patristic-staging-two-text-sources-20261109.json`. An independent SELECT verified both texts, URLs, stored SHA-256 hashes, null vector embedding and staged/unreviewed status.
+
+The staging integration retrieval query now permits **only these two explicitly allowlisted text-only passage IDs**, in addition to previously embedded content; no generic bypass of the vector requirement was introduced. A multi-author query now gathers up to two topic-matched passages per recognized author, so a single author's high score cannot crowd out the other author.
+
+**Result: 8/8 positive/safety integration checks passed** using direct staging SELECT data replayed through the checked-in integration script with mocked connection transport. Eight selected evidence candidates still have pending editorial review in the replay. The case counts establish topic-linked candidate availability and author scope, not verified textual interpretation.
+
+**Important separate release gate**: the GitHub Actions workflow now fails if `pendingEditorialReview !== 0`, even when all eight cases pass. Therefore release is still blocked. This is intentional, not a CI regression. We have not confirmed an actual GitHub Actions run, HTTP Chat E2E response, OpenAI answer generation, or full source-authenticity editorial assessment.
+
+Next required tasks: independent editorial certification of edition provenance and segment boundaries; ensure speaker/claim review is backed by an authoritative record; isolate the preview Chat database credentials, then test actual answers.
