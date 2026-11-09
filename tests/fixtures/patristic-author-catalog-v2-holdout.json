@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 2,
+  "purpose": "INDEPENDENT_AUTHOR_SCOPE_HOLDOUT_NO_ANSWER_GENERATION",
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "cases": [
+    {
+      "id": "english-basil",
+      "question": "What does St. Basil the Great teach about creation?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Basil the Great"
+    },
+    {
+      "id": "english-cyril",
+      "question": "How does St. Cyril of Jerusalem explain baptism?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Cyril of Jerusalem"
+    },
+    {
+      "id": "english-athanasius",
+      "question": "What does St. Athanasius of Alexandria teach about the Incarnation?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Athanasius of Alexandria"
+    },
+    {
+      "id": "english-chrysostom",
+      "question": "How does St. John Chrysostom interpret prayer?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. John Chrysostom"
+    },
+    {
+      "id": "english-gregory-duplicate",
+      "question": "What does St. Gregory of Nyssa say about the soul?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": "St. Gregory of Nyssa"
+    },
+    {
+      "id": "english-augustine-unindexed",
+      "question": "What does Augustine of Hippo say about grace?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": "Augustine of Hippo"
+    },
+    {
+      "id": "serbian-basil",
+      "question": "Шта Свети Василије Велики учи о стварању?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Basil the Great"
+    },
+    {
+      "id": "serbian-chrysostom",
+      "question": "Шта Свети Јован Златоусти говори о молитви?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. John Chrysostom"
+    },
+    {
+      "id": "serbian-athanasius",
+      "question": "Како Свети Атанасије Александријски тумачи оваплоћење?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Athanasius of Alexandria"
+    },
+    {
+      "id": "serbian-cyril",
+      "question": "Шта Свети Кирило Јерусалимски учи о крштењу?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Cyril of Jerusalem"
+    },
+    {
+      "id": "serbian-gregory",
+      "question": "Шта Свети Григорије Ниски говори о души?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": "St. Gregory of Nyssa"
+    },
+    {
+      "id": "english-compare",
+      "question": "Compare St. Basil the Great and St. Cyril of Jerusalem on baptism.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null
+    },
+    {
+      "id": "compare-duplicate",
+      "question": "Compare St. Basil the Great and St. Gregory of Nyssa on the soul.",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "compare-partial",
+      "question": "Compare St. Basil the Great with St. Maximus the Confessor on love.",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "unknown-photios",
+      "question": "What does St. Photios the Great teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "ambiguous-cyril",
+      "question": "What does Cyril teach about baptism?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "global-repentance",
+      "question": "How does repentance relate to baptism?",
+      "expectedScope": "GLOBAL",
+      "expectedAuthor": null
+    },
+    {
+      "id": "global-ascesis",
+      "question": "Зашто је покајање важно у духовном животу?",
+      "expectedScope": "GLOBAL",
+      "expectedAuthor": null
+    }
+  ]
+}
