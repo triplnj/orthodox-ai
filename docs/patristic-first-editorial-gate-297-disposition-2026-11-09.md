@@ -29,3 +29,15 @@ This completes **inventory, historical edition attribution, text-integrity verif
 This does NOT complete publisher/editorial sign-off of the 73 quarantined passages and does not establish that the 224 full matches can be quoted directly or attributed to the source work's bibliographic author as a speaker. They must be filtered using the review classification before any Chat source card can be described as verified. A generated answer has not been audited. Unreviewed work and staged edition flags must not be lifted by this classification alone.
 
 The subsequent speaker-attribution/author deduplication phase must retain this evidence boundary. Production remains untouched.
+
+## Independent CI confirmation — final classification run
+A GitHub Actions run completed successfully with the source classifier and source audit executing independently:
+- Run: https://github.com/triplnj/orthodox-ai/actions/runs/42674088750
+- Checked commit: `abfdbbfe307bf1958e93380bfdbf3f3b78e135f8`
+- Classification artifact ID `13698644254`, named `patristic-staging-source-review-classification`.
+- The downloaded artifact was parsed independently and confirmed to contain exactly 297 records and the stated 224/73 classification.
+- `quoteApprovals=0`, `speakerApprovals=0`, `releaseApproved=false`, `productionChanges=0`.
+
+The first *bibliographic and source-text disposition* workstream is now completed for the existing pilot corpus, with 73 records **quarantined in the review classification**. Quarantine status must be honored by every future retrieval/publishing integration; do not mistake an artifact flag for a production enforcement mechanism. The existing production Chat path has not been changed. Pending editorial fixes for these 73 are deferred outside the validated source subset rather than silently considered verified.
+
+**Next workstream (task 2 of 5):** speaker attribution and Gregory duplicate author/work review; preserve source-review classification before enabling any publication. No production deployment authorized.
