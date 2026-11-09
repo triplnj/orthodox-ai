@@ -17,6 +17,8 @@ on:
       - 'scripts/patristics/rank-staging-source-evidence.mjs'
       - 'tests/patristic-rank-staging-source-evidence.test.mjs'
       - 'tests/fixtures/patristic-chat-staging-integration.json'
+      - 'scripts/patristics/audit-staging-transcriptions.mjs'
+      - 'tests/patristic-source-text-audit.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,7 +36,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
@@ -110,6 +112,55 @@ jobs:
           path: ${{ runner.temp }}/patristic-chat-staging-integration.json
           retention-days: 21
           if-no-files-found: warn
+      - name: Audit every staged passage against its published source
+        id: full_source_audit
+        continue-on-error: true
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/audit-staging-transcriptions.mjs > "$RUNNER_TEMP/patristic-source-text-audit.json"
+      - name: Publish source audit findings
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync,existsSync} from 'node:fs';
+          const p=process.env.RUNNER_TEMP+'/patristic-source-text-audit.json';
+          if(!existsSync(p)){process.stdout.write('### Source audit unavailable — runner failure\\n');process.exit(0);}
+          const r=JSON.parse(readFileSync(p,'utf8'));
+          const lines=['### Full staging transcription audit','',
+            'Passages checked: '+r.total,
+            'Source URLs: '+r.sourceUrls,
+            'Stored SHA-256 mismatches: '+r.badHashes,
+            'Source fetch failures: '+r.sourceFailures.length,'',
+            '| Audit classification | Count |','|---|---:|'];
+          for(const [k,v] of Object.entries(r.stats))lines.push('| '+k+' | '+v+' |');
+          lines.push('','This audit checks source text correspondence only. Editorial and theological review remain separate.');
+          process.stdout.write(lines.join('\\n')+'\\n');
+          NODE
+      - name: Save full source audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-full-source-transcription-audit
+          path: ${{ runner.temp }}/patristic-source-text-audit.json
+          retention-days: 21
+          if-no-files-found: warn
+      - name: Block release if source-audit transport or data integrity fails
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.full_source_audit.outcome }}" = "success"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-source-text-audit.json','utf8'));
+          if(r.status!=='STAGING_SOURCE_TEXT_AUDIT'||r.databaseWrites!==0||r.productionChanges!==0||
+             r.badHashes>0||r.sourceFailures.length>0)
+           throw Error('Transcription audit is incomplete or untrusted; no release.');
+          if((r.stats.NO_TEXT_MATCH??0)>0||(r.stats.PARTIAL_TEXT_MATCH??0)>0||
+             (r.stats.TOO_SHORT_FOR_TEXT_AUDIT??0)>0)
+           throw Error('Editorial passage correspondence/boundary review pending; no release.');
+          NODE
       - name: Save complete holdout evidence
         if: always()
         uses: actions/upload-artifact@v4
