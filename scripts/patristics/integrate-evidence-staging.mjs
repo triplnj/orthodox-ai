@@ -9,7 +9,13 @@ import {assessPassageAttribution} from "./assess-passage-attribution.mjs";
 import {rankSourcePassage} from "./rank-staging-source-evidence.mjs";
 const BRANCH="br-spring-frost-assfzje6";
 const sqlAuthors='SELECT a."id",a."canonicalName",a."nameVariants",count(p.embedding)::int AS indexed FROM "LibraryAuthor" a LEFT JOIN "LibraryWork" w ON w."authorId"=a."id" LEFT JOIN "LibraryEdition" e ON e."workId"=w."id" LEFT JOIN "LibraryPassage" p ON p."editionId"=e."id" GROUP BY a."id",a."canonicalName",a."nameVariants" ORDER BY a."canonicalName",a."id"';
-const sqlPassages='SELECT a."id" AS "authorId",a."canonicalName",w."title",w."authenticity",e."sourceUrl",e."editionTitle",e."importStatus",p."id" AS "passageId",p."locator",p."content" FROM "LibraryPassage" p JOIN "LibraryEdition" e ON e."id"=p."editionId" JOIN "LibraryWork" w ON w."id"=e."workId" JOIN "LibraryAuthor" a ON a."id"=w."authorId" WHERE p.embedding IS NOT NULL AND a."id"=ANY($1::text[]) AND length(trim(p."content")) >= 30 ORDER BY w."title",p."ordinal" LIMIT 600';
+// Only these explicitly reviewed-for-import pilot IDs may be read without vectors.
+// Their work/edition records remain UNREVIEWED/STAGED; do not quote as authenticated.
+const STAGING_TEXT_ONLY_IDS=Object.freeze([
+ "pilot_passage_john_eph24_prayer_20261109",
+ "pilot_passage_basil_holyspirit_baptism_20261109"
+]);
+const sqlPassages='SELECT a."id" AS "authorId",a."canonicalName",w."title",w."authenticity",e."sourceUrl",e."editionTitle",e."importStatus",p."id" AS "passageId",p."locator",p."content" FROM "LibraryPassage" p JOIN "LibraryEdition" e ON e."id"=p."editionId" JOIN "LibraryWork" w ON w."id"=e."workId" JOIN "LibraryAuthor" a ON a."id"=w."authorId" WHERE (p.embedding IS NOT NULL OR p."id"=ANY($2::text[])) AND a."id"=ANY($1::text[]) AND length(trim(p."content")) >= 30 ORDER BY w."title",p."ordinal" LIMIT 600';
 export async function runStagingEvidenceIntegration(env=process.env,deps={}){
  if(env.LIBRARY_STAGING_BRANCH_ID!==BRANCH||!env.LIBRARY_STAGING_DB_URL)throw Error("Protected staging required");
  const url=new URL(env.LIBRARY_STAGING_DB_URL);
@@ -28,7 +34,7 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
    const scoped=route.status==="EXACT_CATALOG_MATCH"&&Array.isArray(route.authorIds);
    let passages=[];
    if(scoped){
-    const response=await db.query(sqlPassages,[route.authorIds]);
+    const response=await db.query(sqlPassages,[route.authorIds,STAGING_TEXT_ONLY_IDS]);
     passages=response.rows.filter(p=>route.authorIds.includes(p.authorId));
    }
    // The passages are only source candidates. Never auto-certify truth, relevance, or speaker.
@@ -36,7 +42,11 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
     const ranking=rankSourcePassage({content:p.content,topicTerms:item.topicTerms??item.question});
     return {...p,...ranking};
    }).sort((a,b)=>b.score-a.score);
-   const candidates=scored.filter(p=>p.score>0).slice(0,3);
+   const candidatePool=scored.filter(p=>p.score>0);
+   // On comparisons select evidence per recognized author, not top-K pooled hits.
+   const candidates=route.scope==="MULTI_AUTHOR"
+    ? route.authorIds.flatMap(id=>candidatePool.filter(p=>p.authorId===id).slice(0,2))
+    : candidatePool.slice(0,3);
    const evidence=candidates.map(p=>{
     const attribution=assessPassageAttribution({workAuthor:p.canonicalName,passage:p.content,sourceLocator:p.locator});
     return {authorName:p.canonicalName,workTitle:p.title,locator:p.locator,
@@ -48,6 +58,7 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
    const allAuthorEvidence=!item.requireAllAuthors ||
     (route.authorIds??[]).every(id=>evidence.some(e=>
       passages.some(p=>p.authorId===id&&p.passageId===e.passageId)));
+   const pendingEditorialReview=evidence.filter(e=>e.sourceAuthenticity!=="AUTHENTIC"||e.importStatus!=="ACTIVE").length;
    const accepted=route.scope===item.expectedScope &&
     (item.expectedAuthor==null||route.authors.includes(item.expectedAuthor)) &&
     Boolean(evidence.length)===item.expectCandidate && allAuthorEvidence &&
@@ -59,10 +70,11 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
    if(evidence.some(e=>e.sourceAuthenticity!=="AUTHENTIC"||e.importStatus!=="ACTIVE"))
     gaps.push("EDITORIAL_SOURCE_REVIEW_PENDING");
    results.push({id:item.id,expectedScope:item.expectedScope,actualScope:route.scope,reason:route.reason,
-    indexedCandidates:passages.length,evidenceCount:evidence.length,allAuthorEvidence,evidence,
+    indexedCandidates:passages.length,evidenceCount:evidence.length,allAuthorEvidence,evidence,pendingEditorialReview,
     evidenceGaps:gaps,accepted:Boolean(accepted)});
   }
-  return {status:"STAGING_EVIDENCE_INTEGRATION_NO_LLM",branchId:BRANCH,
+  const pendingEditorialReview=results.reduce((sum,r)=>sum+r.pendingEditorialReview,0);
+  return {status:"STAGING_EVIDENCE_INTEGRATION_NO_LLM",branchId:BRANCH,pendingEditorialReview,
    passed:results.filter(r=>r.accepted).length,total:results.length,results,
    databaseWrites:0,aiCalls:0,chatWrites:0,productionChanges:0,
    disclaimer:"Real staging database retrieval only; not generative AI, exact citation verification, or HTTP Chat E2E."};
