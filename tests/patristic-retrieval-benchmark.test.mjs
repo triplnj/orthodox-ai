@@ -65,3 +65,18 @@ test("invalid vector response rejected",()=>{
 test("non-Neon URL rejected before any connection",()=>{
  assert.throws(()=>validateBenchmarkConfiguration({...env,LIBRARY_STAGING_DB_URL:"postgresql://x:y@localhost/live"}),/non-Neon/);
 });
+
+test("English-only evaluation leaves Serbian cases out and preserves baseline",async()=>{
+ const db=fakeDb();const batches=[];
+ const ai={embeddings:{async create(req){
+   batches.push(req.input);
+   return {data:req.input.map((_,index)=>({index,embedding:vector}))};
+ }}};
+ const result=await benchmarkRetrieval({...env,PATRISTIC_ENGLISH_ONLY:"true"},{db,ai});
+ assert.equal(result.questions,3);
+ assert.equal(batches.length,1);
+ assert.equal(batches[0].length,3);
+ assert.ok(result.reports.every(x=>x.id.endsWith("-en")));
+ assert.ok(result.reports.every(x=>x.baselineTop5.length===1&&x.top5.length===1));
+ assert.ok(result.reports.every(x=>x.top5[0].originalRank===1));
+});
