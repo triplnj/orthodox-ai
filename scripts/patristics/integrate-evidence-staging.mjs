@@ -47,13 +47,16 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
       speakerVerified:attribution.attributionAllowed,exactQuoteAllowed:false,
       excerpt:p.content.slice(0,1000)};
    });
+   const allAuthorEvidence=!item.requireAllAuthors ||
+    (route.authorIds??[]).every(id=>evidence.some(e=>
+      passages.some(p=>p.authorId===id&&p.passageId===e.passageId)));
    const accepted=route.scope===item.expectedScope &&
     (item.expectedAuthor==null||route.authors.includes(item.expectedAuthor)) &&
-    (item.expectCandidate===null||Boolean(evidence.length)===item.expectCandidate) &&
+    Boolean(evidence.length)===item.expectCandidate && allAuthorEvidence &&
     evidence.every(e=>route.authors.includes(e.authorName)&&
       /^https:\/\//.test(e.sourceUrl)&&e.passageId&&e.excerpt&&e.speakerVerified===false&&e.exactQuoteAllowed===false);
    results.push({id:item.id,expectedScope:item.expectedScope,actualScope:route.scope,reason:route.reason,
-    indexedCandidates:passages.length,evidenceCount:evidence.length,evidence,
+    indexedCandidates:passages.length,evidenceCount:evidence.length,allAuthorEvidence,evidence,
     accepted:Boolean(accepted)});
   }
   return {status:"STAGING_EVIDENCE_INTEGRATION_NO_LLM",branchId:BRANCH,
