@@ -39,7 +39,10 @@ export function resolveAuthorCatalogV2(question,catalog){
  // Comparison words may compare two concepts, not two patristic authors.
  // A lone recognized author plus a second capitalized proper name remains unresolved.
  const otherProperName=found.size===1&&/(?:\b(?:and|with|versus|vs)\s+)(?:[A-Z][a-z]+\s+){1,3}(?:[A-Z][a-z]+|the\s+[A-Z][a-z]+)/u.test(question);
- if(comparison&&found.size!==2&&(found.size===0||otherProperName))
+ const bareOtherName=found.size===1&&[...groups.keys()].some(key=>
+  !found.has(key)&&key.split(" ").some(word=>word.length>=5&&!["saint","great"].includes(word)&&includesPhrase(q,word)));
+ const explicitlyUnknownComparison=/(?:unknown\s+saint|непознат\w*\s+светитељ)/iu.test(question);
+ if(comparison&&found.size!==2&&(found.size===0||otherProperName||bareOtherName||explicitlyUnknownComparison))
   return blocked("REVIEW_REQUIRED","INCOMPLETE_COMPARISON",authors,comparison);
  if(!comparison&&found.size===2)return blocked("REVIEW_REQUIRED","MULTIPLE_AUTHORS_WITHOUT_COMPARISON",authors,comparison);
  // An unqualified given name that appears in any catalogue entry remains ambiguous.
@@ -65,6 +68,6 @@ export function resolveAuthorCatalogV2(question,catalog){
  if(selected.some(g=>g.ids.size===0))return blocked("REVIEW_REQUIRED","AUTHOR_NOT_INDEXED",authors,comparison);
  if(selected.some(g=>g.ids.size>1))return blocked("REVIEW_REQUIRED","DUPLICATE_INDEXED_AUTHOR_IDS",authors,comparison,
   {duplicateAuthors:selected.filter(g=>g.ids.size>1).map(g=>g.canonicalName)});
- return {status:"EXACT_CATALOG_MATCH",scope:comparison?"MULTI_AUTHOR":"SINGLE_AUTHOR",
+ return {status:"EXACT_CATALOG_MATCH",scope:comparison&&found.size===2?"MULTI_AUTHOR":"SINGLE_AUTHOR",
   reason:"REVIEWED_CATALOG_ALIAS",authors,authorIds:selected.map(g=>[...g.ids][0]),comparison};
 }
