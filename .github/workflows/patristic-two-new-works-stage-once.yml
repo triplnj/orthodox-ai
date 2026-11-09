@@ -47,6 +47,13 @@ jobs:
           LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
           PATRISTIC_NEW_WORKS_STAGE_APPROVAL: STAGE_TWO_NEW_WORKS_UNREVIEWED
         run: node scripts/patristics/stage-pinned-new-works-staging.mjs "$RUNNER_TEMP/new-works.clean.json" > "$RUNNER_TEMP/new-works.staged-result.json"
+      - name: Index ten new passages in isolated Neon staging only
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PATRISTIC_NEW_WORKS_INDEX_APPROVAL: INDEX_TWO_NEW_WORKS_STAGING_ONLY
+        run: node scripts/patristics/index-two-new-works-staging.mjs "$RUNNER_TEMP/new-works.staged-result.json" > "$RUNNER_TEMP/new-works.index-result.json"
       - name: Summarize independently reproducible staging result
         run: |
           node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
@@ -67,5 +74,6 @@ jobs:
             ${{ runner.temp }}/new-works.pinned-summary.json
             ${{ runner.temp }}/new-works.clean-summary.json
             ${{ runner.temp }}/new-works.staged-result.json
+            ${{ runner.temp }}/new-works.index-result.json
           retention-days: 21
           if-no-files-found: error
