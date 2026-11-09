@@ -8,7 +8,7 @@
       "expectedScope": "SINGLE_AUTHOR",
       "expectedAuthor": "St. Basil the Great",
       "topicTerms": "creation world",
-      "expectCandidate": null
+      "expectCandidate": true
     },
     {
       "id": "chrysostom-serbian",
@@ -16,7 +16,7 @@
       "expectedScope": "SINGLE_AUTHOR",
       "expectedAuthor": "St. John Chrysostom",
       "topicTerms": "prayer",
-      "expectCandidate": null
+      "expectCandidate": true
     },
     {
       "id": "cyril-baptism",
@@ -24,7 +24,7 @@
       "expectedScope": "SINGLE_AUTHOR",
       "expectedAuthor": "St. Cyril of Jerusalem",
       "topicTerms": "baptism",
-      "expectCandidate": null
+      "expectCandidate": true
     },
     {
       "id": "athanasius-incarnation",
@@ -32,7 +32,7 @@
       "expectedScope": "SINGLE_AUTHOR",
       "expectedAuthor": "St. Athanasius of Alexandria",
       "topicTerms": "incarnation",
-      "expectCandidate": null
+      "expectCandidate": true
     },
     {
       "id": "gregory-duplicate",
@@ -54,7 +54,8 @@
       "expectedScope": "MULTI_AUTHOR",
       "expectedAuthor": null,
       "topicTerms": "baptism",
-      "expectCandidate": null
+      "expectCandidate": true,
+      "requireAllAuthors": true
     },
     {
       "id": "topic-global",
