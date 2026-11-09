@@ -6,10 +6,10 @@ import {readFileSync} from "node:fs";
 import {pathToFileURL} from "node:url";
 import {resolveAuthorCatalogV2} from "./resolve-author-catalog-v2.mjs";
 import {assessPassageAttribution} from "./assess-passage-attribution.mjs";
+import {rankSourcePassage} from "./rank-staging-source-evidence.mjs";
 const BRANCH="br-spring-frost-assfzje6";
 const sqlAuthors='SELECT a."id",a."canonicalName",a."nameVariants",count(p.embedding)::int AS indexed FROM "LibraryAuthor" a LEFT JOIN "LibraryWork" w ON w."authorId"=a."id" LEFT JOIN "LibraryEdition" e ON e."workId"=w."id" LEFT JOIN "LibraryPassage" p ON p."editionId"=e."id" GROUP BY a."id",a."canonicalName",a."nameVariants" ORDER BY a."canonicalName",a."id"';
 const sqlPassages='SELECT a."id" AS "authorId",a."canonicalName",w."title",w."authenticity",e."sourceUrl",e."editionTitle",e."importStatus",p."id" AS "passageId",p."locator",p."content" FROM "LibraryPassage" p JOIN "LibraryEdition" e ON e."id"=p."editionId" JOIN "LibraryWork" w ON w."id"=e."workId" JOIN "LibraryAuthor" a ON a."id"=w."authorId" WHERE p.embedding IS NOT NULL AND a."id"=ANY($1::text[]) AND length(trim(p."content")) >= 30 ORDER BY w."title",p."ordinal" LIMIT 600';
-const tokens=s=>[...new Set(String(s).normalize("NFKD").toLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").split(" ").filter(w=>w.length>=4))];
 export async function runStagingEvidenceIntegration(env=process.env,deps={}){
  if(env.LIBRARY_STAGING_BRANCH_ID!==BRANCH||!env.LIBRARY_STAGING_DB_URL)throw Error("Protected staging required");
  const url=new URL(env.LIBRARY_STAGING_DB_URL);
@@ -32,18 +32,16 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
     passages=response.rows.filter(p=>route.authorIds.includes(p.authorId));
    }
    // The passages are only source candidates. Never auto-certify truth, relevance, or speaker.
-   const qTokens=tokens(item.topicTerms??item.question);
    const scored=passages.map(p=>{
-    const contentTokens=new Set(tokens(p.content));
-    const overlap=qTokens.filter(t=>contentTokens.has(t));
-    return {...p,overlap,score:overlap.length};
+    const ranking=rankSourcePassage({content:p.content,topicTerms:item.topicTerms??item.question});
+    return {...p,...ranking};
    }).sort((a,b)=>b.score-a.score);
    const candidates=scored.filter(p=>p.score>0).slice(0,3);
    const evidence=candidates.map(p=>{
     const attribution=assessPassageAttribution({workAuthor:p.canonicalName,passage:p.content,sourceLocator:p.locator});
     return {authorName:p.canonicalName,workTitle:p.title,locator:p.locator,
       sourceUrl:p.sourceUrl,passageId:p.passageId,sourceAuthenticity:p.authenticity,
-      importStatus:p.importStatus,lexicalOverlap:p.overlap,
+      importStatus:p.importStatus,lexicalOverlap:p.matchedTerms,matchedCues:p.matchedCues,
       speakerVerified:attribution.attributionAllowed,exactQuoteAllowed:false,
       excerpt:p.content.slice(0,1000)};
    });
