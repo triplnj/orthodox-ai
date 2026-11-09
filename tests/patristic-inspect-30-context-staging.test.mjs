@@ -9,7 +9,7 @@ function sampleReport(){
  return {status:"PROVISIONAL_RETRIEVAL_QA_NOT_THEOLOGICAL_CERTIFICATION",branchId:env.LIBRARY_STAGING_BRANCH_ID,
   questionCount:30,total:285,indexed:281,
   questions:fixtures.questions.map(q=>{
-   const rank={hit@10:0};
+   const rank={"hit@10":0};
    const empty={baseline:rank,reranked:rank,baselineTop10:[],rerankedTop10:[]};
    return {questionId:q.id,searches:{"all-authors":empty,"expected-author":empty}};
   })};
