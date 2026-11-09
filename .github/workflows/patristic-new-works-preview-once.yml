@@ -22,9 +22,11 @@ jobs:
       - name: Install source parsing dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run fail-closed source preview tests
-        run: node --test tests/patristic-new-works-preview.test.mjs
+        run: node --test tests/patristic-new-works-preview.test.mjs tests/patristic-clean-new-works-preview.test.mjs
       - name: Fetch public-domain historical source text for editorial inspection
         run: node scripts/patristics/preview-new-works-staging.mjs "$RUNNER_TEMP/patristic-two-new-works.preview.json" > "$RUNNER_TEMP/patristic-two-new-works.summary.json"
+      - name: Remove paratext and verify numbered source sections
+        run: node scripts/patristics/clean-new-works-preview.mjs "$RUNNER_TEMP/patristic-two-new-works.preview.json" "$RUNNER_TEMP/patristic-two-new-works.clean-candidate.json"
       - name: Report source provenance, not doctrinal correctness
         run: |
           node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
@@ -43,5 +45,6 @@ jobs:
           path: |
             ${{ runner.temp }}/patristic-two-new-works.preview.json
             ${{ runner.temp }}/patristic-two-new-works.summary.json
+            ${{ runner.temp }}/patristic-two-new-works.clean-candidate.json
           retention-days: 21
           if-no-files-found: error
