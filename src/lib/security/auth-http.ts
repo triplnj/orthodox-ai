@@ -18,6 +18,16 @@ function queueEmail(mail: Awaited<ReturnType<typeof service.issueEmail>>) {
 }
 export async function authenticationResponse(req: Request, action: "login" | "register" | "forgot" | "verify" | "reset" | "resend" | "password") {
   try {
+    if (process.env.ORTHODOXAI_CHAT_ISOLATED_PREVIEW === "1") {
+      // Preview contains no imported users: permit only explicitly seeded QA
+      // logins and never send verification, registration or reset emails.
+      if (action !== "login")
+        return NextResponse.json({ error: "Registration and email actions disabled in isolated Chat Preview." }, { status: 403 });
+      const payload = await req.clone().json().catch(() => null);
+      if (!payload || typeof payload.email !== "string" ||
+          !payload.email.toLowerCase().endsWith("@example.test"))
+        return NextResponse.json({ error: "Only isolated QA accounts can sign in here." }, { status: 403 });
+    }
     await authLimit(req, action);
     queryInput(req);
     if (action === "resend" || action === "password") {
