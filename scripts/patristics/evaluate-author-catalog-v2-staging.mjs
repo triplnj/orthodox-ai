@@ -26,8 +26,20 @@ export async function evaluateCatalogAuthorHoldout(env=process.env,deps={}){
    return {id:c.id,expectedScope:c.expectedScope,actualScope:r.scope,expectedAuthor:c.expectedAuthor,authors:r.authors,reason:r.reason,correct};
   });
   const correctCount=results.filter(x=>x.correct).length;
+  const adversarialFixture=deps.adversarialFixture??JSON.parse(readFileSync("tests/fixtures/patristic-author-catalog-v2-adversarial.json","utf8"));
+  if(adversarialFixture.schemaVersion!==1||
+    adversarialFixture.purpose!=="POST_DISCOVERY_ADVERSARIAL_REGRESSION_NOT_BLINDED_HOLDOUT"||
+    adversarialFixture.cases.length!==19||new Set(adversarialFixture.cases.map(x=>x.id)).size!==19)
+    throw Error("Wrong adversarial regression fixture");
+  const adversarialResults=adversarialFixture.cases.map(c=>{
+   const r=resolveAuthorCatalogV2(c.question,rows);
+   return {id:c.id,expectedScope:c.expectedScope,actualScope:r.scope,
+    reason:r.reason,correct:r.scope===c.expectedScope};
+  });
+  const adversarialCorrect=adversarialResults.filter(x=>x.correct).length;
   return {status:"CATALOG_AUTHOR_V2_STAGING_HOLDOUT",branchId:BRANCH,total:results.length,correctCount,
    accuracy:correctCount/results.length,
+   adversarialTotal:adversarialResults.length,adversarialCorrect,adversarialResults,
    missingVariantRows:rows.filter(x=>!Array.isArray(x.nameVariants)||x.nameVariants.length===0).length,
    indexedAuthorRows:rows.filter(x=>Number(x.indexed)>0).length,
    duplicateCanonicalNames:[...new Set(rows.map(x=>x.canonicalName))].filter(n=>rows.filter(x=>x.canonicalName===n&&Number(x.indexed)>0).length>1),
