@@ -21,6 +21,11 @@ on:
       - 'tests/patristic-source-text-audit.test.mjs'
       - 'scripts/patristics/finalize-staging-source-review.mjs'
       - 'tests/patristic-finalize-source-review.test.mjs'
+      - 'scripts/patristics/resolve-reviewed-logical-author.mjs'
+      - 'scripts/patristics/test-gregory-identity-speakers-staging.mjs'
+      - 'tests/patristic-reviewed-logical-author.test.mjs'
+      - 'tests/fixtures/patristic-gregory-logical-identity-review.json'
+      - 'tests/fixtures/patristic-gregory-speaker-evidence-review.json'
       - 'tests/fixtures/patristic-staging-quarantined-fragments.json'
   workflow_dispatch:
 permissions:
@@ -39,7 +44,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs tests/patristic-reviewed-logical-author.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
@@ -187,6 +192,33 @@ jobs:
             '**This diagnostic workflow never deploys or promotes production.**'];
           process.stdout.write(lines.join('\\n')+'\\n');
           NODE
+      - name: Verify Gregory logical identity and dialogue speakers against staging
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: |
+          node scripts/patristics/test-gregory-identity-speakers-staging.mjs > "$RUNNER_TEMP/patristic-gregory-dialogue-staging.json"
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-gregory-dialogue-staging.json','utf8'));
+          if(r.status!=='GREGORY_LOGICAL_IDENTITY_SPEAKER_STAGING'||r.total!==8||
+             r.passed!==8||r.databaseWrites!==0||r.productionChanges!==0||
+             r.quoteApprovals!==0)throw Error('Gregory dialogue review not complete: '+r.passed+'/'+r.total);
+          process.stdout.write(['### Gregory identity and dialogue review','',
+            'Verified '+r.passed+'/'+r.total+' author/voice safety cases.',
+            'Original author records retained: '+r.distinctAuthorIds,
+            'Exact fingerprinted speaker mappings: '+r.reviewedSpeakers,
+            'Unapproved voice/source items kept blocked: '+r.unapprovedSpeakerPassages,
+            'No automatic quotation authorization.'].join('\\n')+'\\n');
+          NODE
+      - name: Save Gregory identity and dialogue report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-gregory-dialogue-staging
+          path: ${{ runner.temp }}/patristic-gregory-dialogue-staging.json
+          retention-days: 21
+          if-no-files-found: warn
       - name: Save complete holdout evidence
         if: always()
         uses: actions/upload-artifact@v4
