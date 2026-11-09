@@ -1,6 +1,7 @@
 name: Patristic Two New Works - Guarded Staging Import
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -27,7 +28,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Source and manuscript integrity regression tests
-        run: node --test tests/patristic-new-works-preview.test.mjs tests/patristic-clean-new-works-preview.test.mjs tests/patristic-new-works-question-plan.test.mjs
+        run: node --test tests/patristic-new-works-preview.test.mjs tests/patristic-clean-new-works-preview.test.mjs tests/patristic-new-works-question-plan.test.mjs tests/patristic-index-two-new-works-staging.test.mjs tests/patristic-eight-new-works-qa.test.mjs tests/patristic-frozen-baseline-corpus.test.mjs
       - name: Verify exact isolated Neon staging connection
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
@@ -68,19 +69,21 @@ jobs:
           if(r.status!=='TWO_NEW_WORKS_STAGED_UNREVIEWED'||r.branchId!=='br-spring-frost-assfzje6'||r.counts.passages!==10||r.embeddingRequests!==0)
             throw Error('Unexpected staged source report');
           process.stdout.write('### Two new historical editions staged — unreviewed\n\n'+
-            'Neon staging only. **No embeddings, no production use, no doctrinal certification.**\n\n'+
+            'Neon staging only. **Embeddings generated only in staging, no production use, no doctrinal certification.**\n\n'+
             '| Edition ID |\n|---|\n'+r.editionIds.map(id=>'| `'+id+'` |').join('\n')+
             '\n\nPassages: '+r.counts.passages+'\n');
           NODE
-      - name: Save source provenance, pinned manuscript and staging report
+      - name: Save available safe diagnostic artifacts even if a later stage fails
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: patristic-two-new-works-staged-unreviewed
           path: |
+            ${{ runner.temp }}/new-works.preview-summary.json
             ${{ runner.temp }}/new-works.pinned-summary.json
             ${{ runner.temp }}/new-works.clean-summary.json
             ${{ runner.temp }}/new-works.staged-result.json
             ${{ runner.temp }}/new-works.index-result.json
             ${{ runner.temp }}/new-works.eight-question-qa.json
           retention-days: 21
-          if-no-files-found: error
+          if-no-files-found: warn
