@@ -12,7 +12,11 @@ export type PreviewCounts={
 };
 export type PreviewGuardRow={branchId:string;purpose:string}&PreviewCounts;
 export function assertIsolatedPreviewConfig(env:NodeJS.ProcessEnv=process.env){
- if(env.VERCEL_ENV!=="preview"||env.VERCEL_GIT_COMMIT_REF!==TEST_BRANCH)return false;
+ const flagged=env.ORTHODOXAI_CHAT_ISOLATED_PREVIEW==="1"||
+   env.ORTHODOXAI_CHAT_PREVIEW_DB_BRANCH_ID===ISOLATED_DB_BRANCH;
+ if(!flagged&&env.VERCEL_GIT_COMMIT_REF!==TEST_BRANCH)return false;
+ if(env.VERCEL_ENV!=="preview"||env.VERCEL_GIT_COMMIT_REF!==TEST_BRANCH)
+  throw Error("PREVIEW_CHAT_BLOCKED: deployment identity mismatch");
  if(env.ORTHODOXAI_CHAT_ISOLATED_PREVIEW!=="1"||
    env.ORTHODOXAI_CHAT_PREVIEW_DB_BRANCH_ID!==ISOLATED_DB_BRANCH)
   throw Error("PREVIEW_CHAT_BLOCKED: isolation configuration missing");
