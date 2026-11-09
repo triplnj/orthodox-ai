@@ -1,0 +1,24 @@
+# Task 3 — isolated Preview Chat integration progress (2026-11-09)
+
+## Safety and database checks
+- Isolated Neon branch `br-empty-breeze-asd2dqrq` is a clone of staging, **not** the production branch `br-flat-mode-as1mxdf8`.
+- User-approved clone-only scrubbing completed; 297 patristic passages preserved; no imported user accounts or sessions remain.
+- Exactly one synthetic, password-authenticated, verified Free-plan QA login `patristic-qa@example.test` was created in the isolated branch. Credentials are not stored in this repository.
+- Read-back after QA provisioning: 1 QA account, 0 sessions, 297 passages; sentinel `PATRISTIC_CHAT_ISOLATED_PREVIEW`. Current production read-back: 74 users, 29 conversations, 864 messages, 4 blog posts, untouched.
+- Four encrypted, **branch-scoped** Vercel Preview variables: `DATABASE_URL`, `DIRECT_URL`, `ORTHODOXAI_CHAT_ISOLATED_PREVIEW=1`, `ORTHODOXAI_CHAT_PREVIEW_DB_BRANCH_ID=br-empty-breeze-asd2dqrq`. No unscoped variable was modified.
+- Chat route guard executes before authentication/quota writes. Guard fails closed on missing/mismatched Vercel branch identity, absent isolation flags, wrong Neon host or DB sentinel, or any non-@example.test account in clone.
+- On isolated Preview only, email sends are forbidden, billing-provider API calls are forbidden, and registration/reset/verification are disabled; login accepts only @example.test identities.
+
+## Integrated research path
+- On the experimental Preview branch, questions naming Gregory of Nyssa are routed through `buildIsolatedGregoryResearch` in the real `/api/chat` pipeline.
+- That pilot uses the reviewed logical author resolver against the isolated library's real author catalog, rejecting ambiguous author matches and unsupported comparisons.
+- Only six Gregory passages from the published source-text audit are eligible, with passage IDs and stored content SHA-256 fingerprints checked on every retrieval. The LLM receives a tightly scoped evidence context and source cards with `STAGING_TEXT_MATCH_ONLY`. Direct quotation and unverified dialogue-speaker attribution are prohibited.
+- Other questions retain the preexisting Chat research path. The existing production application is untouched.
+
+## Tests and blocker
+- GitHub Actions now runs the full protected staging tests, Prisma generation, `tsc --noEmit`, and tests of Preview isolation / outbound blocks.
+- Vercel's previous Preview build failed on ES2017 `0n`; fixed. A subsequent strict typecheck caught a union narrowing issue in the new resolver bridge; fixed on `c738e27cb4b8290490de2930516038ff187e40ab`. Obtain the final CI run result before claiming a green typecheck for that commit.
+- New Vercel Preview deployment is currently **blocked by Vercel API HTTP 402**, code `api-deployments-free-per-day`: exceeded 100 free-tier API deployments in the daily window. The platform requested retry after 86400 seconds. No bypass or production deployment was attempted.
+- Consequently no new deployment of the integrated Chat code and **no actual authenticated HTTP Chat E2E answer** have yet been validated. Do not mark Task 3 complete until the Preview deployment is READY and live QA answers are audited.
+
+No user credentials, API secrets or connection strings are embedded in repository files or this report.
