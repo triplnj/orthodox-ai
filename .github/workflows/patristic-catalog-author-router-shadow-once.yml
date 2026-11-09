@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/patristic-catalog-author-router-shadow-once.yml'
+      - 'scripts/patristics/catalog-author-resolver.mjs'
+      - 'tests/patristic-catalog-author-resolver.test.mjs'
   workflow_dispatch:
 
 permissions:
