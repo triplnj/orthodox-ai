@@ -63,6 +63,15 @@
       "expectedScope": "GLOBAL",
       "expectedAuthor": null,
       "expectCandidate": false
+    },
+    {
+      "id": "gregory-reviewed-duplicate",
+      "question": "What does St. Gregory of Nyssa teach about the soul?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "topicTerms": "soul grief",
+      "expectCandidate": true,
+      "requireAllAuthors": false
     }
   ]
 }
