@@ -43,3 +43,16 @@ This isolation concern is separate from the 5/8 read-only evidence tests and is 
 
 ## Additional catalogue provenance inspection
 Direct read-only Neon verification confirms that **all four** indexed works used by the tested Athanasius, Basil, Cyril and Chrysostom questions are marked `UNREVIEWED` in `LibraryWork.authenticity`, with their editions marked `STAGED`. The two successful positive retrieval cases therefore demonstrate **candidate discovery**, not certified authenticity or sufficient attribution for public doctrinal answers. Editorial provenance review remains a separate release blocker.
+
+## Follow-up: bounded content-anchored retrieval improvement
+
+A **shadow-only** evidence ranker now supports a small explicit concept-to-phrase mapping for the term `incarnation`. A match contributes to ranking only when the **literal phrase occurs in the actual passage content**; a work title alone is not counted as supporting evidence. A new regression test verifies matches and unrelated-topic negative examples. No semantic embedding API was invoked; this is a conservative phrase-expansion improvement, not a full semantic embedding search.
+
+Using fresh read-only Neon staging rows and the updated integration script with an isolated mock SQL transport, results improved from **5/8 to 6/8**:
+- Athanasius Incarnation: **PASS**, *On the Incarnation*, Chapter I, §3, passage `passage_5759463d376fca0c63d3dd56a18e1a52`. The source explicitly discusses the Word's bodily appearing and manifestation in a human body. This is candidate evidence, not certified doctrinal interpretation.
+- Chrysostom Prayer: **FAIL**, no topic-matched passage in current staged *Homilies on Matthew*, Homily I.
+- Basil–Cyril Baptism comparison: **FAIL**, passage found for Cyril alone; no Basil baptism passage in staged *Hexaemeron*, Homily I.
+
+All executed mock-transport SQL requests remained SELECT-only, the staging guard matched, and connection cleanup ran. These direct source evaluations do not establish CI success, real Chat model generation, or editorial authentication of `UNREVIEWED` material.
+
+**Release remains blocked at 6/8.** The new report includes `NO_TOPIC_MATCHED_PASSAGE`, `MISSING_COMPARISON_AUTHOR_EVIDENCE`, and `EDITORIAL_SOURCE_REVIEW_PENDING` flags. Do not dilute the fixture to get 8/8: add verifiable topical work editions, editorially verify their provenance, and independently evaluate the resulting citations before enabling any live Chat path.
