@@ -54,6 +54,12 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PATRISTIC_NEW_WORKS_INDEX_APPROVAL: INDEX_TWO_NEW_WORKS_STAGING_ONLY
         run: node scripts/patristics/index-two-new-works-staging.mjs "$RUNNER_TEMP/new-works.staged-result.json" > "$RUNNER_TEMP/new-works.index-result.json"
+      - name: Evaluate eight new-author questions across the expanded staging library
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/patristics/evaluate-eight-new-works-staging.mjs tests/fixtures/patristic-new-works-8-question-plan.json "$RUNNER_TEMP/new-works.manifest.json" "$RUNNER_TEMP/new-works.staged-result.json" > "$RUNNER_TEMP/new-works.eight-question-qa.json"
       - name: Summarize independently reproducible staging result
         run: |
           node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
@@ -75,5 +81,6 @@ jobs:
             ${{ runner.temp }}/new-works.clean-summary.json
             ${{ runner.temp }}/new-works.staged-result.json
             ${{ runner.temp }}/new-works.index-result.json
+            ${{ runner.temp }}/new-works.eight-question-qa.json
           retention-days: 21
           if-no-files-found: error
