@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Validate thirty-question fixtures, evidence and metrics without network
-        run: node --test tests/patristic-english-30-questions.test.mjs tests/patristic-evidence-retrieval-metrics.test.mjs tests/patristic-rerank-retrieval.test.mjs
+        run: node --test tests/patristic-english-30-questions.test.mjs tests/patristic-evidence-retrieval-metrics.test.mjs tests/patristic-rerank-retrieval.test.mjs tests/patristic-paragraph-context-diagnostic.test.mjs tests/patristic-inspect-30-context-staging.test.mjs
       - name: Check database is exactly the approved staging branch
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
@@ -41,6 +41,11 @@ jobs:
           LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: node scripts/patristics/evaluate-30-evidence-staging.mjs > "$RUNNER_TEMP/patristic-evidence-30.json"
+      - name: Inspect adjacent source chunks and dialogue attribution (read-only)
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/inspect-30-paragraph-context-staging.mjs "$RUNNER_TEMP/patristic-evidence-30.json" > "$RUNNER_TEMP/patristic-evidence-30-context.json"
       - name: Audit evidence misses and rank regressions
         shell: bash
         run: |
@@ -78,5 +83,6 @@ jobs:
           path: |
             ${{ runner.temp }}/patristic-evidence-30.json
             ${{ runner.temp }}/patristic-evidence-30-audit.md
+            ${{ runner.temp }}/patristic-evidence-30-context.json
           retention-days: 14
           if-no-files-found: error
