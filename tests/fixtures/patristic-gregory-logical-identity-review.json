@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "purpose": "STAGING_REVIEWED_LOGICAL_AUTHOR_GROUP",
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "canonicalName": "St. Gregory of Nyssa",
+  "historicalWork": "On the Soul and the Resurrection",
+  "workAuthorIds": [
+    "author_70a3fd40c93b35acefdd905186e79922",
+    "author_8acfb0ee0a6f046a3528db5d6587582f"
+  ],
+  "editions": [
+    {
+      "authorId": "author_70a3fd40c93b35acefdd905186e79922",
+      "workId": "work_7957d7df9094b385786801bfdfcd2c8c",
+      "editionId": "edition_a5ab16669e87b05abd9219553343d318",
+      "sourceUrl": "https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/",
+      "passageCount": 5
+    },
+    {
+      "authorId": "author_8acfb0ee0a6f046a3528db5d6587582f",
+      "workId": "work_dd783ac2d654ac230f2f8e036e3da536",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "sourceUrl": "https://www.newadvent.org/fathers/2915.htm",
+      "passageCount": 175
+    }
+  ],
+  "policy": {
+    "databaseMerge": false,
+    "deleteDuplicates": false,
+    "autoSpeakerAttribution": false,
+    "eligibleTextMatchesOnly": true
+  },
+  "references": [
+    "https://www.newadvent.org/fathers/2915.htm",
+    "https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/"
+  ]
+}
