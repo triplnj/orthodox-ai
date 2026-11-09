@@ -59,3 +59,11 @@ test("unqualified comparison and full two-author names stay separate",()=>{
  const b=resolve("Compare St. Basil the Great with Cyril",rows);
  assert.equal(b.scope,"NO_AUTOMATIC_FILTER");
 });
+
+
+test("two named authors without explicit comparison must not enter single-author mode",()=>{
+ const r=resolve("What did St. Basil the Great say about St. Cyril of Jerusalem?",rows);
+ assert.equal(r.scope,"NO_AUTOMATIC_FILTER");
+ assert.equal(r.reason,"MULTIPLE_AUTHORS_WITHOUT_COMPARISON");
+ assert.equal(r.authorIds,undefined);
+});
