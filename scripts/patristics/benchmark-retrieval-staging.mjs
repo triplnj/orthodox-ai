@@ -79,7 +79,7 @@ export async function benchmarkRetrieval(env=process.env,deps={}){
      guard.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")
      throw Error("Wrong Neon branch: aborting before OpenAI request");
    const coverage=await db.query(
-     'SELECT count(*)::integer AS total, count("embedding")::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})');
+     `SELECT count(*)::integer AS total, count("embedding")::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})`);
    if(coverage.rows.length!==1||Number(coverage.rows[0].indexed)!==EXPECTED_INDEXED)
      throw Error("Indexed staging corpus changed; inspect before benchmarking");
    const response=await ai.embeddings.create({
