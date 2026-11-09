@@ -40,3 +40,6 @@ To test generated Chat answers: construct a separate authenticated non-productio
 Vercel project `orthodox-ai-24li` has a preview deployment for `experiment/patristic-catalog-author-v2-20261109`, but branch-specific preview environment-variable metadata contains **no DATABASE_URL override** for this branch. A generic `DATABASE_URL` and `DIRECT_URL` targeting `preview` are present. Their endpoints were deliberately not decrypted. Consequently the preview Chat endpoint could use a non-staging database, and invoking it would write conversation and quota records. **No HTTP Chat test was sent to that preview.** An isolated preview must have explicitly scoped staging credentials and its own safe test user before E2E execution.
 
 This isolation concern is separate from the 5/8 read-only evidence tests and is a deployment blocker.
+
+## Additional catalogue provenance inspection
+Direct read-only Neon verification confirms that **all four** indexed works used by the tested Athanasius, Basil, Cyril and Chrysostom questions are marked `UNREVIEWED` in `LibraryWork.authenticity`, with their editions marked `STAGED`. The two successful positive retrieval cases therefore demonstrate **candidate discovery**, not certified authenticity or sufficient attribution for public doctrinal answers. Editorial provenance review remains a separate release blocker.
