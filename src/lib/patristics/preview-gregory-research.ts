@@ -26,9 +26,10 @@ export async function buildIsolatedGregoryResearch(
   LEFT JOIN "LibraryPassage" p ON p."editionId"=e."id"
   GROUP BY a."id",a."canonicalName",a."nameVariants"`;
  const route=resolveReviewedLogicalAuthor(query,catalog,identity);
+ const resolvedIds=("authorIds" in route&&Array.isArray(route.authorIds))?route.authorIds:[];
  if(route.status!=="EXACT_CATALOG_MATCH"||route.scope!=="SINGLE_AUTHOR"||
    route.authors.length!==1||route.authors[0]!=="St. Gregory of Nyssa"||
-   !Array.isArray(route.authorIds)||route.authorIds.length!==2)
+   resolvedIds.length!==2)
   throw Error("Isolated Gregory pilot rejected an unresolved or multi-author scope");
  const pins=identity.sourceMatchedPassageFingerprints;
  if(pins.length!==6||new Set(pins.map(p=>p.passageId)).size!==6)throw Error("Untrusted Gregory source manifest");
