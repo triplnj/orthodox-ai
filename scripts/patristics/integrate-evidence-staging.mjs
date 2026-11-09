@@ -53,9 +53,14 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
     Boolean(evidence.length)===item.expectCandidate && allAuthorEvidence &&
     evidence.every(e=>route.authors.includes(e.authorName)&&
       /^https:\/\//.test(e.sourceUrl)&&e.passageId&&e.excerpt&&e.speakerVerified===false&&e.exactQuoteAllowed===false);
+   const gaps=[];
+   if(item.expectCandidate&&!evidence.length)gaps.push("NO_TOPIC_MATCHED_PASSAGE");
+   if(!allAuthorEvidence)gaps.push("MISSING_COMPARISON_AUTHOR_EVIDENCE");
+   if(evidence.some(e=>e.sourceAuthenticity!=="AUTHENTIC"||e.importStatus!=="ACTIVE"))
+    gaps.push("EDITORIAL_SOURCE_REVIEW_PENDING");
    results.push({id:item.id,expectedScope:item.expectedScope,actualScope:route.scope,reason:route.reason,
     indexedCandidates:passages.length,evidenceCount:evidence.length,allAuthorEvidence,evidence,
-    accepted:Boolean(accepted)});
+    evidenceGaps:gaps,accepted:Boolean(accepted)});
   }
   return {status:"STAGING_EVIDENCE_INTEGRATION_NO_LLM",branchId:BRANCH,
    passed:results.filter(r=>r.accepted).length,total:results.length,results,
