@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "status": "REVIEWED_ALIAS_CANDIDATES_SHADOW_ONLY",
+  "notes": "Historically recognized English and Serbian name forms. This is external catalogue data; not hard-coded resolver logic. No DB mutations.",
+  "entries": [
+    {
+      "canonicalName": "St. Athanasius of Alexandria",
+      "variants": [
+        "Athanasius",
+        "Athanasius the Great",
+        "Saint Athanasius of Alexandria",
+        "Sveti Atanasije Veliki",
+        "Свети Атанасије Велики",
+        "Свети Атанасије Александријски"
+      ]
+    },
+    {
+      "canonicalName": "St. Basil the Great",
+      "variants": [
+        "Basil",
+        "Basil the Great",
+        "Saint Basil of Caesarea",
+        "Sveti Vasilije Veliki",
+        "Свети Василије Велики"
+      ]
+    },
+    {
+      "canonicalName": "St. Cyril of Jerusalem",
+      "variants": [
+        "Cyril of Jerusalem",
+        "Saint Cyril of Jerusalem",
+        "Sveti Kirilo Jerusalimski",
+        "Свети Кирило Јерусалимски",
+        "Свети Кирил Јерусалимски"
+      ]
+    },
+    {
+      "canonicalName": "St. Gregory of Nyssa",
+      "variants": [
+        "Gregory of Nyssa",
+        "Saint Gregory of Nyssa",
+        "Sveti Grigorije Niski",
+        "Свети Григорије Ниски"
+      ]
+    },
+    {
+      "canonicalName": "St. John Chrysostom",
+      "variants": [
+        "John Chrysostom",
+        "Chrysostom",
+        "Saint John Chrysostom",
+        "Sveti Jovan Zlatousti",
+        "Свети Јован Златоусти"
+      ]
+    }
+  ]
+}
