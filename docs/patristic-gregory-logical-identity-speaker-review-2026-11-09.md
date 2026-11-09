@@ -42,7 +42,7 @@ A ninth integration question exercises Gregory's reviewed logical identity direc
 
 - `https://github.com/triplnj/orthodox-ai/actions/runs/42675594931`: success, 8/8 independent routing/speaker safety tests on the live staging database; source edition records preserved.
 - `https://github.com/triplnj/orthodox-ai/actions/runs/42676044558`: success on tests and report generation, 9 integration checks executed but one legacy fixture still expected blocked Gregory (8/9); fixed in commit `f1244782135524b416cf2fc32afc28c0a7bd723f`.
-- Latest integrated 9/9 re-run: check newest workflow artifacts and result before declaring accepted.
+- **Confirmed 9/9** integrated question-to-evidence replay in successful GitHub Actions run https://github.com/triplnj/orthodox-ai/actions/runs/42676334905, artifact \`patristic-chat-staging-integration\` (ID \`13699603746\`). Downloaded and independently inspected: all nine cases accepted, both Gregory cases return SINGLE_AUTHOR and three topic-linked evidence snippets each. Source editorial review remains pending for 14 selected candidates across the nine cases; no source has been auto-promoted.
 - Source downloads can time out at the external Augustine provider. Retry and fail-closed-with-diagnostics logic added; no unavailable source may be silently certified.
 
 ## Scope boundary and next phase
@@ -50,3 +50,14 @@ A ninth integration question exercises Gregory's reviewed logical identity direc
 This task closes the **duplicate-identity architecture and trustworthy speaker-gate design** for the current staging corpus, without changing DB rows. It does **not** claim independent full speaker attribution of all 180 Gregory chunks, exact-line quotation authority, or answer-level theological verification. Unreviewed passages are denied positive attribution, and 73 entries across the library remain source-quarantined from task 1. The future Chat E2E environment must use the trusted manifests server-side; nothing from a user request or LLM output may be accepted as an editorial review record.
 
 Production remains unchanged. Task 3 is isolated Preview DB credentials and wiring the tested resolver to non-production Chat.
+
+## Final task 2 acceptance
+- Protected staging CI workflow 42676334905: SUCCESS; all steps reported success.
+- Real staging Gregory identity + speaker review: 8/8.
+- Real staging integrated routing and source selection: 9/9.
+- No author/work/edition rows were merged or deleted; no writes performed by tests.
+- Two exact SHA-256 speaker review records recognized; two risky passages explicitly refused.
+- Six Gregory source-matched snippets only, fingerprinted with stored content hashes.
+- No direct-quotation or doctrinal claim approval; production remains unchanged.
+
+**Task 2 accepted for the staging-safe scope described.** Task 3, the isolated staging Chat environment, is next.
