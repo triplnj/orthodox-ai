@@ -80,6 +80,7 @@ export async function sendEmailVerification({
   to,
   verifyUrl,
 }: SendEmailVerificationInput) {
+  if (process.env.ORTHODOXAI_CHAT_ISOLATED_PREVIEW === "1") throw new Error("Outbound email is disabled in isolated Chat Preview.");
   if (!resend) throw new Error("Email delivery is not configured.");
 
   const from = process.env.EMAIL_FROM ?? "OrthodoxAI <onboarding@resend.dev>";
