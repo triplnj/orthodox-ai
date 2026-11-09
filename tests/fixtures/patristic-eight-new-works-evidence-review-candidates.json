@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "sourceRunId": 42620346809,
+  "branchId": "br-spring-frost-assfzje6",
+  "kind": "EIGHT_QUESTION_EDITORIAL_RELEVANCE_REVIEW_ONLY",
+  "originalScoresImmutable": true,
+  "proposals": [
+    {
+      "questionId": "athanasius-inc-02",
+      "existingTarget": "passage_5759463d376fca0c63d3dd56a18e1a52",
+      "existingLocator": "Chapter I, §3",
+      "proposedAdditionalId": "passage_988dc0d98f69a4b3a7a43d9770b2b3ad",
+      "proposedLocator": "Chapter I, §4",
+      "sourceSha256": "20feab3b897525b4ed875d5898ddda9a0ed92b5e891988ae21961a86078aa4c1",
+      "candidateRole": "DIRECT_ANSWER",
+      "why": "§4 explicitly explains beginning with creation and how the same Word made and renews creation; §3 explains the broader necessity of recalling prior teaching to understand the Incarnation.",
+      "status": "SOURCE_TEXT_CHECKED_PENDING_INDEPENDENT_EDITORIAL_APPROVAL"
+    },
+    {
+      "questionId": "cyril-cat-01",
+      "existingTarget": "passage_2cd4a924d5397439649ed65daf8b27bb",
+      "existingLocator": "Catechetical Lecture I, §1",
+      "proposedAdditionalId": "passage_10fe0c08e754eb6600d696288db14cb0",
+      "proposedLocator": "Catechetical Lecture I, §2",
+      "sourceSha256": "617ef89788f7e1baa2edcc1d8c8c2fdffc058720f76f01928fe5e93a6713d2de",
+      "candidateRole": "SUPPORTING_CONTEXT",
+      "why": "§1 addresses the transition from calling to grace and repentance; §2 describes spiritual rebirth into freedom and adoption through faith. Similar themes, but distinct claims.",
+      "status": "SOURCE_TEXT_CHECKED_PENDING_INDEPENDENT_EDITORIAL_APPROVAL"
+    }
+  ]
+}
