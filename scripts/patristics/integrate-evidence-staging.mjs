@@ -15,7 +15,7 @@ const STAGING_TEXT_ONLY_IDS=Object.freeze([
  "pilot_passage_john_eph24_prayer_20261109",
  "pilot_passage_basil_holyspirit_baptism_20261109"
 ]);
-const sqlPassages='SELECT a."id" AS "authorId",a."canonicalName",w."title",w."authenticity",e."sourceUrl",e."editionTitle",e."importStatus",p."id" AS "passageId",p."locator",p."content" FROM "LibraryPassage" p JOIN "LibraryEdition" e ON e."id"=p."editionId" JOIN "LibraryWork" w ON w."id"=e."workId" JOIN "LibraryAuthor" a ON a."id"=w."authorId" WHERE (p.embedding IS NOT NULL OR p."id"=ANY($2::text[])) AND a."id"=ANY($1::text[]) AND length(trim(p."content")) >= 30 ORDER BY w."title",p."ordinal" LIMIT 600';
+const sqlPassages='SELECT a."id" AS "authorId",a."canonicalName",w."title",w."authenticity",e."sourceUrl",e."editionTitle",e."importStatus",p."id" AS "passageId",p."contentSha256",p."locator",p."content" FROM "LibraryPassage" p JOIN "LibraryEdition" e ON e."id"=p."editionId" JOIN "LibraryWork" w ON w."id"=e."workId" JOIN "LibraryAuthor" a ON a."id"=w."authorId" WHERE (p.embedding IS NOT NULL OR p."id"=ANY($2::text[])) AND a."id"=ANY($1::text[]) AND length(trim(p."content")) >= 30 ORDER BY w."title",p."ordinal" LIMIT 600';
 export async function runStagingEvidenceIntegration(env=process.env,deps={}){
  if(env.LIBRARY_STAGING_BRANCH_ID!==BRANCH||!env.LIBRARY_STAGING_DB_URL)throw Error("Protected staging required");
  const url=new URL(env.LIBRARY_STAGING_DB_URL);
@@ -27,7 +27,12 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
   new Set(gregoryReview.sourceMatchedPassageIds).size!==6||
   gregoryReview.policy?.selectedPassagesArePublicationApproved!==false)
   throw Error("Missing reviewed Gregory source-match allowlist");
- const approvedGregoryIds=new Set(gregoryReview.sourceMatchedPassageIds);
+ if(!Array.isArray(gregoryReview.sourceMatchedPassageFingerprints)||
+  gregoryReview.sourceMatchedPassageFingerprints.length!==6)
+  throw Error("Missing verified Gregory passage fingerprints");
+ const approvedGregoryHashes=new Map(gregoryReview.sourceMatchedPassageFingerprints.map(p=>[p.passageId,p.contentSha256]));
+ if(approvedGregoryHashes.size!==6||[...approvedGregoryHashes.values()].some(hash=>!/^[0-9a-f]{64}$/.test(hash)))
+  throw Error("Invalid reviewed passage hashes");
  const db=deps.db??new pg.Client({connectionString:env.LIBRARY_STAGING_DB_URL,ssl:{rejectUnauthorized:true}});
  await db.connect();
  try{
@@ -42,7 +47,7 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
    if(scoped){
     const response=await db.query(sqlPassages,[route.authorIds,STAGING_TEXT_ONLY_IDS]);
     passages=response.rows.filter(p=>route.authorIds.includes(p.authorId)&&
-     (p.canonicalName!=="St. Gregory of Nyssa"||approvedGregoryIds.has(p.passageId)));
+     (p.canonicalName!=="St. Gregory of Nyssa"||approvedGregoryHashes.get(p.passageId)===p.contentSha256));
    }
    // The passages are only source candidates. Never auto-certify truth, relevance, or speaker.
    const scored=passages.map(p=>{
