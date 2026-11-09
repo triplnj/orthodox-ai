@@ -5,7 +5,7 @@ import {prepareCleanEvidence} from "../scripts/patristics/clean-new-works-previe
 const hash=s=>createHash("sha256").update(s).digest("hex");
 function fixture(){
  const a=["On the Incarnation of the Word.","————————————","§1. Introductory description.",
-    "Whereas in what precedes "+("historical patristic text on the Word and creation. ".repeat(40))+
+    "Whereas in what precedes "+("historical patristic text on the Word and creation. ".repeat(40)).trimEnd()+
     " 2. For the more He is mocked among the unbelieving, His power shines forth."+
     " 3. But to treat this subject it is necessary to recall what was said before."+
     " 4. It is, then, proper for us to begin by discussing creation and the Word."];
