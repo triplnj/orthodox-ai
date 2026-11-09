@@ -1,0 +1,75 @@
+name: Patristic Library - 30 English Evidence Retrieval Evaluation (Staging Only)
+
+# Single-use push trigger scoped to this workflow's own creation or modification.
+# Existing reranker is kept unchanged; production chat is never accessed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-evidence-30-evaluation-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-english-evidence-evaluation
+  cancel-in-progress: false
+
+jobs:
+  measure-retrieval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate thirty-question fixtures, evidence and metrics without network
+        run: node --test tests/patristic-english-30-questions.test.mjs tests/patristic-evidence-retrieval-metrics.test.mjs tests/patristic-rerank-retrieval.test.mjs
+      - name: Check database is exactly the approved staging branch
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Measure Hit, Recall, NDCG and MRR for 30 English questions
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/patristics/evaluate-30-evidence-staging.mjs > "$RUNNER_TEMP/patristic-evidence-30.json"
+      - name: Write human-readable metric comparison to job summary
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-evidence-30.json','utf8'));
+          const pct=x=>(100*x).toFixed(1)+'%';
+          const rows=[
+            '### 30 English questions: provisional evidence retrieval',
+            'All evaluations read the staging Neon branch; all 30 questions have source-checked candidate passages.',
+            'No production changes; no author teaching certified by these metrics.',
+            '',
+            '| Scope | Method | Hit@3 | Hit@5 | Hit@10 | Recall@3 | Recall@5 | Recall@10 | nDCG@10 | MRR |',
+            '|---|---|---:|---:|---:|---:|---:|---:|---:|---:|'
+          ];
+          for(const [scope,v] of Object.entries(r.summary))
+            for(const method of ['baseline','reranked']){
+              const x=v[method];
+              rows.push('| '+scope+' | '+method+' | '+[x['hit@3'],x['hit@5'],x['hit@10'],x['recall@3'],x['recall@5'],x['recall@10'],x['ndcg@10'],x.reciprocalRank].map(pct).join(' | ')+' |');
+            }
+          const failed=r.questions.filter(q=>q.searches['all-authors'].reranked['hit@10']===0).map(q=>q.questionId);
+          rows.push('','**Questions with no positive evidence in reranked global top 10:** '+(failed.join(', ')||'none'));
+          rows.push('','**Editorial note:** labels are provisional and do not verify an author’s doctrinal position.');
+          process.stdout.write(rows.join('\n')+'\n');
+          NODE
+      - name: Save detailed ranking and source provenance for each question
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-evidence-30-evaluation
+          path: ${{ runner.temp }}/patristic-evidence-30.json
+          retention-days: 14
+          if-no-files-found: error
