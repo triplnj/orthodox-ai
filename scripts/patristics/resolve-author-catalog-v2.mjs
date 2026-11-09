@@ -36,14 +36,20 @@ export function resolveAuthorCatalogV2(question,catalog){
  const authors=[...found].map(k=>groups.get(k).canonicalName);
  if(conflicts.length)return blocked("REVIEW_REQUIRED","COLLIDING_CATALOG_ALIASES",authors,comparison,{conflicts});
  if(found.size>2)return blocked("REVIEW_REQUIRED","TOO_MANY_AUTHORS",authors,comparison);
- if(comparison&&found.size!==2)return blocked("REVIEW_REQUIRED","INCOMPLETE_COMPARISON",authors,comparison);
+ // Comparison words may compare two concepts, not two patristic authors.
+ // A lone recognized author plus a second capitalized proper name remains unresolved.
+ const otherProperName=found.size===1&&/(?:\\b(?:and|with|versus|vs)\\s+)(?:[A-Z][a-z]+\\s+){1,3}(?:[A-Z][a-z]+|the\\s+[A-Z][a-z]+)/u.test(question);
+ if(comparison&&found.size!==2&&(found.size===0||otherProperName))
+  return blocked("REVIEW_REQUIRED","INCOMPLETE_COMPARISON",authors,comparison);
  if(!comparison&&found.size===2)return blocked("REVIEW_REQUIRED","MULTIPLE_AUTHORS_WITHOUT_COMPARISON",authors,comparison);
  // An unqualified given name that appears in any catalogue entry remains ambiguous.
  // Do not misclassify it as an authorless topic merely because the alias is incomplete.
  const givenNames=[...groups.keys()].flatMap(k=>k.split(" ").filter(w=>w.length>=4&&!["saint","the","great","of"].includes(w)));
- const ambiguousGivenName=givenNames.some(w=>includesPhrase(q,w));
+ const authorContext=/(?:what\\s+(?:does|did)|who\\s+(?:is|was)|teach|say|write|speak|учио|учи|говори|писао|ко\\s+је)/iu.test(question);
+ const ambiguousGivenName=authorContext&&givenNames.some(w=>includesPhrase(q,w));
  if(found.size===0&&ambiguousGivenName)return blocked("UNRESOLVED_NAMED_AUTHOR","INCOMPLETE_OR_AMBIGUOUS_AUTHOR_NAME",[],comparison);
- if(found.size===0)return namedRE.test(question)
+ const genericPatristic=/^(?:шта|како|зашто|које|у\\s+чему).*\\b(?:свети\\s+оци|светих\\s+отаца|свети\\s+оци\\s+учили)\\b/iu.test(normalized);
+ if(found.size===0)return (namedRE.test(question)&&!genericPatristic)
   ?blocked("UNRESOLVED_NAMED_AUTHOR","NO_CATALOG_ALIAS_MATCH",[],comparison)
   :{status:"NO_EXPLICIT_AUTHOR",scope:"GLOBAL",reason:"AUTHOR_NOT_SPECIFIED",authors:[],comparison};
  // Detect additional explicitly titled saints left after recognized aliases are removed.
@@ -54,6 +60,7 @@ export function resolveAuthorCatalogV2(question,catalog){
  }
  const unknownTitled=/(?:^| )(?:saint|st|sveti|svetog|svetom|свети|светог|светом|св)(?: +)(?:[\p{L}][\p{L}\p{N}]*)(?: |$)/u.test(" "+unmatched+" ");
  if(unknownTitled)return blocked("REVIEW_REQUIRED","ADDITIONAL_UNRESOLVED_TITLED_AUTHOR",authors,comparison);
+ if(otherProperName)return blocked("REVIEW_REQUIRED","ADDITIONAL_UNRESOLVED_PROPER_AUTHOR",authors,comparison);
  const selected=[...found].map(k=>groups.get(k));
  if(selected.some(g=>g.ids.size===0))return blocked("REVIEW_REQUIRED","AUTHOR_NOT_INDEXED",authors,comparison);
  if(selected.some(g=>g.ids.size>1))return blocked("REVIEW_REQUIRED","DUPLICATE_INDEXED_AUTHOR_IDS",authors,comparison,
