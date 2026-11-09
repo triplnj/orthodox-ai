@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "purpose": "EXPLICIT_AUTHOR_SHADOW_ROUTING_NOT_ANSWER_EVALUATION",
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "cases": [
+    {
+      "id": "athanasius-explicit",
+      "question": "Why does Athanasius begin with creation?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Athanasius of Alexandria"
+    },
+    {
+      "id": "cyril-explicit",
+      "question": "What does Cyril of Jerusalem teach about baptism?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Cyril of Jerusalem"
+    },
+    {
+      "id": "basil-cyril-comparison",
+      "question": "Compare Basil the Great and Cyril of Jerusalem on teaching believers.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null
+    },
+    {
+      "id": "athanasius-cyril-comparison",
+      "question": "Compare Athanasius and Cyril of Jerusalem on salvation.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null
+    },
+    {
+      "id": "gregory-duplicate",
+      "question": "What does Gregory of Nyssa say about the soul?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "maximus-not-staged",
+      "question": "What does St Maximus the Confessor teach about the will?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "cyril-ambiguous",
+      "question": "What did Cyril teach about sin?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "general-repentance",
+      "question": "How does repentance prepare believers for baptism?",
+      "expectedScope": "GLOBAL",
+      "expectedAuthor": null
+    },
+    {
+      "id": "serbian-basil",
+      "question": "Шта Свети Василије Велики говори о стварању?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Basil the Great"
+    },
+    {
+      "id": "serbian-chrysostom",
+      "question": "Шта Свети Јован Златоусти учи о молитви?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. John Chrysostom"
+    },
+    {
+      "id": "serbian-gregory-duplicate",
+      "question": "Шта Свети Григорије Ниски каже о души?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "compare-unknown",
+      "question": "Compare Basil and Maximus on salvation.",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    }
+  ]
+}
