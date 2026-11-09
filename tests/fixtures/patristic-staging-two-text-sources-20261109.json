@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "purpose": "STAGING_ONLY_SOURCE_PROVENANCE_MANIFEST",
+  "neonBranch": "br-spring-frost-assfzje6",
+  "editorialStatus": "PENDING_REVIEW",
+  "embedStatus": "TEXT_ONLY_NO_VECTOR",
+  "records": [
+    {
+      "id": "pilot_passage_john_eph24_prayer_20261109",
+      "author": "St. John Chrysostom",
+      "work": "Homily 24 on Ephesians",
+      "locator": "Homily 24, commentary on Ephesians 6:18",
+      "edition": "Historical 19th-century English translation, NPNF Series I",
+      "sourceUrl": "https://www.newadvent.org/fathers/230124.htm",
+      "text": "\"With all prayer and supplication, praying at all seasons in the Spirit, and watching thereunto in all perseverance for all the saints.\" Limit it not, I say, to certain times of the day, for hear what he is saying; approach at all times; \"pray,\" says he, \"without ceasing.\"",
+      "quotePermission": "NO_UNTIL_EDITORIAL_REVIEW",
+      "importStatus": "STAGED",
+      "authenticity": "UNREVIEWED"
+    },
+    {
+      "id": "pilot_passage_basil_holyspirit_baptism_20261109",
+      "author": "St. Basil the Great",
+      "work": "On the Holy Spirit",
+      "locator": "Chapter 10, section 24",
+      "edition": "Historical 19th-century English translation, NPNF Series II",
+      "sourceUrl": "https://www.newadvent.org/fathers/3203.htm",
+      "text": "For if our Lord, when enjoining the baptism of salvation, charged His disciples to baptize all nations in the name \"of the Father and of the Son and of the Holy Ghost,\" not disdaining fellowship with Him, and these men allege that we must not rank Him with the Father and the Son, is it not clear that they openly withstand the commandment of God?",
+      "quotePermission": "NO_UNTIL_EDITORIAL_REVIEW",
+      "importStatus": "STAGED",
+      "authenticity": "UNREVIEWED"
+    }
+  ]
+}
