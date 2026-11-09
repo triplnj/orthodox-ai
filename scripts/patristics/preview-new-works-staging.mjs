@@ -30,7 +30,7 @@ export function extractText(html,{minimumCharacters=1500}={}){
    .filter(Boolean);
  const fullText=paragraphs.join("\n\n");
  if(paragraphs.length<3||fullText.length<minimumCharacters)throw Error("Source extraction too short; human review required");
- const numbered=paragraphs.filter(t=>/^\d{1,2}\.\s+/.test(t));
+ const numbered=paragraphs.filter(t=>/^(?:§\s*)?\d{1,2}\.\s+/.test(t));
  if(!numbered.length)throw Error("No numbered authorial source sections; refusing unverifiable article extraction");
  return {paragraphs:paragraphs.map((text,i)=>({locator:"Source paragraph "+String(i+1).padStart(3,"0"),text,sha256:hash(text)})),
    numberedSections:numbered.length,textSha256:hash(fullText),extractedCharacters:fullText.length};
