@@ -61,6 +61,7 @@ function projectHit(r){
  return {
    author:r.author,work:r.work,sourceUrl:r.sourceUrl,locator:r.locator,
    passageId:r.passageId,similarity:Number(Number(r.similarity).toFixed(5)),
+   ...(r.rerankScore===undefined?{}:{rerankScore:r.rerankScore,lexicalCoverage:r.lexicalCoverage,paratextPenalty:r.paratextPenalty,originalRank:r.originalRank}),
    excerpt:r.content.slice(0,220),evidenceRole:evidence.evidenceRole,
    mayPresentAsAuthorTeaching:evidence.mayPresentAsAuthorTeaching
  };
