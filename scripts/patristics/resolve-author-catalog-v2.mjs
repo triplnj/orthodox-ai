@@ -37,6 +37,7 @@ export function resolveAuthorCatalogV2(question,catalog){
  if(conflicts.length)return blocked("REVIEW_REQUIRED","COLLIDING_CATALOG_ALIASES",authors,comparison,{conflicts});
  if(found.size>2)return blocked("REVIEW_REQUIRED","TOO_MANY_AUTHORS",authors,comparison);
  if(comparison&&found.size!==2)return blocked("REVIEW_REQUIRED","INCOMPLETE_COMPARISON",authors,comparison);
+ if(!comparison&&found.size===2)return blocked("REVIEW_REQUIRED","MULTIPLE_AUTHORS_WITHOUT_COMPARISON",authors,comparison);
  // An unqualified given name that appears in any catalogue entry remains ambiguous.
  // Do not misclassify it as an authorless topic merely because the alias is incomplete.
  const givenNames=[...groups.keys()].flatMap(k=>k.split(" ").filter(w=>w.length>=4&&!["saint","the","great","of"].includes(w)));
