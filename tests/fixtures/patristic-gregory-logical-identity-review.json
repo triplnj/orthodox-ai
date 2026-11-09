@@ -28,10 +28,20 @@
     "databaseMerge": false,
     "deleteDuplicates": false,
     "autoSpeakerAttribution": false,
-    "eligibleTextMatchesOnly": true
+    "eligibleTextMatchesOnly": true,
+    "selectedPassageIdsFromRun42671629630": true,
+    "selectedPassagesArePublicationApproved": false
   },
   "references": [
     "https://www.newadvent.org/fathers/2915.htm",
     "https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/"
+  ],
+  "sourceMatchedPassageIds": [
+    "passage_64b7e96400d670613b63876288ed49a8",
+    "passage_d451a2cb7b4381904cece710504c14ff",
+    "pilot_gregory_opening_paragraph_4",
+    "passage_64392acb5bd30192043e1321e90843d3",
+    "passage_33ada2f705836e9d8d1970add4f4f8ac",
+    "passage_3caf70e65932fa3b6f83a9452cb8a30f"
   ]
 }
