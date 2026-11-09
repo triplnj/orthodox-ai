@@ -132,14 +132,15 @@ jobs:
           lines.push('','This audit checks source text correspondence only. Editorial and theological review remain separate.');
           process.stdout.write(lines.join('\\n')+'\\n');
           NODE
-      - name: Classify all 297 audit records; quarantine any non-exact text match
-        if: steps.full_source_audit.outcome == 'success'
+      - name: Classify staging source review after audit
+        if: always()
         shell: bash
         run: |
-          node scripts/patristics/finalize-staging-source-review.mjs \
-            "$RUNNER_TEMP/patristic-source-text-audit.json" \
-            "$RUNNER_TEMP/patristic-source-review-classification.json" \
-            >> "$GITHUB_STEP_SUMMARY"
+          if test -s "$RUNNER_TEMP/patristic-source-text-audit.json"; then
+            node scripts/patristics/finalize-staging-source-review.mjs "$RUNNER_TEMP/patristic-source-text-audit.json" "$RUNNER_TEMP/patristic-source-review-classification.json" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Source audit report missing. Classification unavailable." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Save classified source evidence
         if: always()
         uses: actions/upload-artifact@v4
