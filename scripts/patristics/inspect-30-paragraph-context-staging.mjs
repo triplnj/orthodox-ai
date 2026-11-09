@@ -10,6 +10,7 @@
 import {readFileSync} from "node:fs";
 import {pathToFileURL} from "node:url";
 import pg from "pg";
+import {FROZEN_INDEXED_SQL,FROZEN_TOTAL_SQL} from "./frozen-baseline-corpus.mjs";
 import {loadReferenceSets} from "./evaluate-30-evidence-staging.mjs";
 import {analyzeParagraphContext} from "./paragraph-context-diagnostic.mjs";
 const {Client}=pg;
@@ -42,7 +43,7 @@ export async function inspectContext(env,report,fixtures=loadReferenceSets(),dep
   if(guard.rows.length!==1||guard.rows[0].branchId!==BRANCH||
     guard.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")
    throw Error("Protected staging marker mismatch");
-  const count=await db.query('SELECT count(*)::integer AS total,count(embedding)::integer AS indexed FROM "LibraryPassage"');
+  const count=await db.query('SELECT count(*)::integer AS total,count(embedding)::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})');
   if(Number(count.rows[0]?.total)!==285||Number(count.rows[0]?.indexed)!==281)
    throw Error("Staging corpus changed");
   const ids=[...new Set([
