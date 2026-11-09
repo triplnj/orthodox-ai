@@ -68,6 +68,7 @@ function projectHit(r){
 }
 export async function benchmarkRetrieval(env=process.env,deps={}){
  const budget=validateBenchmarkConfiguration(env);
+ const selectedCases=env.PATRISTIC_ENGLISH_ONLY==="true"?CASES.filter(c=>c.id.endsWith("-en")):CASES;
  const db=deps.db??new Client({connectionString:env.LIBRARY_STAGING_DB_URL,ssl:{rejectUnauthorized:true}});
  const ai=deps.ai??new OpenAI({apiKey:env.OPENAI_API_KEY});
  await db.connect();
@@ -81,12 +82,12 @@ export async function benchmarkRetrieval(env=process.env,deps={}){
    if(coverage.rows.length!==1||Number(coverage.rows[0].indexed)!==EXPECTED_INDEXED)
      throw Error("Indexed staging corpus changed; inspect before benchmarking");
    const response=await ai.embeddings.create({
-     model:MODEL,input:CASES.map(c=>c.question),encoding_format:"float"
+     model:MODEL,input:selectedCases.map(c=>c.question),encoding_format:"float"
    });
-   const vectors=validateEmbeddingResponse(response,CASES.length);
+   const vectors=validateEmbeddingResponse(response,selectedCases.length);
    const reports=[];
-   for(let i=0;i<CASES.length;i++){
-     const c=CASES[i],v=toVector(vectors[i]);
+   for(let i=0;i<selectedCases.length;i++){
+     const c=selectedCases[i],v=toVector(vectors[i]);
      const sql=String.raw`
        SELECT a."canonicalName" AS author,w."title" AS work,
          e."sourceUrl" AS "sourceUrl",p."locator" AS locator,
@@ -130,7 +131,7 @@ export async function benchmarkRetrieval(env=process.env,deps={}){
    return {
      status:"RETRIEVAL_DIAGNOSTICS_ONLY",branchId:env.LIBRARY_STAGING_BRANCH_ID,
      indexedPassages:Number(coverage.rows[0].indexed),totalPassages:Number(coverage.rows[0].total),
-     ...budget,questions:CASES.length,
+     ...budget,questions:selectedCases.length,
      authorRecallAt5:Number((reports.filter(x=>x.authorAppearsTop5).length/reports.length).toFixed(3)),
      missingScopedResults:reports.filter(x=>x.scopedAuthorResults===0).map(x=>x.id),
      reports,
