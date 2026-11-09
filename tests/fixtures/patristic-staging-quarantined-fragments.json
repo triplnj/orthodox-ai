@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "purpose": "SOURCE_ONLY_EDITORIAL_QUARANTINE_NOT_DELETE",
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "items": [
+    {
+      "passageId": "passage_00f82a5c666de9e00fe14ec7b1f05d26",
+      "contentSha256": "349313b80e800663b35c680e11d9ace07a1b36517a86af17df2cbc3f72059df6",
+      "reason": "EDITORIAL_HEADING",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_0fa69a7ca3ad105b5eb6b8240b31559d",
+      "contentSha256": "1e716ceac3a0a52dc35dd9aa38f4bb257eb7c2f465cadc30ae5de28708526baa",
+      "reason": "FRAGMENTED_TITLE",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_185a36d5d93bc50b2493cb92745c71de",
+      "contentSha256": "51baf1bef5d301e2f037f3d224ca0555dde5bdb53c47098e0233c1c16cfaf5f6",
+      "reason": "FRAGMENTED_TITLE",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_6fb5eb9c0340e17b895a73ab84d4dbf5",
+      "contentSha256": "ea4c1d21779cf13b88c571d0d2155d558d9f996d310275df6b1e9103cc244010",
+      "reason": "CONTEXTLESS_DIALOGUE_LINE",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_74c0ffc5a290bb0f23fe8929481cd8a7",
+      "contentSha256": "349313b80e800663b35c680e11d9ace07a1b36517a86af17df2cbc3f72059df6",
+      "reason": "EDITORIAL_HEADING",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_865dc4d8f79e2553cc12fdd85e0e8823",
+      "contentSha256": "02d4519f7c5840bacb9ec8050ba2796f7af3cdaa503514a40548bd30d58ba227",
+      "reason": "CONTEXTLESS_DIALOGUE_LINE",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_ac1ea53c224489feefdd0042652ad761",
+      "contentSha256": "0a66638ce1b08390712e50ac8b9732b3d77e92c7fc9f4be210fbb62267083ccf",
+      "reason": "CONTEXTLESS_DIALOGUE_FRAGMENT",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_b8ffe1ed9e14ada3686c8050bb6e783c",
+      "contentSha256": "4a11bcbbadf8e4315e862d6c21f5edb82d219941130dd49a42156511af3cd994",
+      "reason": "CONTEXTLESS_DIALOGUE_LINE",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    },
+    {
+      "passageId": "passage_edeb453307ec31bdb362458ccb5e6461",
+      "contentSha256": "7f5ff1af755f56a7145743c8122dc4a789e67fdab8c9a0f386d2f4da9889c7de",
+      "reason": "SEPARATOR",
+      "mayQuote": false,
+      "mayRankAsIndependentEvidence": false
+    }
+  ]
+}
