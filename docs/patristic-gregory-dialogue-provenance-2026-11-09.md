@@ -25,3 +25,14 @@ These are real dialogue boundaries, so even *authentic work attribution* is not 
 2. Produce a controlled normalized near-duplicate alignment between the 5-passage pilot and 175-passage edition.
 3. Add reviewed speaker-level passage attribution with auditable records before enabling direct speaker quotations.
 4. Run independent CI and answer-quality evaluation before any production routing change.
+
+
+## Preliminary text alignment on staging (read-only)
+A second SELECT normalized letter case, punctuation and spacing, then checked whether the first 70 normalized characters of each 5-passage pilot chunk occurred in any of the 175 longer-edition chunks:
+- 4 of 5 pilot chunks had an exact normalized 70-character prefix match in at least one larger-edition chunk.
+- 1 pilot chunk, `pilot_gregory_macrina_first_response`, did not match under this strict prefix test. Its opening differs in spelling (`especial` versus `special`), which can explain an exact-prefix miss.
+- Matching locators include the three separate chunks labelled `Opening dialogue — paragraphs 1–3` and `Opening dialogue — paragraph 4`.
+This is preliminary overlapping-text evidence, not sufficient for automatically merging records; requires editorial review of entire passage boundaries, language and source provenance.
+
+## Additional router safeguards
+Shadow resolver now blocks questions mixing recognized author names with unmatched titled saints, and questions that mention two recognized authors but do not clearly request a comparison. Fixture replay remained 18/18 on the protected staging catalogue; three additional adversarial examples were evaluated and correctly blocked.
