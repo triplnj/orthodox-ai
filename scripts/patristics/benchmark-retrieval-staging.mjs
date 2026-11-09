@@ -10,6 +10,7 @@ import pg from "pg";
 import OpenAI from "openai";
 import {pathToFileURL} from "node:url";
 import {assessPassageEvidence} from "./assess-passage-evidence.mjs";
+import {rerankCandidates} from "./rerank-retrieval.mjs";
 
 const {Client}=pg;
 export const CASES=Object.freeze([
@@ -106,17 +107,23 @@ export async function benchmarkRetrieval(env=process.env,deps={}){
      `;
      // First measure unfiltered performance; then independently verify an
      // author-scoped result, grouping all duplicate IDs under canonical name.
-     const global=await db.query(sql,[v,null,5]);
-     const scoped=await db.query(sql,[v,c.expectedAuthor,3]);
-     const top5=global.rows.map(projectHit);
-     const scopedTop3=scoped.rows.map(projectHit);
+     // Preserve raw vector ranking as the control group. Rerank an expanded
+     // candidate set using deterministic English text signals, with no LLM
+     // synthesis and no possibility of promoting claims to accepted doctrine.
+     const global=await db.query(sql,[v,null,20]);
+     const scoped=await db.query(sql,[v,c.expectedAuthor,12]);
+     const baselineTop5=global.rows.slice(0,5).map(projectHit);
+     const top5=rerankCandidates(c.question,global.rows,{limit:5}).map(projectHit);
+     const scopedTop3=rerankCandidates(c.question,scoped.rows,{limit:3}).map(projectHit);
      const firstExpected=top5.findIndex(hit=>hit.author===c.expectedAuthor);
+     const baselineRank=baselineTop5.findIndex(hit=>hit.author===c.expectedAuthor);
      reports.push({
        id:c.id,question:c.question,expectedAuthor:c.expectedAuthor,
+       baselineAuthorRankTop5:baselineRank<0?null:baselineRank+1,
        authorRankTop5:firstExpected<0?null:firstExpected+1,
        authorAppearsTop5:firstExpected!==-1,
        scopedAuthorResults:scopedTop3.length,
-       top5,scopedTop3
+       baselineTop5,top5,scopedTop3
      });
    }
    return {
