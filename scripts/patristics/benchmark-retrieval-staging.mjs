@@ -7,6 +7,7 @@
  * claim or automatic editorial approval.
  */
 import pg from "pg";
+import {FROZEN_INDEXED_SQL,FROZEN_TOTAL_SQL} from "./frozen-baseline-corpus.mjs";
 import OpenAI from "openai";
 import {pathToFileURL} from "node:url";
 import {assessPassageEvidence} from "./assess-passage-evidence.mjs";
@@ -78,7 +79,7 @@ export async function benchmarkRetrieval(env=process.env,deps={}){
      guard.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")
      throw Error("Wrong Neon branch: aborting before OpenAI request");
    const coverage=await db.query(
-     'SELECT count(*)::integer AS total, count("embedding")::integer AS indexed FROM "LibraryPassage"');
+     'SELECT count(*)::integer AS total, count("embedding")::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})');
    if(coverage.rows.length!==1||Number(coverage.rows[0].indexed)!==EXPECTED_INDEXED)
      throw Error("Indexed staging corpus changed; inspect before benchmarking");
    const response=await ai.embeddings.create({
@@ -102,7 +103,7 @@ export async function benchmarkRetrieval(env=process.env,deps={}){
        JOIN "LibraryWork" w ON w."id"=e."workId"
        JOIN "LibraryAuthor" a ON a."id"=w."authorId"
        LEFT JOIN "LibraryPassageAttribution" attr ON attr."passageId"=p."id"
-       WHERE e."importStatus"='STAGED' AND p."embedding" IS NOT NULL
+       WHERE e."importStatus"='STAGED' AND p."embedding" IS NOT NULL AND e."id" IN (${FROZEN_INDEXED_SQL})
          AND ($2::text IS NULL OR a."canonicalName"=$2)
        ORDER BY p."embedding" <=> $1::vector,p."id"
        LIMIT $3
