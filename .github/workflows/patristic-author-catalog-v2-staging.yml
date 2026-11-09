@@ -19,6 +19,7 @@ on:
       - 'tests/fixtures/patristic-chat-staging-integration.json'
       - 'scripts/patristics/audit-staging-transcriptions.mjs'
       - 'tests/patristic-source-text-audit.test.mjs'
+      - 'tests/fixtures/patristic-staging-quarantined-fragments.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -132,6 +133,7 @@ jobs:
             'Passages checked: '+r.total,
             'Source URLs: '+r.sourceUrls,
             'Stored SHA-256 mismatches: '+r.badHashes,
+            'Quarantined non-evidence fragments: '+r.quarantinedNonEvidence,
             'Source fetch failures: '+r.sourceFailures.length,'',
             '| Audit classification | Count |','|---|---:|'];
           for(const [k,v] of Object.entries(r.stats))lines.push('| '+k+' | '+v+' |');
