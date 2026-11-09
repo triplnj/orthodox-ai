@@ -62,7 +62,7 @@ export async function runHoldoutBenchmark(env=process.env,deps={}){
   if(marker.rows.length!==1||marker.rows[0].branchId!==BRANCH||
      marker.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")
    throw Error("Wrong staging database: no embeddings requested");
-  const count=await db.query('SELECT count(*)::integer AS total,count(embedding)::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})');
+  const count=await db.query(`SELECT count(*)::integer AS total,count(embedding)::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})`);
   if(count.rows.length!==1||Number(count.rows[0].indexed)!==EXPECTED_INDEXED)
    throw Error("Unexpected corpus coverage: no embeddings requested");
   const indexedRefs=await db.query('SELECT "id","editionId","contentSha256" FROM "LibraryPassage" WHERE "id"=ANY($1::text[])',
