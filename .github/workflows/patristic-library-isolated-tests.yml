@@ -22,6 +22,8 @@ on:
       - 'tests/patristic-evidence-report-audit.test.mjs'
       - 'scripts/patristics/paragraph-context-diagnostic.mjs'
       - 'tests/patristic-paragraph-context-diagnostic.test.mjs'
+      - 'scripts/patristics/inspect-30-paragraph-context-staging.mjs'
+      - 'tests/patristic-inspect-30-context-staging.test.mjs'
       - 'scripts/patristics/evaluate-staging.mjs'
       - 'scripts/patristics/assess-passage-evidence.mjs'
       - 'scripts/patristics/flag-dialogue-boundaries.mjs'
@@ -68,4 +70,4 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs tests/patristic-evidence-policy.test.mjs tests/patristic-dialogue-boundaries.test.mjs tests/patristic-dialogue-staging-scan.test.mjs tests/patristic-universal-query.test.mjs tests/patristic-research-staging.test.mjs tests/patristic-source-batch.test.mjs tests/patristic-first-source-batch.test.mjs tests/patristic-first-batch-audit.test.mjs tests/patristic-approved-source-staging.test.mjs tests/patristic-approved-index.test.mjs tests/patristic-retrieval-benchmark.test.mjs tests/patristic-rerank-retrieval.test.mjs tests/patristic-english-30-questions.test.mjs tests/patristic-evidence-retrieval-metrics.test.mjs tests/patristic-evidence-report-audit.test.mjs tests/patristic-paragraph-context-diagnostic.test.mjs
+      - run: node --test tests/patristic-library-isolation.test.mjs tests/patristic-library-index-cli.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-source-preview.test.mjs tests/patristic-section-manifest.test.mjs tests/patristic-fullwork-staging.test.mjs tests/patristic-evidence-policy.test.mjs tests/patristic-dialogue-boundaries.test.mjs tests/patristic-dialogue-staging-scan.test.mjs tests/patristic-universal-query.test.mjs tests/patristic-research-staging.test.mjs tests/patristic-source-batch.test.mjs tests/patristic-first-source-batch.test.mjs tests/patristic-first-batch-audit.test.mjs tests/patristic-approved-source-staging.test.mjs tests/patristic-approved-index.test.mjs tests/patristic-retrieval-benchmark.test.mjs tests/patristic-rerank-retrieval.test.mjs tests/patristic-english-30-questions.test.mjs tests/patristic-evidence-retrieval-metrics.test.mjs tests/patristic-evidence-report-audit.test.mjs tests/patristic-paragraph-context-diagnostic.test.mjs tests/patristic-inspect-30-context-staging.test.mjs
