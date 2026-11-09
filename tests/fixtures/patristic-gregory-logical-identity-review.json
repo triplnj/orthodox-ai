@@ -43,5 +43,31 @@
     "passage_64392acb5bd30192043e1321e90843d3",
     "passage_33ada2f705836e9d8d1970add4f4f8ac",
     "passage_3caf70e65932fa3b6f83a9452cb8a30f"
+  ],
+  "sourceMatchedPassageFingerprints": [
+    {
+      "passageId": "passage_64b7e96400d670613b63876288ed49a8",
+      "contentSha256": "e25ac6f43f7e3b06c1e72f1389876ec2224548a319a4df9d398e6a38874a4b9e"
+    },
+    {
+      "passageId": "passage_d451a2cb7b4381904cece710504c14ff",
+      "contentSha256": "74e821f527733d87d9eeca1f2d529abb198270f1456720b9fe46a62433c23f7a"
+    },
+    {
+      "passageId": "pilot_gregory_opening_paragraph_4",
+      "contentSha256": "7af632e26203f87ef2c1f67ba7f06dd2bd918590c33cf60a7f4e5aef257d2334"
+    },
+    {
+      "passageId": "passage_64392acb5bd30192043e1321e90843d3",
+      "contentSha256": "9fb166a431a8a7ea70a2e45bc756ee9fc6838b09471aa9cf3ea3fb802634be71"
+    },
+    {
+      "passageId": "passage_33ada2f705836e9d8d1970add4f4f8ac",
+      "contentSha256": "366d98492bd4623b037eb0c5015bae64df3ed0d13d43e7d4a8e3da7205477e99"
+    },
+    {
+      "passageId": "passage_3caf70e65932fa3b6f83a9452cb8a30f",
+      "contentSha256": "4f076073df308077c17af06e781327b9994e2da83a871594499427374b4b0231"
+    }
   ]
 }
