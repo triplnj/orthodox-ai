@@ -3,6 +3,7 @@
  */
 import pg from "pg";
 import {load} from "cheerio";
+import {readFileSync} from "node:fs";
 import {pathToFileURL} from "node:url";
 const BRANCH="br-spring-frost-assfzje6";
 const normalize=s=>String(s??"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
@@ -42,6 +43,10 @@ export async function auditStagingTranscriptions(env=process.env,deps={}){
  try{
   const guard=await db.query('SELECT "branchId","purpose" FROM "LibraryStagingGuard"');
   if(guard.rows.length!==1||guard.rows[0].branchId!==BRANCH||guard.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")throw Error("Staging guard mismatch");
+  const quarantineData=deps.quarantine??JSON.parse(readFileSync("tests/fixtures/patristic-staging-quarantined-fragments.json","utf8"));
+  if(quarantineData.schemaVersion!==1||quarantineData.stagingBranch!==BRANCH||quarantineData.items.length!==9)throw Error("Invalid short-fragment quarantine fixture");
+  const quarantined=new Map(quarantineData.items.map(x=>[x.passageId,x.contentSha256]));
+  if(quarantined.size!==9)throw Error("Duplicate short-fragment quarantine entries");
   const {rows}=await db.query(`SELECT e."id" "editionId",e."sourceUrl",e."editionTitle",
   p."id" "passageId",p."locator",p."content",
   p."contentSha256" "storedHash",encode(sha256(convert_to(p."content",'UTF8')),'hex') "computedHash"
@@ -54,7 +59,9 @@ export async function auditStagingTranscriptions(env=process.env,deps={}){
     catch(e){pages.set(entry.sourceUrl,{error:String(e.message??e)});}
    }
    const page=pages.get(entry.sourceUrl);
-   const v=page.error?{status:"SOURCE_UNAVAILABLE",anchors:0,full:false}:matches(entry.content,page.text);
+   const ignored=quarantined.get(entry.passageId)===entry.storedHash&&entry.content.trim().length<30;
+   const v=ignored?{status:"QUARANTINED_NON_EVIDENCE",anchors:0,full:false}
+    :page.error?{status:"SOURCE_UNAVAILABLE",anchors:0,full:false}:matches(entry.content,page.text);
    const hashOk=entry.storedHash===entry.computedHash;
    results.push({editionId:entry.editionId,passageId:entry.passageId,locator:entry.locator,
     sourceUrl:entry.sourceUrl,hashOk,...v});
@@ -63,7 +70,7 @@ export async function auditStagingTranscriptions(env=process.env,deps={}){
   for(const row of results)stats[row.status]=(stats[row.status]??0)+1;
   return {status:"STAGING_SOURCE_TEXT_AUDIT",branchId:BRANCH,total:results.length,
    sourceUrls:pages.size,sourceFailures:[...pages].filter(([,v])=>v.error).map(([u,v])=>({url:u,error:v.error})),
-   badHashes:results.filter(x=>!x.hashOk).length,stats,results,
+   badHashes:results.filter(x=>!x.hashOk).length,quarantinedNonEvidence:results.filter(x=>x.status==="QUARANTINED_NON_EVIDENCE").length,stats,results,
    databaseWrites:0,productionChanges:0,
    caveat:"Only normalized text-match; attribution, editorial boundary, legal assessment and theological content are not automatically certified."};
  }finally{await db.end();}
