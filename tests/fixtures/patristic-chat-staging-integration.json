@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "cases": [
+    {
+      "id": "basil-english",
+      "question": "What does St. Basil the Great teach about creation?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Basil the Great",
+      "topicTerms": "creation world",
+      "expectCandidate": null
+    },
+    {
+      "id": "chrysostom-serbian",
+      "question": "Шта Свети Јован Златоусти говори о молитви?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. John Chrysostom",
+      "topicTerms": "prayer",
+      "expectCandidate": null
+    },
+    {
+      "id": "cyril-baptism",
+      "question": "What does St. Cyril of Jerusalem teach about baptism?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Cyril of Jerusalem",
+      "topicTerms": "baptism",
+      "expectCandidate": null
+    },
+    {
+      "id": "athanasius-incarnation",
+      "question": "What does St. Athanasius of Alexandria teach about the Incarnation?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Athanasius of Alexandria",
+      "topicTerms": "incarnation",
+      "expectCandidate": null
+    },
+    {
+      "id": "gregory-duplicate",
+      "question": "What does St. Gregory of Nyssa teach about the soul?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "expectCandidate": false
+    },
+    {
+      "id": "unknown-named",
+      "question": "What does St. Photios the Great teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null,
+      "expectCandidate": false
+    },
+    {
+      "id": "two-author",
+      "question": "Compare St. Basil the Great and St. Cyril of Jerusalem on baptism.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null,
+      "topicTerms": "baptism",
+      "expectCandidate": null
+    },
+    {
+      "id": "topic-global",
+      "question": "How does repentance relate to baptism?",
+      "expectedScope": "GLOBAL",
+      "expectedAuthor": null,
+      "expectCandidate": false
+    }
+  ]
+}
