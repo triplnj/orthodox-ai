@@ -8,6 +8,7 @@
 import {readFileSync} from "node:fs";
 import {pathToFileURL} from "node:url";
 import pg from "pg";
+import {FROZEN_INDEXED_SQL,FROZEN_TOTAL_SQL} from "./frozen-baseline-corpus.mjs";
 import OpenAI from "openai";
 import {rerankCandidates} from "./rerank-retrieval.mjs";
 import {validateEmbeddingResponse} from "./benchmark-retrieval-staging.mjs";
@@ -61,7 +62,7 @@ export async function runHoldoutBenchmark(env=process.env,deps={}){
   if(marker.rows.length!==1||marker.rows[0].branchId!==BRANCH||
      marker.rows[0].purpose!=="PATRISTIC_LIBRARY_STAGING")
    throw Error("Wrong staging database: no embeddings requested");
-  const count=await db.query('SELECT count(*)::integer AS total,count(embedding)::integer AS indexed FROM "LibraryPassage"');
+  const count=await db.query('SELECT count(*)::integer AS total,count(embedding)::integer AS indexed FROM "LibraryPassage" WHERE "editionId" IN (${FROZEN_TOTAL_SQL})');
   if(count.rows.length!==1||Number(count.rows[0].indexed)!==EXPECTED_INDEXED)
    throw Error("Unexpected corpus coverage: no embeddings requested");
   const indexedRefs=await db.query('SELECT "id","editionId","contentSha256" FROM "LibraryPassage" WHERE "id"=ANY($1::text[])',
@@ -86,7 +87,7 @@ export async function runHoldoutBenchmark(env=process.env,deps={}){
     JOIN "LibraryEdition" e ON e."id"=p."editionId"
     JOIN "LibraryWork" w ON w."id"=e."workId"
     JOIN "LibraryAuthor" a ON a."id"=w."authorId"
-    WHERE e."importStatus"='STAGED' AND p."embedding" IS NOT NULL
+    WHERE e."importStatus"='STAGED' AND p."embedding" IS NOT NULL AND e."id" IN (${FROZEN_INDEXED_SQL})
       AND ($2::text IS NULL OR a."canonicalName"=$2)
     ORDER BY p."embedding" <=> $1::vector,p."id"
     LIMIT 20
