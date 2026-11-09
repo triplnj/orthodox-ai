@@ -3,6 +3,7 @@ import { apiJson } from "@/lib/api/response";
 import { randomUUID } from "node:crypto";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceChatPreviewIsolation, type PreviewGuardRow } from "@/lib/preview/chat-isolation";
 import { isProUser } from "@/lib/subscription";
 import { generateOrthodoxAnswer } from "@/lib/ai/chatService";
 import { withAiOperation, quotaSnapshot } from "@/lib/ai/operationLimits";
@@ -21,6 +22,24 @@ import { visibleMessages } from "@/lib/chat/history";
 async function handleChat(request: Request, onDelta?: (text: string) => void, onPhase?: (phase: string) => void) {
   let attempt: TurnAttempt | undefined;
   try {
+    // Never authenticate, reserve quota, or write a chat turn until this test
+    // branch proves it is using its dedicated, de-identified Neon database.
+    await enforceChatPreviewIsolation(async () => prisma.$queryRaw<PreviewGuardRow[]>`
+      SELECT g."branchId", g."purpose",
+      (SELECT count(*) FROM users) "users",
+      (SELECT count(*) FROM users WHERE lower("email") NOT LIKE '%@example.test') "nonTestUsers",
+      (SELECT count(*) FROM sessions) "sessions",
+      (SELECT count(*) FROM "Conversation") "conversations",
+      (SELECT count(*) FROM "ChatTurn") "chatTurns",
+      (SELECT count(*) FROM chat_messages) "messages",
+      (SELECT count(*) FROM email_verification_tokens) "emailTokens",
+      (SELECT count(*) FROM password_reset_tokens) "resetTokens",
+      (SELECT count(*) FROM journal_entries) "journals",
+      (SELECT count(*) FROM usage_logs) "usageLogs",
+      (SELECT count(*) FROM "AiReservation") "reservations",
+      (SELECT count(*) FROM "UserActivationFeedback") "feedback"
+      FROM "LibraryStagingGuard" g
+    `);
     const user = await getCurrentUser();
     if (!user) return apiJson({ error: "You must be signed in." }, { status: 401 });
     // Check the current database state on every request; never trust client profile or a cached flag.
