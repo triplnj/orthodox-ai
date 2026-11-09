@@ -12,6 +12,7 @@ import { aiSecurityResponse, readAiJson, validateAiStrings, AiInputError } from 
 import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
+import {buildIsolatedGregoryResearch} from "@/lib/patristics/preview-gregory-research";
 import { shouldRunPatristicResearch } from "@/lib/patristics/should-run-patristic-research";
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
@@ -95,7 +96,15 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
             ? `${priorQuestions.slice(-2).join("\n")}\nFollow-up question: ${message}`
             : message;
       onPhase?.("Searching and checking patristic sources...");
-      const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query, () => onPhase?.("Waiting for distant source..."))]);
+      const [profile, research] = await Promise.all([
+        getUserProfileContext(user.id),
+        (async () => {
+          // Experimental Gregory pilot is deliberately isolated from the other
+          // discovery providers and never runs on production or generic previews.
+          const pilot = await buildIsolatedGregoryResearch(query);
+          return pilot ?? buildPatristicResearchContext(query, () => onPhase?.("Waiting for distant source..."));
+        })(),
+      ]);
       onPhase?.("Writing the answer...");
       // A source-dependent question must not silently fall back to a fluent,
       // unsupported historical or patristic account when all providers fail.
