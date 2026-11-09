@@ -1,0 +1,64 @@
+name: Patristic Library - English Reranking Comparison (Staging Only)
+
+# Explicit one-time QA workflow; source content and production chat are untouched.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-english-rerank-qa-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  english-retrieval-comparison:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify retrieval reranker, guard and English-only scope
+        run: node --test tests/patristic-rerank-retrieval.test.mjs tests/patristic-retrieval-benchmark.test.mjs tests/patristic-library-evaluate.test.mjs tests/patristic-evidence-policy.test.mjs
+      - name: Verify Neon staging guard (read-only)
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Compare vector baseline versus English reranking
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PATRISTIC_ENGLISH_ONLY: 'true'
+        run: node scripts/patristics/benchmark-retrieval-staging.mjs > "$RUNNER_TEMP/patristic-english-rerank-comparison.json"
+      - name: Summarize comparison without claiming doctrinal verification
+        shell: bash
+        run: |
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/patristic-english-rerank-comparison.json","utf8"));
+            const lines=[
+              "### English patristic retrieval — vector baseline vs deterministic reranker",
+              "Branch: staging only. No SQL writes. No theological answers generated.",
+              "Indexed "+r.indexedPassages+"/"+r.totalPassages+" passages; "+r.questions+" English questions.",
+              "",
+              "| Question | Baseline author rank @5 | Reranked author rank @5 | Baseline first passage | Reranked first passage |",
+              "|---|---:|---:|---|---|",
+              ...r.reports.map(x=>"| "+x.id+" | "+(x.baselineAuthorRankTop5??"Not found")+" | "+(x.authorRankTop5??"Not found")+" | "+(x.baselineTop5[0]?.locator??"None")+" | "+(x.top5[0]?.locator??"None")+" |"),
+              "",
+              "These ranks and lexical scores do not establish doctrinal relevance. Manually review linked source passages."
+            ];
+            console.log(lines.join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive baseline and reranked evidence side-by-side
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-english-rerank-comparison
+          path: ${{ runner.temp }}/patristic-english-rerank-comparison.json
+          retention-days: 7
+          if-no-files-found: error
