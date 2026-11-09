@@ -4,7 +4,7 @@
 import pg from "pg";
 import {readFileSync} from "node:fs";
 import {pathToFileURL} from "node:url";
-import {resolveAuthorCatalogV2} from "./resolve-author-catalog-v2.mjs";
+import {resolveReviewedLogicalAuthor} from "./resolve-reviewed-logical-author.mjs";
 import {assessPassageAttribution} from "./assess-passage-attribution.mjs";
 import {rankSourcePassage} from "./rank-staging-source-evidence.mjs";
 const BRANCH="br-spring-frost-assfzje6";
@@ -21,7 +21,13 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
  const url=new URL(env.LIBRARY_STAGING_DB_URL);
  if(!["postgres:","postgresql:"].includes(url.protocol)||!url.hostname.toLowerCase().endsWith(".neon.tech")||!url.username||url.pathname==="/")throw Error("Refusing non-Neon endpoint");
  const fixture=deps.fixture??JSON.parse(readFileSync("tests/fixtures/patristic-chat-staging-integration.json","utf8"));
- if(fixture.schemaVersion!==1||fixture.stagingBranch!==BRANCH||fixture.cases?.length!==8||new Set(fixture.cases.map(c=>c.id)).size!==8)throw Error("Unexpected integration fixture");
+ if(fixture.schemaVersion!==1||fixture.stagingBranch!==BRANCH||fixture.cases?.length!==9||new Set(fixture.cases.map(c=>c.id)).size!==9)throw Error("Unexpected integration fixture");
+ const gregoryReview=deps.gregoryReview??JSON.parse(readFileSync("tests/fixtures/patristic-gregory-logical-identity-review.json","utf8"));
+ if(!Array.isArray(gregoryReview.sourceMatchedPassageIds)||gregoryReview.sourceMatchedPassageIds.length!==6||
+  new Set(gregoryReview.sourceMatchedPassageIds).size!==6||
+  gregoryReview.policy?.selectedPassagesArePublicationApproved!==false)
+  throw Error("Missing reviewed Gregory source-match allowlist");
+ const approvedGregoryIds=new Set(gregoryReview.sourceMatchedPassageIds);
  const db=deps.db??new pg.Client({connectionString:env.LIBRARY_STAGING_DB_URL,ssl:{rejectUnauthorized:true}});
  await db.connect();
  try{
@@ -30,12 +36,13 @@ export async function runStagingEvidenceIntegration(env=process.env,deps={}){
   const {rows:catalog}=await db.query(sqlAuthors);
   const results=[];
   for(const item of fixture.cases){
-   const route=resolveAuthorCatalogV2(item.question,catalog);
+   const route=resolveReviewedLogicalAuthor(item.question,catalog,gregoryReview);
    const scoped=route.status==="EXACT_CATALOG_MATCH"&&Array.isArray(route.authorIds);
    let passages=[];
    if(scoped){
     const response=await db.query(sqlPassages,[route.authorIds,STAGING_TEXT_ONLY_IDS]);
-    passages=response.rows.filter(p=>route.authorIds.includes(p.authorId));
+    passages=response.rows.filter(p=>route.authorIds.includes(p.authorId)&&
+     (p.canonicalName!=="St. Gregory of Nyssa"||approvedGregoryIds.has(p.passageId)));
    }
    // The passages are only source candidates. Never auto-certify truth, relevance, or speaker.
    const scored=passages.map(p=>{
