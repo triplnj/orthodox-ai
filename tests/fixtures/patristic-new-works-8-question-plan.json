@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "purpose": "CROSS_WORK_QUESTION_PLAN_NOT_YET_EVALUATED",
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "sourceManifestStatus": "CLEAN_SOURCE_CANDIDATE_NOT_APPROVED",
+  "questions": [
+    {
+      "id": "athanasius-inc-01",
+      "author": "St. Athanasius of Alexandria",
+      "work": "On the Incarnation of the Word, Chapter 1",
+      "locator": "Chapter I, §1",
+      "question": "How does Athanasius connect the Word's role in creation with the saving work of the Incarnation?",
+      "focus": "creation_and_incarnation",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "athanasius-inc-02",
+      "author": "St. Athanasius of Alexandria",
+      "work": "On the Incarnation of the Word, Chapter 1",
+      "locator": "Chapter I, §1",
+      "question": "Why does Athanasius return to the teaching about creation before explaining the Incarnation?",
+      "focus": "argument_structure",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "athanasius-inc-03",
+      "author": "St. Athanasius of Alexandria",
+      "work": "On the Incarnation of the Word, Chapter 1",
+      "locator": "Chapter I, §1",
+      "question": "Which earlier subject does Athanasius say he has already addressed before turning to the Incarnation?",
+      "focus": "narrative_context",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "cyril-cat-01",
+      "author": "St. Cyril of Jerusalem",
+      "work": "Catechetical Lecture 1",
+      "locator": "Catechetical Lecture I, §1",
+      "question": "How does Cyril describe the change awaiting those preparing for baptism?",
+      "focus": "baptismal_preparation",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "cyril-cat-02",
+      "author": "St. Cyril of Jerusalem",
+      "work": "Catechetical Lecture 1",
+      "locator": "Catechetical Lecture I, §2",
+      "question": "How does Cyril contrast bondage to sin with the freedom offered through faith?",
+      "focus": "sin_and_freedom",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "cyril-cat-03",
+      "author": "St. Cyril of Jerusalem",
+      "work": "Catechetical Lecture 1",
+      "locator": "Catechetical Lecture I, §3",
+      "question": "What warning does Cyril give about hypocrisy and the reception of divine grace?",
+      "focus": "hypocrisy_and_grace",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "cyril-cat-04",
+      "author": "St. Cyril of Jerusalem",
+      "work": "Catechetical Lecture 1",
+      "locator": "Catechetical Lecture I, §5",
+      "question": "What concrete practices does Cyril urge upon baptismal candidates during the season of confession?",
+      "focus": "confession_and_preparation",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    },
+    {
+      "id": "cyril-cat-05",
+      "author": "St. Cyril of Jerusalem",
+      "work": "Catechetical Lecture 1",
+      "locator": "Catechetical Lecture I, §6",
+      "question": "Why does Cyril insist on forgiving others before seeking forgiveness of sins?",
+      "focus": "forgiveness",
+      "language": "en",
+      "sourcePassageId": null,
+      "editorialStatus": "QUESTION_SOURCE_SECTION_IDENTIFIED_PENDING_TEXT_AND_CITATION_REVIEW"
+    }
+  ]
+}
