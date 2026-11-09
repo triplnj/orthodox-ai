@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 1,
+  "purpose": "English-first source-grounded retrieval evaluation, not public answers",
+  "mode": "LOBSTER_VERIFIABLE_DEPTH",
+  "questions": [
+    {
+      "id": "basil-01",
+      "language": "en",
+      "question": "How does Basil distinguish the Creator from the created world when explaining Genesis 1:1?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 005",
+        "Source paragraph 006"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-02",
+      "language": "en",
+      "question": "Why does Basil argue that the visible world cannot be co-eternal with God?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 006",
+        "Source paragraph 007"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-03",
+      "language": "en",
+      "question": "What does Basil mean by the words 'in the beginning' in the account of creation?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 009",
+        "Source paragraph 010"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-04",
+      "language": "en",
+      "question": "How does Basil explain the relationship between the beginning of the world and time?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 008",
+        "Source paragraph 010"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-05",
+      "language": "en",
+      "question": "How does Basil respond to Greek philosophical theories about the origin of the cosmos?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 005",
+        "Source paragraph 007"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-06",
+      "language": "en",
+      "question": "Why does Basil identify Moses as a trustworthy witness to the creation narrative?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 004"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-07",
+      "language": "en",
+      "question": "What does Basil say the harmony of the created world reveals about its maker?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 011",
+        "Source paragraph 016"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-08",
+      "language": "en",
+      "question": "Why does Basil interpret 'heaven and earth' as referring to the whole created world?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 012"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-09",
+      "language": "en",
+      "question": "How does Basil treat speculation about the earth's physical support?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 014",
+        "Source paragraph 015"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "basil-10",
+      "language": "en",
+      "question": "What is Basil's distinction between investigating natural mechanisms and honoring divine wisdom?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "candidateLocators": [
+        "Source paragraph 016",
+        "Source paragraph 018"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-01",
+      "language": "en",
+      "question": "Why does Chrysostom say Christians came to need written Scripture?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 007",
+        "Source paragraph 010"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-02",
+      "language": "en",
+      "question": "What does Chrysostom mean when he says the heart should become a book for the Holy Spirit?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 007",
+        "Source paragraph 011"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-03",
+      "language": "en",
+      "question": "How does Chrysostom contrast God's communication in the Old Testament with the written New Covenant?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 008",
+        "Source paragraph 013",
+        "Source paragraph 014"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-04",
+      "language": "en",
+      "question": "Why does Chrysostom call the Gospel 'good tidings' rather than ordinary good news?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 015",
+        "Source paragraph 016"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-05",
+      "language": "en",
+      "question": "Why does Chrysostom argue that four Gospel accounts need not undermine the truth of their witness?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 018",
+        "Source paragraph 019"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-06",
+      "language": "en",
+      "question": "How does Chrysostom distinguish genuine Gospel disagreements from differences of detail?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 020",
+        "Source paragraph 021",
+        "Source paragraph 030"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-07",
+      "language": "en",
+      "question": "What reasons does Chrysostom give for Matthew writing his Gospel?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 025",
+        "Source paragraph 027"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-08",
+      "language": "en",
+      "question": "Why does Chrysostom urge listeners to read a biblical passage before hearing it explained?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 047",
+        "Source paragraph 048"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-09",
+      "language": "en",
+      "question": "How does Chrysostom describe the accessibility of Christ's moral teaching to ordinary people?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 041",
+        "Source paragraph 042"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "chrysostom-10",
+      "language": "en",
+      "question": "Why does Chrysostom insist that hearing Scripture must lead to obedience and attention?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "candidateLocators": [
+        "Source paragraph 055",
+        "Source paragraph 058",
+        "Source paragraph 059"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-01",
+      "language": "en",
+      "question": "How does the dialogue between Gregory and Macrina begin with the experience of grief over death?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 001",
+        "Source paragraph 002",
+        "Source paragraph 004"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-02",
+      "language": "en",
+      "question": "Why does Macrina challenge the assumption that the soul perishes when the body dissolves?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 005",
+        "Source paragraph 007",
+        "Source paragraph 008"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-03",
+      "language": "en",
+      "question": "How does Gregory present the philosophical objection that the dissolution of the body entails the disappearance of the soul?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 010",
+        "Source paragraph 011"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-04",
+      "language": "en",
+      "question": "How does Macrina argue that the soul is intellectual and not merely a bodily organ?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 018",
+        "Source paragraph 020",
+        "Source paragraph 021"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-05",
+      "language": "en",
+      "question": "What definition of the soul does Macrina offer in the dialogue?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 019",
+        "Source paragraph 020"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-06",
+      "language": "en",
+      "question": "How does the dialogue distinguish the human mind's likeness to God from identity with God?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 030",
+        "Source paragraph 031"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-07",
+      "language": "en",
+      "question": "How does Macrina discuss anger and desire in relation to the rational soul?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 034",
+        "Source paragraph 035",
+        "Source paragraph 037"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-08",
+      "language": "en",
+      "question": "How does Macrina interpret the rich man and Lazarus in discussing the soul after death?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 056",
+        "Source paragraph 057",
+        "Source paragraph 059",
+        "Source paragraph 061"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-09",
+      "language": "en",
+      "question": "How does the dialogue respond to objections concerning the resurrection of a dissolved body?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 052",
+        "Source paragraph 053",
+        "Source paragraph 054",
+        "Source paragraph 086"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    },
+    {
+      "id": "gregory-10",
+      "language": "en",
+      "question": "How does Macrina appeal to Scripture and Paul's contrast between corruption and incorruption in discussing resurrection?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "candidateLocators": [
+        "Source paragraph 083",
+        "Source paragraph 087",
+        "Source paragraph 088"
+      ],
+      "reviewStatus": "PENDING_SOURCE_REVIEW",
+      "relevantPassageIds": [],
+      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+    }
+  ]
+}
