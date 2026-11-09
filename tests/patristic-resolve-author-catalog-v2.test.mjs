@@ -35,7 +35,7 @@ test("two-author comparison and incomplete comparison",()=>{
 });
 test("short names, substring traps and overlapping aliases fail safe",()=>{
  assert.equal(resolve("basilica architecture",rows).scope,"GLOBAL");
- assert.equal(resolve("What does Cyril teach?",rows).scope,"GLOBAL");
+ assert.equal(resolve("What does Cyril teach?",rows).scope,"NO_AUTOMATIC_FILTER");
  const collision=[...rows,{id:"other",canonicalName:"Another Basil",indexed:1,nameVariants:["Basil the Great"]}];
  assert.equal(resolve("Basil the Great on creation",collision).reason,"COLLIDING_CATALOG_ALIASES");
 });
