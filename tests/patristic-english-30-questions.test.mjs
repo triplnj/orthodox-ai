@@ -25,7 +25,7 @@ test("30 English patristic questions are distinct, evenly grouped and source-sco
    assert.equal(q.reviewStatus,"PENDING_SOURCE_REVIEW");
    assert.deepEqual(q.relevantPassageIds,[]);
    assert.ok(q.candidateLocators.length>0&&q.candidateLocators.length<=5);
-   assert.ok(q.candidateLocators.every(l=>/^Source paragraph \\d{3}$/.test(l)));
+   assert.ok(q.candidateLocators.every(l=>/^Source paragraph \d{3}$/.test(l)));
  }
 });
 test("candidate locators are not mislabeled as verified doctrine or answer keys",()=>{
