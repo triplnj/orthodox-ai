@@ -19,6 +19,8 @@ on:
       - 'tests/fixtures/patristic-chat-staging-integration.json'
       - 'scripts/patristics/audit-staging-transcriptions.mjs'
       - 'tests/patristic-source-text-audit.test.mjs'
+      - 'scripts/patristics/finalize-staging-source-review.mjs'
+      - 'tests/patristic-finalize-source-review.test.mjs'
       - 'tests/fixtures/patristic-staging-quarantined-fragments.json'
   workflow_dispatch:
 permissions:
@@ -37,7 +39,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
@@ -130,6 +132,22 @@ jobs:
           lines.push('','This audit checks source text correspondence only. Editorial and theological review remain separate.');
           process.stdout.write(lines.join('\\n')+'\\n');
           NODE
+      - name: Classify all 297 audit records; quarantine any non-exact text match
+        if: steps.full_source_audit.outcome == 'success'
+        shell: bash
+        run: |
+          node scripts/patristics/finalize-staging-source-review.mjs \
+            "$RUNNER_TEMP/patristic-source-text-audit.json" \
+            "$RUNNER_TEMP/patristic-source-review-classification.json" \
+            >> "$GITHUB_STEP_SUMMARY"
+      - name: Save classified source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-staging-source-review-classification
+          path: ${{ runner.temp }}/patristic-source-review-classification.json
+          retention-days: 21
+          if-no-files-found: warn
       - name: Save full source audit evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -148,7 +166,9 @@ jobs:
           const read=(path)=>existsSync(temp+'/'+path)?JSON.parse(readFileSync(temp+'/'+path,'utf8')):null;
           const integration=read('patristic-chat-staging-integration.json');
           const sourceAudit=read('patristic-source-text-audit.json');
+          const sourceReview=read('patristic-source-review-classification.json');
           const causes=[];
+          if(!sourceReview||sourceReview.summary?.status!=='STAGING_SOURCE_MATCH_CLASSIFIED'||sourceReview.summary.fullTextMatch!==224||sourceReview.summary.quarantined!==73)causes.push('297-passage source classification missing or inconsistent');
           if(!integration||integration.status!=='STAGING_EVIDENCE_INTEGRATION_NO_LLM'||integration.total!==8||integration.passed!==8)
             causes.push('Integration evidence missing or fewer than 8/8');
           if((integration?.pendingEditorialReview??-1)!==0)
