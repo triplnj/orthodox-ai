@@ -1,0 +1,47 @@
+name: Patristic New Works — Source Preview Only
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-new-works-preview-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preview-two-works:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install source parsing dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run fail-closed source preview tests
+        run: node --test tests/patristic-new-works-preview.test.mjs
+      - name: Fetch public-domain historical source text for editorial inspection
+        run: node scripts/patristics/preview-new-works-staging.mjs "$RUNNER_TEMP/patristic-two-new-works.preview.json" > "$RUNNER_TEMP/patristic-two-new-works.summary.json"
+      - name: Report source provenance, not doctrinal correctness
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-two-new-works.summary.json','utf8'));
+          const out=['## Two new historical English patristic works — PREVIEW ONLY','',
+            'No Neon access, no new embeddings, no production change. Rights and source integrity remain pending editorial review.','',
+            '| Author | Work | Source paragraphs | SHA256 |','|---|---|---:|---|'];
+          for(const w of x.works)out.push('| '+w.author+' | '+w.title+' | '+w.paragraphCount+' | `'+w.sha256+'` |');
+          process.stdout.write(out.join('\n')+'\n');
+          NODE
+      - name: Archive provenance and paragraph-level editorial preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-two-new-works-source-preview
+          path: |
+            ${{ runner.temp }}/patristic-two-new-works.preview.json
+            ${{ runner.temp }}/patristic-two-new-works.summary.json
+          retention-days: 21
+          if-no-files-found: error
