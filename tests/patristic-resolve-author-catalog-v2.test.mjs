@@ -43,3 +43,19 @@ test("reject invalid questions and absent catalogs",()=>{
  assert.throws(()=>resolve("",rows),/Invalid/);
  assert.throws(()=>resolve("Hi",[]),/Missing/);
 });
+
+
+test("mixed known and unknown titled saints never narrow to known author",()=>{
+ const r=resolve("What do St. Basil the Great and St. Photios teach about prayer?",rows);
+ assert.equal(r.scope,"NO_AUTOMATIC_FILTER");
+ assert.equal(r.reason,"ADDITIONAL_UNRESOLVED_TITLED_AUTHOR");
+ const s=resolve("Шта Свети Василије Велики и Свети Максим Исповедник уче о љубави?",rows);
+ assert.equal(s.scope,"NO_AUTOMATIC_FILTER");
+ assert.equal(s.reason,"ADDITIONAL_UNRESOLVED_TITLED_AUTHOR");
+});
+test("unqualified comparison and full two-author names stay separate",()=>{
+ const a=resolve("Compare St. Basil the Great and St. Cyril of Jerusalem",rows);
+ assert.equal(a.scope,"MULTI_AUTHOR");
+ const b=resolve("Compare St. Basil the Great with Cyril",rows);
+ assert.equal(b.scope,"NO_AUTOMATIC_FILTER");
+});
