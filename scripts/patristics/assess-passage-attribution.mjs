@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 /** Bibliographic author alone is NEVER permission to assign dialogue speech.
  * Only a trusted checked-in review registry can resolve an exact fingerprinted passage.
  * Do not construct trustedReviews from user, model, or network input.
@@ -13,6 +14,8 @@ export function assessPassageAttribution({workAuthor,passage,reviewedSpeaker=nul
   typeof editionId!=="string"||typeof sourceLocator!=="string"||
   sourceMatchStatus!=="FULL_NORMALIZED_MATCH")return unverified;
  // Locate exactly one reviewed record; anonymous/fabricated IDs and altered hashes fail closed.
+ const computedHash=createHash("sha256").update(passage,"utf8").digest("hex");
+ if(computedHash!==contentSha256)return unverified;
  const matches=trustedReviews.filter(r=>r?.reviewRecordId===reviewRecordId);
  if(matches.length!==1)return unverified;
  const record=matches[0];
