@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "purpose": "CATALOG_DRIVEN_AUTHOR_ROUTER_V2_SHADOW",
+  "branchId": "br-spring-frost-assfzje6",
+  "caseCount": 16,
+  "cases": [
+    {
+      "id": "athanasius-en",
+      "question": "Why does Athanasius begin with creation?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Athanasius of Alexandria"
+    },
+    {
+      "id": "basil-sr",
+      "question": "Шта Свети Василије Велики говори о стварању?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Basil the Great"
+    },
+    {
+      "id": "cyril-full",
+      "question": "What does Cyril of Jerusalem teach about baptism?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Cyril of Jerusalem"
+    },
+    {
+      "id": "gregory-duplicate-group",
+      "question": "What does Gregory of Nyssa say about the soul?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Gregory of Nyssa"
+    },
+    {
+      "id": "john-sr",
+      "question": "Шта Свети Јован Златоусти говори о молитви?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. John Chrysostom"
+    },
+    {
+      "id": "compare-two",
+      "question": "Compare Athanasius and Cyril of Jerusalem on salvation.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null
+    },
+    {
+      "id": "compare-gregory",
+      "question": "Compare Basil and Gregory of Nyssa on creation.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null
+    },
+    {
+      "id": "unknown-maximus",
+      "question": "What does St Maximus the Confessor teach about wills?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "unknown-augustine",
+      "question": "What does Augustine of Hippo say about grace?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "ambiguous-cyril",
+      "question": "What did Cyril teach about confession?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "ambiguous-gregory",
+      "question": "What did Gregory teach about virtue?",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "general",
+      "question": "How does repentance prepare believers for baptism?",
+      "expectedScope": "GLOBAL",
+      "expectedAuthor": null
+    },
+    {
+      "id": "compare-unknown",
+      "question": "Compare Basil and Maximus on salvation.",
+      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedAuthor": null
+    },
+    {
+      "id": "not-name-basilica",
+      "question": "How is basilica architecture described?",
+      "expectedScope": "GLOBAL",
+      "expectedAuthor": null
+    },
+    {
+      "id": "compare-athanasius-gregory",
+      "question": "Compare Athanasius and Gregory of Nyssa on the soul.",
+      "expectedScope": "MULTI_AUTHOR",
+      "expectedAuthor": null
+    },
+    {
+      "id": "cyril-sr",
+      "question": "Шта Свети Кирило Јерусалимски учи о покајању?",
+      "expectedScope": "SINGLE_AUTHOR",
+      "expectedAuthor": "St. Cyril of Jerusalem"
+    }
+  ]
+}
