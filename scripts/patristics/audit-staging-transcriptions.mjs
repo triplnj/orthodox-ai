@@ -14,10 +14,21 @@ const matches=(excerpt,page)=>{
  if(page.includes(snippet))return {status:"FULL_NORMALIZED_MATCH",anchors:3,full:true};
  const size=Math.min(100,Math.max(45,Math.floor(snippet.length/5)));
  const starts=[0,Math.floor((snippet.length-size)/2),snippet.length-size];
- const anchors=starts.map(i=>snippet.slice(i,i+size))
-  .filter(x=>page.includes(x)).length;
- return {status:anchors===3?"THREE_ANCHORS_MATCH":anchors>=1?"PARTIAL_TEXT_MATCH":"NO_TEXT_MATCH",
-  anchors,full:false};
+ const segments=starts.map(i=>snippet.slice(i,i+size));
+ let afterIndex=0,matched=0,firstPos=-1,lastPos=-1;
+ for(const segment of segments){
+  const pos=page.indexOf(segment,afterIndex);
+  if(pos<0)continue;
+  if(firstPos<0)firstPos=pos;
+  lastPos=pos+segment.length;
+  afterIndex=lastPos;
+  matched++;
+ }
+ // A three-anchor hit is meaningful only if all anchors occur in source order
+ // and within a plausible contiguous textual span, not scattered over a book.
+ const coherent=matched===3&&lastPos-firstPos<=Math.max(snippet.length*3,500);
+ return {status:coherent?"THREE_ANCHORS_MATCH":matched>=1?"PARTIAL_TEXT_MATCH":"NO_TEXT_MATCH",
+  anchors:matched,full:false};
 };
 async function downloadText(url,request=fetch){
  const u=new URL(url);
