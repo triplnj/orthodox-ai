@@ -1,0 +1,64 @@
+name: Patristic Catalog Author V2 - Staging Holdout
+on:
+  push:
+    branches:
+      - experiment/patristic-catalog-author-v2-20261109
+    paths:
+      - '.github/workflows/patristic-author-catalog-v2-staging.yml'
+      - 'scripts/patristics/resolve-author-catalog-v2.mjs'
+      - 'scripts/patristics/evaluate-author-catalog-v2-staging.mjs'
+      - 'tests/fixtures/patristic-author-catalog-v2-holdout.json'
+      - 'tests/patristic-resolve-author-catalog-v2.test.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent-staging-holdout:
+    runs-on: ubuntu-latest
+    environment: patristic-library-staging
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Independent resolver unit tests
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs
+      - name: Verify protected staging database
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Evaluate 18 unseen author-routing questions without writes
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/evaluate-author-catalog-v2-staging.mjs > "$RUNNER_TEMP/patristic-author-catalog-v2-holdout.json"
+      - name: Publish measured metrics including unresolved variants
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-author-catalog-v2-holdout.json','utf8'));
+          if(r.status!=='CATALOG_AUTHOR_V2_STAGING_HOLDOUT'||r.total!==18||r.databaseWrites!==0||r.productionChanges!==0||r.embeddingRequests!==0)throw Error('Unexpected staging report');
+          const lines=['## Independent author recognition holdout','',
+            'Correct routing: '+r.correctCount+'/'+r.total+' ('+(r.accuracy*100).toFixed(1)+'%)',
+            'Catalogue rows without name variants: '+r.missingVariantRows,
+            'Duplicate indexed canonical names: '+r.duplicateCanonicalNames.join(', '),'',
+            '| Case | Expected scope | Actual scope | Recognized authors | Correct |',
+            '|---|---|---|---|---|'];
+          for(const q of r.results)lines.push('| '+q.id+' | '+q.expectedScope+' | '+q.actualScope+' | '+q.authors.join(', ')+' | '+q.correct+' |');
+          lines.push('','This is routing only, not passage attribution or answer correctness. Production untouched.');
+          process.stdout.write(lines.join('\n')+'\n');
+          NODE
+      - name: Save complete holdout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-author-catalog-v2-holdout
+          path: ${{ runner.temp }}/patristic-author-catalog-v2-holdout.json
+          retention-days: 21
+          if-no-files-found: warn
