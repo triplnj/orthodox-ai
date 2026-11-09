@@ -38,17 +38,17 @@ export function resolveAuthorCatalogV2(question,catalog){
  if(found.size>2)return blocked("REVIEW_REQUIRED","TOO_MANY_AUTHORS",authors,comparison);
  // Comparison words may compare two concepts, not two patristic authors.
  // A lone recognized author plus a second capitalized proper name remains unresolved.
- const otherProperName=found.size===1&&/(?:\\b(?:and|with|versus|vs)\\s+)(?:[A-Z][a-z]+\\s+){1,3}(?:[A-Z][a-z]+|the\\s+[A-Z][a-z]+)/u.test(question);
+ const otherProperName=found.size===1&&/(?:\b(?:and|with|versus|vs)\s+)(?:[A-Z][a-z]+\s+){1,3}(?:[A-Z][a-z]+|the\s+[A-Z][a-z]+)/u.test(question);
  if(comparison&&found.size!==2&&(found.size===0||otherProperName))
   return blocked("REVIEW_REQUIRED","INCOMPLETE_COMPARISON",authors,comparison);
  if(!comparison&&found.size===2)return blocked("REVIEW_REQUIRED","MULTIPLE_AUTHORS_WITHOUT_COMPARISON",authors,comparison);
  // An unqualified given name that appears in any catalogue entry remains ambiguous.
  // Do not misclassify it as an authorless topic merely because the alias is incomplete.
  const givenNames=[...groups.keys()].flatMap(k=>k.split(" ").filter(w=>w.length>=4&&!["saint","the","great","of"].includes(w)));
- const authorContext=/(?:what\\s+(?:does|did)|who\\s+(?:is|was)|teach|say|write|speak|учио|учи|говори|писао|ко\\s+је)/iu.test(question);
+ const authorContext=/(?:what\s+(?:does|did)|who\s+(?:is|was)|teach|say|write|speak|учио|учи|говори|писао|ко\s+је)/iu.test(question);
  const ambiguousGivenName=authorContext&&givenNames.some(w=>includesPhrase(q,w));
  if(found.size===0&&ambiguousGivenName)return blocked("UNRESOLVED_NAMED_AUTHOR","INCOMPLETE_OR_AMBIGUOUS_AUTHOR_NAME",[],comparison);
- const genericPatristic=/^(?:шта|како|зашто|које|у\\s+чему).*\\b(?:свети\\s+оци|светих\\s+отаца|свети\\s+оци\\s+учили)\\b/iu.test(normalized);
+ const genericPatristic=["свети оци","светих отаца","светим оцима"].some(term=>includesPhrase(q,term));
  if(found.size===0)return (namedRE.test(question)&&!genericPatristic)
   ?blocked("UNRESOLVED_NAMED_AUTHOR","NO_CATALOG_ALIAS_MATCH",[],comparison)
   :{status:"NO_EXPLICIT_AUTHOR",scope:"GLOBAL",reason:"AUTHOR_NOT_SPECIFIED",authors:[],comparison};
