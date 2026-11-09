@@ -35,6 +35,18 @@ export function prepareCleanEvidence(preview){
       throw Error("Cyril section boundary moved; review manually");
     }
     return {locator,text:p.text,sourceLocator,sha256:p.sha256};
+  }).flatMap(p=>{
+    if(!spec.author.includes("Athanasius"))return [p];
+    // The Wikisource HTML has four numbered sections inside ONE <p>.
+    // Keep the historical 1–4 boundaries, not the defective HTML boundary.
+    const parts=p.text.split(/(?<=\\.) (?=[234]\\. )/);
+    if(parts.length!==4||!parts[0].startsWith("Whereas in what precedes")||
+       !["2. ","3. ","4. "].every((prefix,i)=>parts[i+1].startsWith(prefix))||
+       parts.join(" ")!==p.text)
+       throw Error("Athanasius section boundaries changed; refuse to stage");
+    return parts.map((text,i)=>({locator:"Chapter I, §"+(i+1),text,
+      sourceLocator:p.sourceLocator,sha256:sha(text),parentSourceSha256:p.sha256,
+      sectionNumber:i+1}));
   });
   return {author:w.author,title:w.title,editionTitle:w.editionTitle,
     translator:w.translator,publicationYear:w.publicationYear,
