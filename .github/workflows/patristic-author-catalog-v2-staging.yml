@@ -75,7 +75,7 @@ jobs:
           lines.push('','This is routing only, not passage attribution or answer correctness. Production untouched.');
           process.stdout.write(lines.join('\n')+'\n');
           NODE
-      - name: Read-only question-to-evidence integration (8 cases)
+      - name: Read-only question-to-evidence integration (9 cases)
         id: integration
         continue-on-error: true
         env:
@@ -91,7 +91,7 @@ jobs:
           const file=process.env.RUNNER_TEMP+'/patristic-chat-staging-integration.json';
           if(!existsSync(file)){process.stdout.write('### Staging evidence integration unavailable (step error)\\n');process.exit(0);}
           const r=JSON.parse(readFileSync(file,'utf8'));
-          if(r.status!=='STAGING_EVIDENCE_INTEGRATION_NO_LLM'||r.total!==8||
+          if(r.status!=='STAGING_EVIDENCE_INTEGRATION_NO_LLM'||r.total!==9||
              r.databaseWrites!==0||r.aiCalls!==0||r.chatWrites!==0||r.productionChanges!==0)
             throw Error('Unexpected staging integration report');
           const lines=['### Staging question-to-passage integration','',`Verified ${r.passed}/${r.total} (failures remain release blockers)`,'',
@@ -175,8 +175,8 @@ jobs:
           const sourceReview=read('patristic-source-review-classification.json');
           const causes=[];
           if(!sourceReview||sourceReview.summary?.status!=='STAGING_SOURCE_MATCH_CLASSIFIED'||sourceReview.summary.fullTextMatch!==224||sourceReview.summary.quarantined!==73)causes.push('297-passage source classification missing or inconsistent');
-          if(!integration||integration.status!=='STAGING_EVIDENCE_INTEGRATION_NO_LLM'||integration.total!==8||integration.passed!==8)
-            causes.push('Integration evidence missing or fewer than 8/8');
+          if(!integration||integration.status!=='STAGING_EVIDENCE_INTEGRATION_NO_LLM'||integration.total!==9||integration.passed!==9)
+            causes.push('Integration evidence missing or fewer than 9/9');
           if((integration?.pendingEditorialReview??-1)!==0)
             causes.push('Editorial provenance approval still pending');
           if(!sourceAudit||sourceAudit.status!=='STAGING_SOURCE_TEXT_AUDIT'||sourceAudit.total!==297||
