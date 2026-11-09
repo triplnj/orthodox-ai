@@ -1,0 +1,62 @@
+name: Patristic Author Router - Protected Shadow Only
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-author-router-shadow-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate-author-routing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify offline author-routing behavior
+        run: node --test tests/patristic-resolve-author-scope.test.mjs tests/patristic-shadow-author-routing-staging.test.mjs
+      - name: Verify protected Neon marker
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Run read-only twelve-question author-routing shadow
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/shadow-author-routing-staging.mjs > "$RUNNER_TEMP/patristic-author-router-shadow.json"
+      - name: Report safe author-routing quality
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-author-router-shadow.json','utf8'));
+          if(r.status!=='AUTHOR_ROUTER_SHADOW_ONLY'||r.questionCount!==12||
+             r.databaseWrites!==0||r.embeddingRequests!==0||r.productionRouteChanges!==0)
+             throw Error('Unexpected shadow report');
+          const lines=['## Explicit-author shadow routing — read-only','',
+            'Pass: '+r.passCount+'/'+r.questionCount,
+            '','','Duplicated author records: '+(r.duplicateNames.join(', ')||'none'),
+            '','| Case | Expected | Actual | Reason |','|---|---|---|---|'];
+          for(const q of r.results)lines.push('| '+q.id+' | '+q.expectedScope+' | '+q.actualScope+' | '+q.reason+' |');
+          lines.push('','No live routing, no answer generation, no doctrinal certification.');
+          process.stdout.write(lines.join('\n')+'\n');
+          NODE
+      - name: Preserve complete shadow results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-author-router-shadow-12
+          path: ${{ runner.temp }}/patristic-author-router-shadow.json
+          retention-days: 21
+          if-no-files-found: warn
