@@ -1,0 +1,62 @@
+name: Patristic Generic Catalogue Author Router - Shadow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-catalog-author-router-shadow-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  catalogue-author-shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Locked installation
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run catalogue resolver regressions
+        run: node --test tests/patristic-catalog-author-resolver.test.mjs tests/patristic-shadow-catalog-author-routing.test.mjs
+      - name: Verify guarded Neon staging branch
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Read-only sixteen-case catalogue routing shadow
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/shadow-catalog-author-routing-staging.mjs > "$RUNNER_TEMP/catalog-author-shadow-16.json"
+      - name: Show summary without exposing connection credentials
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/catalog-author-shadow-16.json','utf8'));
+          if(r.status!=='CATALOG_AUTHOR_ROUTER_V2_SHADOW_ONLY'||r.questionCount!==16||
+             r.databaseWrites!==0||r.embeddingRequests!==0||r.productionChanges!==0)
+            throw Error('Unexpected author shadow report');
+          const lines=['## Generic catalogue-driven author resolver — shadow only','',
+            'Correct cases: '+r.passCount+'/'+r.questionCount,'',
+            'Duplicated canonical groups: '+r.duplicateGroups.map(g=>g.canonicalName+' ('+g.ids.length+' ids)').join(', '),'',
+            '| Case | Expected | Actual |','|---|---|---|'];
+          for(const x of r.results)lines.push('| '+x.id+' | '+x.expectedScope+' | '+x.actualScope+' |');
+          lines.push('','The source registry is data-driven; no live chat changes or theological certification.');
+          process.stdout.write(lines.join('\n')+'\n');
+          NODE
+      - name: Archive shadow results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-generic-catalog-author-shadow-16
+          path: ${{ runner.temp }}/catalog-author-shadow-16.json
+          retention-days: 21
+          if-no-files-found: warn
