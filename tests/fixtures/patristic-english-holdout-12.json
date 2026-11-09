@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "kind": "ENGLISH_HOLDOUT_SAME_CORPUS",
+  "branchId": "br-spring-frost-assfzje6",
+  "purpose": "Previously unseen questions and passage IDs, NOT independent works or theological validation",
+  "lockedBeforeMeasurement": true,
+  "questions": [
+    {
+      "id": "basil-h01",
+      "language": "en",
+      "question": "How does Basil describe the invisible intellectual creation preceding the visible world's formation?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "provisionalEvidencePassageIds": [
+        "passage_f95032c160719d68e29e6fa611f20631"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "basil-h02",
+      "language": "en",
+      "question": "Why does Basil discourage attempts to define the essence of every created thing in his Hexaemeron?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "provisionalEvidencePassageIds": [
+        "passage_be44f59c924fff4fdd03bfcfd9561455"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "basil-h03",
+      "language": "en",
+      "question": "Which competing theories about the elements of the heavens does Basil report?",
+      "expectedAuthor": "St. Basil the Great",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "provisionalEvidencePassageIds": [
+        "passage_e9593749bae5428265b3d73953f8fccb"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "chrysostom-h01",
+      "language": "en",
+      "question": "What purpose for writing does Chrysostom attribute to the evangelist Luke?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "provisionalEvidencePassageIds": [
+        "passage_fa436e5ddc6765ed11ac96b52292d709"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "chrysostom-h02",
+      "language": "en",
+      "question": "Why, according to the tradition Chrysostom recounts, does John's Gospel begin differently from the others?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "provisionalEvidencePassageIds": [
+        "passage_83c915befd689f6023be569a49015fed"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "chrysostom-h03",
+      "language": "en",
+      "question": "How does Chrysostom extend Christian chastity beyond outward actions?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "provisionalEvidencePassageIds": [
+        "passage_5709d957343d8665769cb0d3ab4bf23a"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "chrysostom-h04",
+      "language": "en",
+      "question": "What rewards does Chrysostom associate with citizenship in the heavenly commonwealth?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "provisionalEvidencePassageIds": [
+        "passage_7ad88a432f010fd77d1dd673fc6f0dc1"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "chrysostom-h05",
+      "language": "en",
+      "question": "Who is the enemy in Chrysostom's description of Christian spiritual warfare, and what is its armor?",
+      "expectedAuthor": "St. John Chrysostom",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "provisionalEvidencePassageIds": [
+        "passage_eea6dcc05e3f48b49be3a65d9016bc5c"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "gregory-h01",
+      "language": "en",
+      "question": "How does Macrina explain the role of free will in directing emotions toward virtue or vice?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "provisionalEvidencePassageIds": [
+        "passage_29fff93e00df00737665fc92eb74f960"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "gregory-h02",
+      "language": "en",
+      "question": "Why does Macrina say the soul's emotions are not virtue or vice in themselves?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "provisionalEvidencePassageIds": [
+        "passage_707e50f793c798b305d4266b446d2ac1"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "gregory-h03",
+      "language": "en",
+      "question": "Why does Macrina argue that love outlasts faith and hope?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "provisionalEvidencePassageIds": [
+        "passage_090c0fe5372b552d22d5b4362bd506bd"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "gregory-h04",
+      "language": "en",
+      "question": "What does Macrina foresee for birth and death when humanity reaches its destined fullness?",
+      "expectedAuthor": "St. Gregory of Nyssa",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "provisionalEvidencePassageIds": [
+        "passage_1171cb9d2c12b69b723b92a94ef0ce64"
+      ],
+      "holdoutStatus": "FROZEN_BEFORE_FIRST_HOLDOUT_RUN",
+      "editorialStatus": "PENDING_INDEPENDENT_REVIEW"
+    }
+  ],
+  "evidence": [
+    {
+      "questionId": "basil-h01",
+      "passageId": "passage_f95032c160719d68e29e6fa611f20631",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "locator": "Source paragraph 008",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "9a701b8d5b0b09c8ee7cc580caa1cdf614dea1468ff1fdb1387794216622cf5a",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20II/Volume%20VIII/The%20Hexaemeron/Homily%201",
+      "excerpt": "5. It appears, indeed, that even before this world an order of things existed of which our mind can form an idea, but of which we can say nothing, because it is too lofty a subject for men who are but beginners and are still babes in knowledge. The birth of th",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "basil-h02",
+      "passageId": "passage_be44f59c924fff4fdd03bfcfd9561455",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "locator": "Source paragraph 013",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "255f710561ba605fb187be88b57190a0d51c1da0e4fa6d8c93f98e5e08550130",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20II/Volume%20VIII/The%20Hexaemeron/Homily%201",
+      "excerpt": "8. “In the beginning God created the heaven and the earth.” If we were to wish to discover the essence of each of the beings which are offered for our contemplation, or come under our senses, we should be drawn away into long digressions, and the solution of t",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "basil-h03",
+      "passageId": "passage_e9593749bae5428265b3d73953f8fccb",
+      "editionId": "edition_b0cd850e255cf4bd4310094ce8625dec",
+      "locator": "Source paragraph 017",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "714936253fdf66733cfe63687f0dd22cbdcf2337277e7bd0b652c7f71cbec876",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20II/Volume%20VIII/The%20Hexaemeron/Homily%201",
+      "excerpt": "11. We might say the same thing of the heavens. With what a noise of words the sages of this world have discussed their nature! Some have said that heaven is composed of four elements as being tangible and visible, and is made up of earth on account of its pow",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "chrysostom-h01",
+      "passageId": "passage_fa436e5ddc6765ed11ac96b52292d709",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "locator": "Source paragraph 023",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "3dbad7e85d67de9aef3e24006d108b3b5589d943b0f781fa50c88259605943dd",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20I/Volume%20X/The%20Homilies%20of%20St.%20John%20Chrysostom/Homily%201",
+      "excerpt": "7. Now Luke tells us also the cause wherefore he proceeds to write: “that thou mayest hold,” saith he, “the certainty of the words wherein thou hast been instructed;” that is, that being continually reminded thou mayest hold to the certainty, and abide in cert",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "chrysostom-h02",
+      "passageId": "passage_83c915befd689f6023be569a49015fed",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "locator": "Source paragraph 024",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "ce66ee0db03e6e301da9db65f257c25a8573704055f247af1f138fe7f1266ebc",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20I/Volume%20X/The%20Homilies%20of%20St.%20John%20Chrysostom/Homily%201",
+      "excerpt": "But as to John, he hath himself kept silence touching the cause; yet, (as a tradition saith, which hath come down to us from the first, even from the Fathers,) neither did he come to write without purpose; but forasmuch as it had been the care of the three to ",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "chrysostom-h03",
+      "passageId": "passage_5709d957343d8665769cb0d3ab4bf23a",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "locator": "Source paragraph 038",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "f309fdbaff80c35c746253a3c1b3c9891fd075b4e4e42e3120b6a61e3f14c6cc",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20I/Volume%20X/The%20Homilies%20of%20St.%20John%20Chrysostom/Homily%201",
+      "excerpt": "But they that are of our part not only exterminate lust, they chastise not only the act, but even an unchaste look, and insulting language, and disorderly laughter, and dress, and gait, and clamor, and they carry on their exactness even to the smallest things,",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "chrysostom-h04",
+      "passageId": "passage_7ad88a432f010fd77d1dd673fc6f0dc1",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "locator": "Source paragraph 045",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "2e36629a59d7e84d0c10d9bdfd37c0d5cf57ec289c468f5fffcfb65b7d8fa37a",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20I/Volume%20X/The%20Homilies%20of%20St.%20John%20Chrysostom/Homily%201",
+      "excerpt": "And as a place for this their commonwealth they have assigned Heaven, and God they have brought in as the framer thereof, and as lawgiver of the statutes there set; as indeed was their duty. And the rewards in their commonwealth are not leaves of bay nor olive",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "chrysostom-h05",
+      "passageId": "passage_eea6dcc05e3f48b49be3a65d9016bc5c",
+      "editionId": "edition_55ef4de453f96a6f885f78a83e01edc0",
+      "locator": "Source paragraph 046",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "823a874abfc15dca317a858cb5ddf54dfad9cf4275d59f0518849a07ccfe5428",
+      "sourceUrl": "https://en.wikisource.org/wiki/Nicene%20and%20Post-Nicene%20Fathers%3A%20Series%20I/Volume%20X/The%20Homilies%20of%20St.%20John%20Chrysostom/Homily%201",
+      "excerpt": "This republic is at war not with men, but with devils, and those incorporeal powers. Wherefore also their captain is no one of men, nor of angels, but God Himself. And the armor too of these warriors suits the nature of the warfare, for it is not formed of hid",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "gregory-h01",
+      "passageId": "passage_29fff93e00df00737665fc92eb74f960",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "locator": "Source paragraph 039",
+      "ordinal": 3,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "0a7f3b77bbc840832a067c2ef320d0be0fb3709d8062505b58b2345b31ce001f",
+      "sourceUrl": "https://www.newadvent.org/fathers/2915.htm",
+      "excerpt": "be the author of evil, if in them, so deeply rooted as they are in our nature, any necessities of wrong-doing were found), but according to the use which our free will puts them to, these emotions of the soul become the instruments of virtue or of vice. They a",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "gregory-h02",
+      "passageId": "passage_707e50f793c798b305d4266b446d2ac1",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "locator": "Source paragraph 041",
+      "ordinal": 2,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "dcc93783e6ec1fef05c6a0d3e74504618644e7cfd909319a0fa34f3153808e85",
+      "sourceUrl": "https://www.newadvent.org/fathers/2915.htm",
+      "excerpt": "due proportion and holds them in his own power instead of being held in theirs, employing them for an instrument as a king does his subjects' many hands, then efforts towards excellence more easily succeed for him. But should he become theirs, and, as when any",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "gregory-h03",
+      "passageId": "passage_090c0fe5372b552d22d5b4362bd506bd",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "locator": "Source paragraph 065",
+      "ordinal": 4,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "50cc81d11dcb7525a5b92003afb4937bd2e69e71c3b27f5281804315054edb4b",
+      "sourceUrl": "https://www.newadvent.org/fathers/2915.htm",
+      "excerpt": "a ceasing of all other activities, even for the good, which are within us, and finds no limit for love alone. Prophecies, he says, shall fail; forms of knowledge shall cease; but charity never fails; which is equivalent to its being always as it is: and though",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    },
+    {
+      "questionId": "gregory-h04",
+      "passageId": "passage_1171cb9d2c12b69b723b92a94ef0ce64",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "locator": "Source paragraph 075",
+      "ordinal": 0,
+      "role": "DIRECT_ANSWER",
+      "contentSha256": "4c3b0549d414cb4aa20c85c9aed849ab8136672073aa72ae4b68d13cf2441da6",
+      "sourceUrl": "https://www.newadvent.org/fathers/2915.htm",
+      "excerpt": "Whenever, then, humanity shall have reached the plenitude that belongs to it, this on-streaming movement of production will altogether cease; it will have touched its destined bourn, and a new order of things quite distinct from the present precession of birth",
+      "sourceAttributionStatus": "UNREVIEWED",
+      "sourceSpeakerName": null,
+      "editorialStatus": "TEXT_CHECKED_NOT_DOCTRINALLY_CERTIFIED"
+    }
+  ]
+}
