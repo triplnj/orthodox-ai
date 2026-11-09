@@ -23,3 +23,18 @@ The transaction would execute only against Neon **branch ID `br-empty-breeze-asd
 
 ## Status
 **TASK 3 IN PROGRESS, NOT COMPLETE**; no Vercel database or Chat requests have been connected to the new clone, and no private user data has been deleted. No production modifications.
+
+## User-approved sanitization and Vercel branch-only credentials
+
+After explicit user approval to delete copied private records **only in the new test clone**, the first transaction was fully rolled back by the clone's `LibraryStagingGuard_purpose_check` check constraint. After verifying counts were unchanged, a second single transaction (targeting only `br-empty-breeze-asd2dqrq`) expanded that constraint, truncated cloned users and dependent private records, and set the new guard `PATRISTIC_CHAT_ISOLATED_PREVIEW`.
+
+**Read-back after commit:**
+- Isolated clone `br-empty-breeze-asd2dqrq`: users **0**, sessions **0**, conversations **0**, ChatTurn **0**, chat_messages **0**, email verification tokens **0**, password reset tokens **0**, billing webhook events **0**, BlogPost **0**; LibraryPassage **297**. Guard branch/purpose both match the isolated clone.
+- Source staging `br-spring-frost-assfzje6`: users **67**, sessions **89**, conversations **24**, turns **114**, chat messages **844**, blogs **3**; LibraryPassage **297**; original staging guard unchanged.
+- Production `br-flat-mode-as1mxdf8`: users **74**, sessions **96**, conversations **29**, turns **125**, chat messages **864**, blogs **4**. No destructive SQL was executed on it.
+
+Four **branch-specific Preview** variables were stored in Vercel for `experiment/patristic-catalog-author-v2-20261109`: `DATABASE_URL`, `DIRECT_URL`, `ORTHODOXAI_CHAT_ISOLATED_PREVIEW=1`, and `ORTHODOXAI_CHAT_PREVIEW_DB_BRANCH_ID=br-empty-breeze-asd2dqrq`. Credentials were passed from Neon to Vercel without exposing their values in the user-facing record. Vercel metadata confirms that all four are encrypted and scoped exactly to the experimental git branch, not production or all Preview branches.
+
+The now-approved SQL is already executed on the child branch; the file `REQUIRES-APPROVAL-isolate-chat-preview.sql` is a historical plan, **not** an instruction to rerun. Its initial form lacked the revised purpose check constraint and would fail without adjustment.
+
+**Still required for task 3:** app-level integration of reviewed source resolver into Chat runtime, a QA-only test identity and safe off-switches for billing/outbound email, a new preview deployment built with current branch-specific credentials, and an actual authenticated Chat end-to-end test. None of those are claimed complete.
