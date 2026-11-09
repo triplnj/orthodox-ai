@@ -35,9 +35,17 @@ async function downloadText(url,request=fetch){
  if(u.protocol!=="https:"||![
   "www.newadvent.org","en.wikisource.org","www.stninaorlando.org","patrologia-lib.ru"
  ].includes(u.hostname))throw Error("Unapproved public source host");
- const response=await request(url,{signal:AbortSignal.timeout(16000),headers:{"User-Agent":"OrthodoxAI-Staging-Editorial-Audit/1.0"}});
- if(!response.ok)throw Error("Source HTTP "+response.status);
- const body=await response.text();
+ let body=null,lastError=null;
+ for(let attempt=0;attempt<3;attempt++){
+  try{
+   const response=await request(url,{signal:AbortSignal.timeout(18000),headers:{"User-Agent":"OrthodoxAI-Staging-Editorial-Audit/1.0"}});
+   if(!response.ok)throw Error("Source HTTP "+response.status);
+   body=await response.text();break;
+  }catch(err){
+   lastError=err;
+  }
+ }
+ if(body===null)throw Error("Source unavailable after 3 tries: "+String(lastError?.message??lastError));
  if(body.length>7000000)throw Error("Oversize source page");
  const $=load(body);
  $("script,style,nav,footer,header,form").remove();
