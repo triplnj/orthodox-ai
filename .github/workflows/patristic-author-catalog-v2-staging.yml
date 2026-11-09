@@ -14,6 +14,8 @@ on:
       - 'scripts/patristics/assess-passage-attribution.mjs'
       - 'tests/patristic-passage-attribution-gate.test.mjs'
       - 'scripts/patristics/integrate-evidence-staging.mjs'
+      - 'scripts/patristics/rank-staging-source-evidence.mjs'
+      - 'tests/patristic-rank-staging-source-evidence.test.mjs'
       - 'tests/fixtures/patristic-chat-staging-integration.json'
   workflow_dispatch:
 permissions:
@@ -32,7 +34,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
