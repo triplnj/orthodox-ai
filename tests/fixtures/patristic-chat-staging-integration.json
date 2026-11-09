@@ -37,9 +37,10 @@
     {
       "id": "gregory-duplicate",
       "question": "What does St. Gregory of Nyssa teach about the soul?",
-      "expectedScope": "NO_AUTOMATIC_FILTER",
+      "expectedScope": "SINGLE_AUTHOR",
       "expectedAuthor": "St. Gregory of Nyssa",
-      "expectCandidate": false
+      "expectCandidate": true,
+      "topicTerms": "soul"
     },
     {
       "id": "unknown-named",
