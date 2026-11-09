@@ -8,9 +8,10 @@ test("a source author does not automatically become the speaker",()=>{
  assert.equal(b.attributionAllowed,false);
 });
 test("human-reviewed speaker and exact locator permit attributed quotation",()=>{
- const a=assess({workAuthor:"St. Gregory of Nyssa",passage:"Most certainly, the Virgin replied...",reviewedSpeaker:"St. Macrina",sourceLocator:"Source paragraph 018"});
+ const a=assess({workAuthor:"St. Gregory of Nyssa",passage:"Most certainly, the Virgin replied...",reviewedSpeaker:"St. Macrina",sourceLocator:"Source paragraph 018",reviewRecordId:"review-gregory-018"});
  assert.equal(a.attributionAllowed,true);assert.equal(a.speaker,"St. Macrina");
  assert.equal(assess({workAuthor:"St. Gregory of Nyssa",passage:"Quote",reviewedSpeaker:"St. Macrina"}).attributionAllowed,false);
+ assert.equal(assess({workAuthor:"St. Gregory of Nyssa",passage:"Quote",reviewedSpeaker:"St. Macrina",sourceLocator:"Source paragraph 018"}).attributionAllowed,false);
 });
 test("passage and bibliographic identity required",()=>{
  assert.throws(()=>assess({workAuthor:"",passage:"Quoted"}),/required/);
