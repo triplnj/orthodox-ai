@@ -49,9 +49,9 @@ export function resolveAuthorCatalogV2(question,catalog){
  // For example, "Basil the Great and St Maximus" must never silently scope to Basil.
  let unmatched=q;
  for(const [alias] of specific.sort((a,b)=>b[0].length-a[0].length)){
-  unmatched=(" "+unmatched+" ").replace(" "+alias+" "," ").trim().replace(/\\s+/g," ");
+  unmatched=(" "+unmatched+" ").replace(" "+alias+" "," ").trim().replace(/\s+/g," ");
  }
- const unknownTitled=/(?:^| )(?:saint|st|sveti|svetog|svetom|свети|светог|светом|св)(?: +)(?:[\\p{L}][\\p{L}\\p{N}]*)(?: |$)/u.test(" "+unmatched+" ");
+ const unknownTitled=/(?:^| )(?:saint|st|sveti|svetog|svetom|свети|светог|светом|св)(?: +)(?:[\p{L}][\p{L}\p{N}]*)(?: |$)/u.test(" "+unmatched+" ");
  if(unknownTitled)return blocked("REVIEW_REQUIRED","ADDITIONAL_UNRESOLVED_TITLED_AUTHOR",authors,comparison);
  const selected=[...found].map(k=>groups.get(k));
  if(selected.some(g=>g.ids.size===0))return blocked("REVIEW_REQUIRED","AUTHOR_NOT_INDEXED",authors,comparison);
