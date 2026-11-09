@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/patristic-new-works-diagnostic-once.yml'
+      - 'tests/patristic-clean-new-works-preview.test.mjs'
+      - 'scripts/patristics/clean-new-works-preview.mjs'
   workflow_dispatch:
 
 permissions:
