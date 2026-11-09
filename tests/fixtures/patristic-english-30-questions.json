@@ -13,9 +13,12 @@
         "Source paragraph 005",
         "Source paragraph 006"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_5d6994b4584842125a85bda89285385e",
+        "passage_11f3a8aa929d88a2c41c882a58681bfe"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-02",
@@ -27,9 +30,12 @@
         "Source paragraph 006",
         "Source paragraph 007"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_11f3a8aa929d88a2c41c882a58681bfe",
+        "passage_3efddd37c7820b634dc4b7b3d4feb24e"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-03",
@@ -41,9 +47,12 @@
         "Source paragraph 009",
         "Source paragraph 010"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_23636d99de952f351e8e2760b480b66d",
+        "passage_457b51e6c32ccd5316038b9ab32fd4f9"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-04",
@@ -55,9 +64,12 @@
         "Source paragraph 008",
         "Source paragraph 010"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_0cc05e9a6810e080ee30f5fda78bae28",
+        "passage_a48a4995e8897d976953a7875271f958"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-05",
@@ -69,9 +81,12 @@
         "Source paragraph 005",
         "Source paragraph 007"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_5d9683ebc43d601e3e19e68e255ddf4c",
+        "passage_3efddd37c7820b634dc4b7b3d4feb24e"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-06",
@@ -82,9 +97,12 @@
       "candidateLocators": [
         "Source paragraph 004"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_0f9edd2fe3a06bcbcd259a5c61f85419",
+        "passage_04f9eee90d6b19e8fc8f510cbe63a4c9"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-07",
@@ -96,9 +114,12 @@
         "Source paragraph 011",
         "Source paragraph 016"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_20a5267628e3edce04c2f2b903cd0cb2",
+        "passage_665cb860b78da1f2e41b68c485373e48"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-08",
@@ -109,9 +130,11 @@
       "candidateLocators": [
         "Source paragraph 012"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_c67c88e41b126454c779231d7c04349e"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-09",
@@ -123,9 +146,12 @@
         "Source paragraph 014",
         "Source paragraph 015"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_93ccc96f7cda643f2b7659b55966e1d3",
+        "passage_d9dba21fd8cb86416e6d9a70902fd9e2"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "basil-10",
@@ -137,9 +163,12 @@
         "Source paragraph 016",
         "Source paragraph 018"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_665cb860b78da1f2e41b68c485373e48",
+        "passage_c37f56a5456962705213c87426573379"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-01",
@@ -151,9 +180,12 @@
         "Source paragraph 007",
         "Source paragraph 010"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_8d73b0f56f08d0d7c066b65eea7003f7",
+        "passage_a1f35922379108a63b8a4af6b2d217ac"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-02",
@@ -165,9 +197,12 @@
         "Source paragraph 007",
         "Source paragraph 011"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_a1f35922379108a63b8a4af6b2d217ac",
+        "passage_c31da21bb65f4e1c15a8bdbcccfcb4a5"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-03",
@@ -180,9 +215,12 @@
         "Source paragraph 013",
         "Source paragraph 014"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_3f6885fc432e02d053aa1ec24d087abc",
+        "passage_b8a381143c743538bc2db4d3ad31f11b"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-04",
@@ -194,9 +232,12 @@
         "Source paragraph 015",
         "Source paragraph 016"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_60da4e2222f71d6ed21d054dadbf697e",
+        "passage_c39ba0e4e5246619bc07263091d59bd9"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-05",
@@ -208,9 +249,12 @@
         "Source paragraph 018",
         "Source paragraph 019"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_0d84ee0e6f6f030f9812d5f7ba6e9647",
+        "passage_4aa9e066169a0b43a7a89b1564d12766"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-06",
@@ -223,9 +267,12 @@
         "Source paragraph 021",
         "Source paragraph 030"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_03ea138de2b4b572b4263beb84fc7b2b",
+        "passage_89f3372b79626c0f894e1a5157983020"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-07",
@@ -237,9 +284,12 @@
         "Source paragraph 025",
         "Source paragraph 027"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_bd51d8ef69e7700890b6a23d17f3add3",
+        "passage_54348860783a8490612970444d8a1996"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-08",
@@ -251,9 +301,12 @@
         "Source paragraph 047",
         "Source paragraph 048"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_dcfb1b54430c01c43e18c6bc55654d2e",
+        "passage_361ff373e798b5c6eeadb3397c6ecdec"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-09",
@@ -265,9 +318,12 @@
         "Source paragraph 041",
         "Source paragraph 042"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_b18c96d20a0ef10233922960f6d35a1e",
+        "passage_d3959074e92e56876a7d3fa56c5d4048"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "chrysostom-10",
@@ -280,9 +336,12 @@
         "Source paragraph 058",
         "Source paragraph 059"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_5ddb1eb3d125dcf4cf53a0d8f849f7a1",
+        "passage_dbc17c39746658e53afce9fbc449eeb4"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-01",
@@ -295,9 +354,12 @@
         "Source paragraph 002",
         "Source paragraph 004"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_64b7e96400d670613b63876288ed49a8",
+        "passage_de04e5cf05a1e0ed33f1f58286dc4a00"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-02",
@@ -310,9 +372,12 @@
         "Source paragraph 007",
         "Source paragraph 008"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_8164d200ff50233c638a84ae183d15c1",
+        "passage_b13386ff74d3196a4e35b84460e12f47"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-03",
@@ -324,9 +389,12 @@
         "Source paragraph 010",
         "Source paragraph 011"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_f8a0c80fe4c9742e15cb825d06a2cebf",
+        "passage_132a0f79b97dfdedac88e756967f4965"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-04",
@@ -339,9 +407,12 @@
         "Source paragraph 020",
         "Source paragraph 021"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_0f44ad24d1d2b1697c11909a7d4e861f",
+        "passage_7f0b9553ccfa60489e5266a550f1c1a6"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-05",
@@ -353,9 +424,12 @@
         "Source paragraph 019",
         "Source paragraph 020"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_7f0b9553ccfa60489e5266a550f1c1a6",
+        "passage_32d2b419f9186d80f9a9592824f5ea89"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-06",
@@ -367,9 +441,12 @@
         "Source paragraph 030",
         "Source paragraph 031"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_29f709a214bb8ffce0e6c2986cd5d58a",
+        "passage_940edf0048eea58abb1a7c9238cfc761"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-07",
@@ -382,9 +459,12 @@
         "Source paragraph 035",
         "Source paragraph 037"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_587b24a75d24cfdd01f3f6a83d28a773",
+        "passage_20970ff5facbdf43c4b642d62c865f14"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-08",
@@ -398,9 +478,13 @@
         "Source paragraph 059",
         "Source paragraph 061"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_b00ea62bca34dc9d25c765758eaafdc4",
+        "passage_2c23a577d1aa190805d8803df587ba61",
+        "passage_c3b81c85b864301267535ce02846bcce"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-09",
@@ -414,9 +498,13 @@
         "Source paragraph 054",
         "Source paragraph 086"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_68307dccb2e4fbd8a0a5fd937aecfae5",
+        "passage_7f0210eb5322a922eff191b5842a004a",
+        "passage_2b61c4d3c9020f81ef53655577a4a127"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     },
     {
       "id": "gregory-10",
@@ -429,9 +517,12 @@
         "Source paragraph 087",
         "Source paragraph 088"
       ],
-      "reviewStatus": "PENDING_SOURCE_REVIEW",
-      "relevantPassageIds": [],
-      "note": "Candidate locators are navigation hints, not reviewed ground-truth evidence."
+      "reviewStatus": "SOURCE_TEXT_CHECKED_PENDING_EDITORIAL_APPROVAL",
+      "relevantPassageIds": [
+        "passage_898af8210c45ec5f730043d127e46ad8",
+        "passage_64d3d20634439a3da46b71ba89ca65b5"
+      ],
+      "note": "Linked to inspected source-text passages, distinguishing direct evidence, objections and context. Independent theological editorial approval remains pending."
     }
   ]
 }
