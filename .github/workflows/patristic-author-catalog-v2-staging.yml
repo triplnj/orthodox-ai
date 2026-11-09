@@ -27,6 +27,7 @@ on:
       - 'tests/patristic-chat-preview-isolation.test.mjs'
       - 'src/lib/preview/chat-isolation.ts'
       - 'src/app/api/chat/route.ts'
+      - 'src/lib/patristics/preview-gregory-research.ts'
       - 'tests/fixtures/patristic-gregory-logical-identity-review.json'
       - 'tests/fixtures/patristic-gregory-speaker-evidence-review.json'
       - 'tests/fixtures/patristic-staging-quarantined-fragments.json'
@@ -46,6 +47,13 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Type-check isolated Preview Chat without accessing a database
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@ep-invalid.neon.tech/placeholder
+          DIRECT_URL: postgresql://placeholder:placeholder@ep-invalid.neon.tech/placeholder
+        run: |
+          npx prisma generate
+          npx tsc --noEmit
       - name: Independent resolver unit tests
         run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs tests/patristic-reviewed-logical-author.test.mjs tests/patristic-chat-preview-isolation.test.mjs
       - name: Verify protected staging database
