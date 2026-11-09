@@ -5,7 +5,7 @@
 const TEST_BRANCH="experiment/patristic-catalog-author-v2-20261109";
 const ISOLATED_DB_BRANCH="br-empty-breeze-asd2dqrq";
 export type PreviewCounts={
- users:bigint|number;sessions:bigint|number;conversations:bigint|number;
+ users:bigint|number;nonTestUsers:bigint|number;sessions:bigint|number;conversations:bigint|number;
  chatTurns:bigint|number;messages:bigint|number;emailTokens:bigint|number;
  resetTokens:bigint|number;journals:bigint|number;usageLogs:bigint|number;
  reservations:bigint|number;feedback:bigint|number;
@@ -29,30 +29,16 @@ export function assertIsolatedPreviewDatabase(rows:PreviewGuardRow[]){
    rows[0].purpose!=="PATRISTIC_CHAT_ISOLATED_PREVIEW")
   throw Error("PREVIEW_CHAT_BLOCKED: database guard does not prove isolation");
  const r=rows[0];
- const fields:(keyof PreviewCounts)[]=["users","sessions","conversations","chatTurns",
- "messages","emailTokens","resetTokens","journals","usageLogs","reservations","feedback"];
- for(const field of fields){
-  if(BigInt(r[field])!==0n)throw Error("PREVIEW_CHAT_BLOCKED: inherited user data exists");
- }
+ if(BigInt(r.nonTestUsers)!==0n)throw Error("PREVIEW_CHAT_BLOCKED: unapproved user accounts remain");
+ // Once scrubbed, QA may create accounts only using the dedicated @example.test domain.
+ // The branch marker itself must only be set AFTER a zero-data sanitization audit.
 }
 export async function enforceChatPreviewIsolation(
- query:(sql:TemplateStringsArray)=>Promise<PreviewGuardRow[]>,
+ fetchGuard:()=>Promise<PreviewGuardRow[]>,
  env:NodeJS.ProcessEnv=process.env
 ){
  if(!assertIsolatedPreviewConfig(env))return;
  // Query uses one fixed SQL literal, not data supplied by callers.
- const rows=await query`SELECT g."branchId",g."purpose",
- (SELECT count(*) FROM users) "users",
- (SELECT count(*) FROM sessions) "sessions",
- (SELECT count(*) FROM "Conversation") "conversations",
- (SELECT count(*) FROM "ChatTurn") "chatTurns",
- (SELECT count(*) FROM chat_messages) "messages",
- (SELECT count(*) FROM email_verification_tokens) "emailTokens",
- (SELECT count(*) FROM password_reset_tokens) "resetTokens",
- (SELECT count(*) FROM journal_entries) "journals",
- (SELECT count(*) FROM usage_logs) "usageLogs",
- (SELECT count(*) FROM "AiReservation") "reservations",
- (SELECT count(*) FROM "UserActivationFeedback") "feedback"
- FROM "LibraryStagingGuard" g`;
+ const rows=await fetchGuard();
  assertIsolatedPreviewDatabase(rows);
 }
