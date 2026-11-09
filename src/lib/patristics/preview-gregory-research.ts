@@ -6,6 +6,7 @@ import {prisma} from "@/lib/prisma";
 import {assertIsolatedPreviewConfig} from "@/lib/preview/chat-isolation";
 import type {PatristicResearchContext,PatristicResearchSource} from "./build-patristic-research-context";
 import identity from "../../../tests/fixtures/patristic-gregory-logical-identity-review.json";
+import {resolveReviewedLogicalAuthor} from "../../../scripts/patristics/resolve-reviewed-logical-author.mjs";
 type PassageRow={passageId:string;contentSha256:string;content:string;locator:string;
  sourceUrl:string;authorName:string;workTitle:string;editionId:string};
 const GREGORY_NAMED=/(?:\b(?:gregory\s+of\s+nyssa|gregorius\s+nyssenus|grigorije\s+niski|grigorija\s+niskog)\b|григориј[аеу]?\s+ниск[оигм]*)/iu;
@@ -18,6 +19,17 @@ export async function buildIsolatedGregoryResearch(
  query:string, env:NodeJS.ProcessEnv=process.env
 ):Promise<PatristicResearchContext|null>{
  if(!assertIsolatedPreviewConfig(env)||!GREGORY_NAMED.test(query))return null;
+ const catalog=await prisma.$queryRaw<Array<{id:string;canonicalName:string;nameVariants:string[];indexed:number}>>`
+  SELECT a."id",a."canonicalName",a."nameVariants",count(p.embedding)::int AS indexed
+  FROM "LibraryAuthor" a LEFT JOIN "LibraryWork" w ON w."authorId"=a."id"
+  LEFT JOIN "LibraryEdition" e ON e."workId"=w."id"
+  LEFT JOIN "LibraryPassage" p ON p."editionId"=e."id"
+  GROUP BY a."id",a."canonicalName",a."nameVariants"`;
+ const route=resolveReviewedLogicalAuthor(query,catalog,identity);
+ if(route.status!=="EXACT_CATALOG_MATCH"||route.scope!=="SINGLE_AUTHOR"||
+   route.authors.length!==1||route.authors[0]!=="St. Gregory of Nyssa"||
+   !Array.isArray(route.authorIds)||route.authorIds.length!==2)
+  throw Error("Isolated Gregory pilot rejected an unresolved or multi-author scope");
  const pins=identity.sourceMatchedPassageFingerprints;
  if(pins.length!==6||new Set(pins.map(p=>p.passageId)).size!==6)throw Error("Untrusted Gregory source manifest");
  const ids=pins.map(p=>p.passageId);
