@@ -29,7 +29,7 @@ export function assertIsolatedPreviewDatabase(rows:PreviewGuardRow[]){
    rows[0].purpose!=="PATRISTIC_CHAT_ISOLATED_PREVIEW")
   throw Error("PREVIEW_CHAT_BLOCKED: database guard does not prove isolation");
  const r=rows[0];
- if(BigInt(r.nonTestUsers)!==0n)throw Error("PREVIEW_CHAT_BLOCKED: unapproved user accounts remain");
+ if(BigInt(r.nonTestUsers)!==BigInt(0))throw Error("PREVIEW_CHAT_BLOCKED: unapproved user accounts remain");
  // Once scrubbed, QA may create accounts only using the dedicated @example.test domain.
  // The branch marker itself must only be set AFTER a zero-data sanitization audit.
 }
