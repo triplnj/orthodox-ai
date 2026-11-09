@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/patristic-two-new-works-stage-once.yml'
+      - 'tests/patristic-clean-new-works-preview.test.mjs'
+      - 'scripts/patristics/clean-new-works-preview.mjs'
 
 permissions:
   contents: read
