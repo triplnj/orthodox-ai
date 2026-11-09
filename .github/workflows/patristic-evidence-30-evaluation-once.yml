@@ -41,6 +41,11 @@ jobs:
           LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: node scripts/patristics/evaluate-30-evidence-staging.mjs > "$RUNNER_TEMP/patristic-evidence-30.json"
+      - name: Audit evidence misses and rank regressions
+        shell: bash
+        run: |
+          node scripts/patristics/audit-30-evidence-report.mjs "$RUNNER_TEMP/patristic-evidence-30.json" > "$RUNNER_TEMP/patristic-evidence-30-audit.md"
+          cat "$RUNNER_TEMP/patristic-evidence-30-audit.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Write human-readable metric comparison to job summary
         shell: bash
         run: |
@@ -70,6 +75,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: patristic-evidence-30-evaluation
-          path: ${{ runner.temp }}/patristic-evidence-30.json
+          path: |
+            ${{ runner.temp }}/patristic-evidence-30.json
+            ${{ runner.temp }}/patristic-evidence-30-audit.md
           retention-days: 14
           if-no-files-found: error
