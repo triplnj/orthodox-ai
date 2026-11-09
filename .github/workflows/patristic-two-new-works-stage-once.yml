@@ -1,0 +1,71 @@
+name: Patristic Two New Works - Guarded Staging Import
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-two-new-works-stage-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-two-new-works-staging-only
+  cancel-in-progress: false
+
+jobs:
+  source-stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Source and manuscript integrity regression tests
+        run: node --test tests/patristic-new-works-preview.test.mjs tests/patristic-clean-new-works-preview.test.mjs tests/patristic-new-works-question-plan.test.mjs
+      - name: Verify exact isolated Neon staging connection
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: |
+          test "$LIBRARY_STAGING_BRANCH_ID" = 'br-spring-frost-assfzje6'
+          node scripts/patristics/check-staging-connection.mjs
+      - name: Reconstruct only historic NPNF source pages
+        run: node scripts/patristics/preview-new-works-staging.mjs "$RUNNER_TEMP/new-works.preview.json" > "$RUNNER_TEMP/new-works.preview-summary.json"
+      - name: Remove paratext and restore four Athanasius numbered sections
+        run: node scripts/patristics/clean-new-works-preview.mjs "$RUNNER_TEMP/new-works.preview.json" "$RUNNER_TEMP/new-works.clean.json" > "$RUNNER_TEMP/new-works.clean-summary.json"
+      - name: Verify exact SHA-256 of ten canonical source sections
+        run: node scripts/patristics/prepare-pinned-new-works-staging.mjs "$RUNNER_TEMP/new-works.clean.json" "$RUNNER_TEMP/new-works.manifest.json" > "$RUNNER_TEMP/new-works.pinned-summary.json"
+      - name: Stage the two new editions, without embeddings or live chat
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          PATRISTIC_NEW_WORKS_STAGE_APPROVAL: STAGE_TWO_NEW_WORKS_UNREVIEWED
+        run: node scripts/patristics/stage-pinned-new-works-staging.mjs "$RUNNER_TEMP/new-works.clean.json" > "$RUNNER_TEMP/new-works.staged-result.json"
+      - name: Summarize independently reproducible staging result
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/new-works.staged-result.json','utf8'));
+          if(r.status!=='TWO_NEW_WORKS_STAGED_UNREVIEWED'||r.branchId!=='br-spring-frost-assfzje6'||r.counts.passages!==10||r.embeddingRequests!==0)
+            throw Error('Unexpected staged source report');
+          process.stdout.write('### Two new historical editions staged — unreviewed\n\n'+
+            'Neon staging only. **No embeddings, no production use, no doctrinal certification.**\n\n'+
+            '| Edition ID |\n|---|\n'+r.editionIds.map(id=>'| `'+id+'` |').join('\n')+
+            '\n\nPassages: '+r.counts.passages+'\n');
+          NODE
+      - name: Save source provenance, pinned manuscript and staging report
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-two-new-works-staged-unreviewed
+          path: |
+            ${{ runner.temp }}/new-works.pinned-summary.json
+            ${{ runner.temp }}/new-works.clean-summary.json
+            ${{ runner.temp }}/new-works.staged-result.json
+          retention-days: 21
+          if-no-files-found: error
