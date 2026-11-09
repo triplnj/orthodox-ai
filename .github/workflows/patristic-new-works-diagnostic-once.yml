@@ -1,0 +1,61 @@
+name: Patristic New Works - Isolated Diagnostic (No DB)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-new-works-diagnostic-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose-source-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Syntax check the entire new works toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in scripts/patristics/{preview-new-works-staging,clean-new-works-preview,prepare-pinned-new-works-staging,stage-pinned-new-works-staging,index-two-new-works-staging,evaluate-eight-new-works-staging}.mjs; do
+            echo "::group::Syntax $script"
+            node --check "$script"
+            echo "::endgroup::"
+          done
+      - name: Isolate regression tests without external services
+        run: node --test tests/patristic-new-works-preview.test.mjs tests/patristic-clean-new-works-preview.test.mjs tests/patristic-new-works-question-plan.test.mjs tests/patristic-index-two-new-works-staging.test.mjs tests/patristic-eight-new-works-qa.test.mjs tests/patristic-frozen-baseline-corpus.test.mjs
+      - name: Fetch historical sources and record exact output
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/patristics/preview-new-works-staging.mjs "$RUNNER_TEMP/source-preview.json" | tee "$RUNNER_TEMP/01-preview-summary.json"
+      - name: Verify normalized sections against source transcript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/patristics/clean-new-works-preview.mjs "$RUNNER_TEMP/source-preview.json" "$RUNNER_TEMP/source-clean.json" | tee "$RUNNER_TEMP/02-clean-summary.json"
+      - name: Compare source section hashes with pinned reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/patristics/prepare-pinned-new-works-staging.mjs "$RUNNER_TEMP/source-clean.json" "$RUNNER_TEMP/source-manifest.json" | tee "$RUNNER_TEMP/03-pinned-summary.json"
+      - name: Publish nonsecret diagnostic files even when a check fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-new-works-offline-diagnostic
+          path: |
+            ${{ runner.temp }}/01-preview-summary.json
+            ${{ runner.temp }}/02-clean-summary.json
+            ${{ runner.temp }}/03-pinned-summary.json
+          retention-days: 14
+          if-no-files-found: warn
