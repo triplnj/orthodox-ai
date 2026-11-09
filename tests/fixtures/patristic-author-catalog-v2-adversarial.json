@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "purpose": "POST_DISCOVERY_ADVERSARIAL_REGRESSION_NOT_BLINDED_HOLDOUT",
+  "cases": [
+    {
+      "id": "regression-01",
+      "question": "What did St. Basil the Great and Maximus the Confessor teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-02",
+      "question": "What did Basil the Great and Photios the Great teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-03",
+      "question": "Compare Basil the Great and Maximus the Confessor on Christ.",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-04",
+      "question": "What did St. Basil the Great teach about St. Maximus the Confessor?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-05",
+      "question": "What did the holy fathers teach about repentance?",
+      "expectedScope": "GLOBAL"
+    },
+    {
+      "id": "regression-06",
+      "question": "Шта су Свети Оци учили о љубави?",
+      "expectedScope": "GLOBAL"
+    },
+    {
+      "id": "regression-07",
+      "question": "What is St. Basil the Great's view of Basil the Great?",
+      "expectedScope": "SINGLE_AUTHOR"
+    },
+    {
+      "id": "regression-08",
+      "question": "Why did St. John Chrysostom cite Basil the Great?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-09",
+      "question": "What does Gregory of Nyssa say?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-10",
+      "question": "What does Gregorius Nyssenus teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-11",
+      "question": "Шта учи Свети Василије Велики?",
+      "expectedScope": "SINGLE_AUTHOR"
+    },
+    {
+      "id": "regression-12",
+      "question": "Шта говори Василије Велики?",
+      "expectedScope": "SINGLE_AUTHOR"
+    },
+    {
+      "id": "regression-13",
+      "question": "What does Augustine of Hippo teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-14",
+      "question": "What do Saint Cyril of Jerusalem and St. Athanasius of Alexandria teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-15",
+      "question": "Explain Cyril of Jerusalem and Athanasius of Alexandria in contrast.",
+      "expectedScope": "MULTI_AUTHOR"
+    },
+    {
+      "id": "regression-16",
+      "question": "What did St. Basil the Great and an unknown saint discuss?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-17",
+      "question": "What did St. Basil the Great and St. Gregory of Nyssa teach?",
+      "expectedScope": "NO_AUTOMATIC_FILTER"
+    },
+    {
+      "id": "regression-18",
+      "question": "Can a basil plant grow?",
+      "expectedScope": "GLOBAL"
+    },
+    {
+      "id": "regression-19",
+      "question": "Can you compare repentance and faith according to St. Basil the Great?",
+      "expectedScope": "SINGLE_AUTHOR"
+    }
+  ]
+}
