@@ -147,7 +147,7 @@ jobs:
           const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-source-text-audit.json','utf8'));
           if(r.sourceFailures.length)process.stdout.write('Source provider unavailable; classification withheld; production remains blocked.\\n');
           NODE
-            if node --input-type=module -e 'const r=JSON.parse(require("node:fs").readFileSync(process.env.RUNNER_TEMP+"/patristic-source-text-audit.json","utf8"));process.exit(r.sourceFailures.length?1:0)'; then
+            if node -e 'const r=JSON.parse(require("node:fs").readFileSync(process.env.RUNNER_TEMP+"/patristic-source-text-audit.json","utf8"));process.exit(r.sourceFailures.length?1:0)'; then
               node scripts/patristics/finalize-staging-source-review.mjs "$RUNNER_TEMP/patristic-source-text-audit.json" "$RUNNER_TEMP/patristic-source-review-classification.json" >> "$GITHUB_STEP_SUMMARY"
             fi
           else
