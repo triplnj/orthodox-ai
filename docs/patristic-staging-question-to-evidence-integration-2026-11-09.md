@@ -35,3 +35,8 @@ The staging GitHub workflow now evaluates all 8 integration cases, publishes per
 
 ## Next genuine end-to-end milestone
 To test generated Chat answers: construct a separate authenticated non-production application environment, with dedicated staging DB, isolated test user and quotas, correctly configured OpenAI key and source review checks. Exercise the actual `/api/chat` endpoint, validate claim-level grounding against real sourced passage locators and negative examples, then audit source cards and citation attribution. None of those checks is claimed complete here.
+
+## Vercel preview isolation audit
+Vercel project `orthodox-ai-24li` has a preview deployment for `experiment/patristic-catalog-author-v2-20261109`, but branch-specific preview environment-variable metadata contains **no DATABASE_URL override** for this branch. A generic `DATABASE_URL` and `DIRECT_URL` targeting `preview` are present. Their endpoints were deliberately not decrypted. Consequently the preview Chat endpoint could use a non-staging database, and invoking it would write conversation and quota records. **No HTTP Chat test was sent to that preview.** An isolated preview must have explicitly scoped staging credentials and its own safe test user before E2E execution.
+
+This isolation concern is separate from the 5/8 read-only evidence tests and is a deployment blocker.
