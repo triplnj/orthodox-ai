@@ -7,7 +7,7 @@ const fold=s=>String(s).normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLocal
 const has=(input,alias)=>(" "+input+" ").includes(" "+alias+" ");
 const compare=/(?:\bcompare\b|\bcompared\b|\bversus\b|\bvs\.?\b|\bdifference(?:s)? between\b|\bcontrast\b|\bboth\b|\bbetween\b|упореди|пореди|упоред|разлика|поређ|између)/iu;
 const honorific=/(?:\b(?:saint|st\.?|holy father)\s+[a-z]|(?:свети|светог|светом|св\.)\s+\p{L}|\bsveti\s+[a-z])/iu;
-const namedSlot=/(?:\b(?:what (?:does|did)|why does|how does|according to|about)\s+[A-Z][a-z]{2,}\b)/;
+const namedSlot=/(?:\b(?:What (?:does|did)|Why does|How does|According to|About)\s+[A-Z][a-z]{2,}\b)/;
 export function buildAuthorAliasIndex(catalog,registry){
  if(!Array.isArray(catalog)||catalog.length===0||!registry||registry.schemaVersion!==1||
     registry.status!=="REVIEWED_ALIAS_CANDIDATES_SHADOW_ONLY"||!Array.isArray(registry.entries))
