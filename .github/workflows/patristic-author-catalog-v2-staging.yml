@@ -9,6 +9,8 @@ on:
       - 'scripts/patristics/evaluate-author-catalog-v2-staging.mjs'
       - 'tests/fixtures/patristic-author-catalog-v2-holdout.json'
       - 'tests/patristic-resolve-author-catalog-v2.test.mjs'
+      - 'tests/patristic-author-catalog-v2-adversarial.test.mjs'
+      - 'tests/fixtures/patristic-author-catalog-v2-adversarial.json'
       - 'scripts/patristics/assess-passage-attribution.mjs'
       - 'tests/patristic-passage-attribution-gate.test.mjs'
   workflow_dispatch:
@@ -28,7 +30,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-passage-attribution-gate.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
@@ -45,14 +47,17 @@ jobs:
           node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
           import {readFileSync} from 'node:fs';
           const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-author-catalog-v2-holdout.json','utf8'));
-          if(r.status!=='CATALOG_AUTHOR_V2_STAGING_HOLDOUT'||r.total!==18||r.databaseWrites!==0||r.productionChanges!==0||r.embeddingRequests!==0)throw Error('Unexpected staging report');
+          if(r.status!=='CATALOG_AUTHOR_V2_STAGING_HOLDOUT'||r.total!==18||r.adversarialTotal!==19||r.databaseWrites!==0||r.productionChanges!==0||r.embeddingRequests!==0)throw Error('Unexpected staging report');
           const lines=['## Independent author recognition holdout','',
             'Correct routing: '+r.correctCount+'/'+r.total+' ('+(r.accuracy*100).toFixed(1)+'%)',
+            'Adversarial regression: '+r.adversarialCorrect+'/'+r.adversarialTotal,
             'Catalogue rows without name variants: '+r.missingVariantRows,
             'Duplicate indexed canonical names: '+r.duplicateCanonicalNames.join(', '),'',
             '| Case | Expected scope | Actual scope | Recognized authors | Correct |',
             '|---|---|---|---|---|'];
           for(const q of r.results)lines.push('| '+q.id+' | '+q.expectedScope+' | '+q.actualScope+' | '+q.authors.join(', ')+' | '+q.correct+' |');
+          lines.push('', '### Post-discovery adversarial regressions', '', '| Case | Expected | Actual | Correct |', '|---|---|---|---|');
+          for(const q of r.adversarialResults)lines.push('| '+q.id+' | '+q.expectedScope+' | '+q.actualScope+' | '+q.correct+' |');
           lines.push('','This is routing only, not passage attribution or answer correctness. Production untouched.');
           process.stdout.write(lines.join('\n')+'\n');
           NODE
