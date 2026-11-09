@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "purpose": "GREGORY_NYSSA_DIALOGUE_SPEAKER_REVIEW",
+  "stagingBranch": "br-spring-frost-assfzje6",
+  "bookAuthor": "St. Gregory of Nyssa",
+  "work": "On the Soul and the Resurrection",
+  "source": "https://www.newadvent.org/fathers/2915.htm",
+  "policy": {
+    "defaultSpeaker": "UNVERIFIED",
+    "narratorNotUniversalSpeaker": true,
+    "biblicalQuotationNotAuthorOriginal": true,
+    "speakerEvidenceNotQuotePublication": true
+  },
+  "reviewedPassages": [
+    {
+      "reviewRecordId": "gregory-dialogue-macrina-p003-20261109",
+      "passageId": "passage_d451a2cb7b4381904cece710504c14ff",
+      "editionId": "edition_7f982e9d2f0acc26526b91f0042dee75",
+      "locator": "Source paragraph 003",
+      "contentSha256": "74e821f527733d87d9eeca1f2d529abb198270f1456720b9fe46a62433c23f7a",
+      "speaker": "St. Macrina",
+      "role": "DIALOGUE",
+      "evidencePhrase": "asked the Teacher",
+      "sourceMatchStatus": "FULL_NORMALIZED_MATCH",
+      "mayQuoteDirectly": false
+    },
+    {
+      "reviewRecordId": "gregory-dialogue-gregory-opening-20261109",
+      "passageId": "pilot_gregory_opening_paragraph_4",
+      "editionId": "edition_a5ab16669e87b05abd9219553343d318",
+      "locator": "Opening dialogue — paragraph 4",
+      "contentSha256": "7af632e26203f87ef2c1f67ba7f06dd2bd918590c33cf60a7f4e5aef257d2334",
+      "speaker": "St. Gregory of Nyssa",
+      "role": "DIALOGUE",
+      "evidencePhrase": "With a heart still fermenting with my pain, I asked",
+      "sourceMatchStatus": "FULL_NORMALIZED_MATCH",
+      "mayQuoteDirectly": false
+    }
+  ],
+  "unapprovedPassages": [
+    {
+      "passageId": "pilot_gregory_macrina_first_response",
+      "reason": "SOURCE_CORRESPONDENCE_PARTIAL",
+      "mayQuoteDirectly": false
+    },
+    {
+      "passageId": "passage_3caf70e65932fa3b6f83a9452cb8a30f",
+      "reason": "APOSTOLIC_SCRIPTURE_REPORTED_BY_NARRATOR",
+      "mayQuoteDirectly": false
+    }
+  ]
+}
