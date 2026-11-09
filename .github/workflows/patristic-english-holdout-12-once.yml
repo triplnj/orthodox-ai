@@ -1,0 +1,76 @@
+name: Patristic English Holdout - 12 Questions (Staging Only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patristic-english-holdout-12-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patristic-holdout-12-staging
+  cancel-in-progress: false
+
+jobs:
+  holdout-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check holdout independence and offline guards
+        run: node --test tests/patristic-english-holdout-12.test.mjs tests/patristic-rerank-retrieval.test.mjs tests/patristic-evidence-retrieval-metrics.test.mjs
+      - name: Confirm protected staging branch
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: node scripts/patristics/check-staging-connection.mjs
+      - name: Evaluate frozen holdout without changing baseline
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/patristics/evaluate-12-holdout-staging.mjs > "$RUNNER_TEMP/patristic-holdout-12.json"
+      - name: Summarize holdout without implying theological accuracy
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-holdout-12.json','utf8'));
+          if(r.questionCount!==12||r.status!=='HOLDOUT_RETRIEVAL_QA_NOT_THEOLOGICAL_CERTIFICATION')
+            throw Error('Invalid holdout report');
+          const pct=x=>(x*100).toFixed(1)+'%';
+          const output=[
+            '## Frozen 12-question English holdout (same works, unused questions and passage IDs)',
+            '',
+            '**Provisional evidence retrieval metrics, NOT theological or editorial certification.**',
+            '',
+            '| Scope | Method | Hit@3 | Hit@5 | Hit@10 | Recall@10 | nDCG@10 | MRR |',
+            '|---|---|---:|---:|---:|---:|---:|---:|'
+          ];
+          for(const [scope,metrics] of Object.entries(r.summary)){
+            for(const method of ['baseline','reranked']){
+              const x=metrics[method];
+              output.push('| '+scope+' | '+method+' | '+['hit@3','hit@5','hit@10','recall@10','ndcg@10','reciprocalRank'].map(k=>pct(x[k])).join(' | ')+' |');
+            }
+          }
+          const failed=r.questions.filter(q=>q.searches['all-authors'].reranked['hit@10']===0).map(q=>q.questionId);
+          output.push('','**Missed global reranked top 10:** '+(failed.join(', ')||'none'),'',
+            'The original 30-question benchmark and annotation versions remain frozen.');
+          process.stdout.write(output.join('\n')+'\n');
+          NODE
+      - name: Save complete question-by-question holdout results
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-english-holdout-12
+          path: ${{ runner.temp }}/patristic-holdout-12.json
+          retention-days: 21
+          if-no-files-found: error
