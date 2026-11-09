@@ -87,7 +87,8 @@ jobs:
           const lines=['### Staging question-to-passage integration','',`Verified ${r.passed}/${r.total} (failures remain release blockers)`,'',
             '| Test | Evidence | Pass |','|---|---:|---|'];
           for(const x of r.results)lines.push(`| ${x.id} | ${x.evidenceCount} | ${x.accepted} |`);
-          lines.push('','No model-generated answer was produced. All passages are staging/unreviewed unless separately checked.');
+          lines.push('','Editorial review pending for '+r.pendingEditorialReview+' retrieved source candidates.',
+            'No model-generated answer was produced. All passages are staging/unreviewed unless separately checked.');
           process.stdout.write(lines.join('\\n')+'\\n');
           NODE
       - name: Gate staging integration before release
@@ -99,6 +100,7 @@ jobs:
           import {readFileSync} from 'node:fs';
           const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/patristic-chat-staging-integration.json','utf8'));
           if(r.total!==8||r.passed!==8)throw Error('Staging evidence integration FAIL: '+r.passed+'/'+r.total+'. Do not deploy.');
+          if(r.pendingEditorialReview!==0)throw Error('Source editorial review required for '+r.pendingEditorialReview+' evidence candidates. Production release blocked.');
           NODE
       - name: Save integration evidence
         if: always()
