@@ -10,7 +10,7 @@ import {resolveReviewedLogicalAuthor} from "../../../scripts/patristics/resolve-
 import {classifyGregoryOpeningQuestion} from "../../../scripts/patristics/classify-gregory-opening-question.mjs";
 type PassageRow={passageId:string;contentSha256:string;content:string;locator:string;
  sourceUrl:string;authorName:string;workTitle:string;editionId:string};
-const GREGORY_NAMED=/(?:\b(?:gregory\s+of\s+nyssa|gregorius\s+nyssenus|grigorije\s+niski|grigorija\s+niskog)\b|григориј[аеу]?\s+ниск[оигм]*)/iu;
+const GREGORY_NAMED=/(?:\b(?:gregory\s+of\s+nyssa|gregorius\s+nyssenus|grigorije\s+niski|grigorija\s+niskog)\b|григориј(?:е|а|у|ем)?\s+ниск(?:и|ог|ом|оме))/iu;
 function candidates(q:string,rows:PassageRow[]){
  const terms=q.toLowerCase().split(/[^\p{L}]+/u).filter(s=>s.length>=4&&!["gregory","nyssa","григорије","ниски","what","does","about"].includes(s));
  return rows.map(r=>({row:r,score:terms.filter(t=>r.content.toLowerCase().includes(t)).length}))
