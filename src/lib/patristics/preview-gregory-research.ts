@@ -7,6 +7,7 @@ import {assertIsolatedPreviewConfig} from "@/lib/preview/chat-isolation";
 import type {PatristicResearchContext,PatristicResearchSource} from "./build-patristic-research-context";
 import identity from "../../../tests/fixtures/patristic-gregory-logical-identity-review.json";
 import {resolveReviewedLogicalAuthor} from "../../../scripts/patristics/resolve-reviewed-logical-author.mjs";
+import {classifyGregoryOpeningQuestion} from "../../../scripts/patristics/classify-gregory-opening-question.mjs";
 type PassageRow={passageId:string;contentSha256:string;content:string;locator:string;
  sourceUrl:string;authorName:string;workTitle:string;editionId:string};
 const GREGORY_NAMED=/(?:\b(?:gregory\s+of\s+nyssa|gregorius\s+nyssenus|grigorije\s+niski|grigorija\s+niskog)\b|григориј[аеу]?\s+ниск[оигм]*)/iu;
@@ -19,6 +20,14 @@ export async function buildIsolatedGregoryResearch(
  query:string, env:NodeJS.ProcessEnv=process.env
 ):Promise<PatristicResearchContext|null>{
  if(!assertIsolatedPreviewConfig(env)||!GREGORY_NAMED.test(query))return null;
+ // A named author is not permission to answer every question from a few introductory excerpts.
+ // Return a non-null, source-empty response: the Chat route must refuse to fabricate an answer,
+ // and must NOT silently fall back to legacy providers with different attribution standards.
+ const coverage=classifyGregoryOpeningQuestion(query);
+ if(!coverage.eligible){
+  return {context:"The six fully matched opening excerpts do not establish the requested Gregory of Nyssa claim. No direct quotation or further patristic claim is authorized from this pilot. Coverage: "+coverage.reason,
+   sources:[],providersAttempted:["PROTECTED_STAGING_GREGORY"],providersSucceeded:[]};
+ }
  const catalog=await prisma.$queryRaw<Array<{id:string;canonicalName:string;nameVariants:string[];indexed:number}>>`
   SELECT a."id",a."canonicalName",a."nameVariants",count(p.embedding)::int AS indexed
   FROM "LibraryAuthor" a LEFT JOIN "LibraryWork" w ON w."authorId"=a."id"
