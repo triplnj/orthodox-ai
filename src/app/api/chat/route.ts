@@ -109,6 +109,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       return apiJson({ ...response, quota, remaining: quota.remaining });
     });
   } catch (error) {
+    if(process.env.CI==="true")console.error("BASELINE_SYNTHETIC_CHAT_FAILURE",error instanceof Error ? error.stack : String(error));
     if (attempt) {
       try { await failTurn(attempt); } catch { diagnostic("operation_failed", { operation: "chat", failure: "database" }); }
     }
