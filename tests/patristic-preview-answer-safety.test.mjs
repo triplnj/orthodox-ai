@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {reviewIsolatedPreviewAnswer as review, previewQuestionLanguage} from "../scripts/patristics/review-isolated-preview-answer.mjs";
+import {reviewIsolatedPreviewAnswer as review, previewQuestionLanguage,normalizePreviewAnswerText} from "../scripts/patristics/review-isolated-preview-answer.mjs";
 const opening="But when we were in each other's presence the sight of the Teacher awakened all my pain; for she too was lying in a state of prostration even unto death. Well, she gave in to me for a little while, like a skilful driver, in the ungovernable violence of my grief; and then she tried to check me by speaking, and to correct with the curb of her reasonings the disorder of my soul.";
 const apostolic="She quoted the Apostle's words about the duty of not being grieved for them that sleep; because only men without hope have such feelings.";
 const sampleAnswer="In the dialogue On the Soul and the Resurrection, after the death of Basil, Gregory of Nyssa seeks out his sister Macrina, called the Teacher, to share his grief. Macrina, though herself deeply sorrowful and weakened, gently guides Gregory by encouraging him to bring his intense sorrow under the control of reason. She reminds him of the Apostle’s teaching that Christians should not grieve as those without hope do, because the faithful have the hope of resurrection and eternal life. Through her calm and reasoned words, Macrina helps Gregory begin to transform his overwhelming grief into a more hopeful and measured mourning rooted in Christian faith.";
@@ -41,7 +41,7 @@ test("no evidence or empty answer cannot pass the pilot",()=>{
 test("Preview pilot buffers answer generation until validation, production keeps streaming",()=>{
  const s=readFileSync("src/app/api/chat/route.ts","utf8");
  assert.match(s,/onDelta: protectedPilotAnswer \? undefined : onDelta/);
- assert.match(s,/reviewIsolatedPreviewAnswer\(result\.answer,research\?\.sources \?\? \[\],previewQuestionLanguage\(message\)\)/);
+ assert.match(s,/reviewIsolatedPreviewAnswer\(result\.answer,research\?\.sources \?\? \[\],pilotLanguage\)/);
  assert.ok(s.indexOf("reviewIsolatedPreviewAnswer(result.answer")<s.indexOf("onDelta?.(result.answer)"));
 });
 
@@ -95,4 +95,15 @@ test("reject observed Serbian Cyrillic grief/mourning mistranslations",()=>{
 test("permit idiomatic Serbian wording",()=>{
  const answer="Након смрти Василија, Макрина, називана Учитељицом, утешила је Григорија и помогла му да тугује не губећи хришћанску наду. Она није одбацила природну жалост, већ га је подсетила да се жалост верујућих разликује од безнађа.";
  assert.equal(review(answer,sources).accepted,true);
+});
+
+test("narrow Serbian repair preserves theology while removing erroneous title/verb",()=>{
+ const raw="Након смрти Василија, Григорије је отишао код сестре Макрине, названа Учитељица, да пронађе утеху. Макрина је рекла да се не тужи као они без наде, већ да тужна душа може да тугује са надом.";
+ const fixed=normalizePreviewAnswerText(raw,"sr-Cyrl");
+ assert.doesNotMatch(fixed,/названа Учитељица|не тужи као/);
+ assert.match(fixed,/Макрине, да пронађе утеху/);
+ assert.match(fixed,/не тугује као они без наде/);
+ assert.equal(normalizePreviewAnswerText(raw,"en"),raw);
+ assert.equal(normalizePreviewAnswerText(raw,"sr-Latn"),raw);
+ assert.equal(review(fixed,sources).accepted,true);
 });
