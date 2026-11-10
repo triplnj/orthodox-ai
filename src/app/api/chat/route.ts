@@ -112,9 +112,14 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       // Preserve the turn and allow the user to retry later without fabricating facts.
       const evidenceRequired = shouldRunPatristicResearch(query) || Boolean(research?.providersAttempted.includes("PROTECTED_STAGING_GREGORY"));
       const evidenceUnavailable = evidenceRequired && !research?.sources.length;
-      const noSourceMessage = /\p{Script=Cyrillic}/u.test(message)
-        ? "Нисам успео да пронађем проверљив извор за овај одговор. Нећу нагађати о историјским личностима, покретима или учењу светих отаца. Покушајте поново касније."
-        : "No verifiable source could be retrieved for this question. I will not guess about Church history, movements, or patristic teachings. Please try again later.";
+      const pilotOutOfCoverage=Boolean(research?.providersAttempted.includes("PROTECTED_STAGING_GREGORY") && !research.sources.length);
+      const noSourceMessage = pilotOutOfCoverage
+        ? /\p{Script=Cyrillic}/u.test(message)
+          ? "Проверени одломци у овој пробној верзији покривају Макринино тешење Григорија после Василијеве смрти. За тражену тврдњу или дословни цитат немам довољно провереног текста и нећу нагађати."
+          : "The source-checked excerpts in this preview cover Macrina consoling Gregory after Basil's death. They do not establish the requested claim or authorize a verbatim quotation, so I will not guess."
+        : /\p{Script=Cyrillic}/u.test(message)
+          ? "Нисам успео да пронађем проверљив извор за овај одговор. Нећу нагађати о историјским личностима, покретима или учењу светих отаца. Покушајте поново касније."
+          : "No verifiable source could be retrieved for this question. I will not guess about Church history, movements, or patristic teachings. Please try again later.";
       // All generated answers, including bibliographies, must share the
       // streaming path. A deterministic answer previously skipped onDelta,
       // leaving the client with no visible text until the terminal event.
