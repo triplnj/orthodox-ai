@@ -13,7 +13,7 @@ import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
 import {buildIsolatedGregoryResearch} from "@/lib/patristics/preview-gregory-research";
-import {reviewIsolatedPreviewAnswer,previewQuestionLanguage} from "../../../../scripts/patristics/review-isolated-preview-answer.mjs";
+import {reviewIsolatedPreviewAnswer,previewQuestionLanguage,normalizePreviewAnswerText} from "../../../../scripts/patristics/review-isolated-preview-answer.mjs";
 import { shouldRunPatristicResearch } from "@/lib/patristics/should-run-patristic-research";
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
@@ -135,7 +135,9 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
           patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns },
           onDelta: protectedPilotAnswer ? undefined : onDelta });
       if(protectedPilotAnswer){
-        const qaReview=reviewIsolatedPreviewAnswer(result.answer,research?.sources ?? [],previewQuestionLanguage(message));
+        const pilotLanguage=previewQuestionLanguage(message);
+        result.answer=normalizePreviewAnswerText(result.answer,pilotLanguage);
+        const qaReview=reviewIsolatedPreviewAnswer(result.answer,research?.sources ?? [],pilotLanguage);
         if(!qaReview.accepted){
           diagnostic("operation_failed",{operation:"research",failure:"validation"});
           throw new AiInputError("Preview source guard could not verify this answer. Please ask a narrower question.", 422);
