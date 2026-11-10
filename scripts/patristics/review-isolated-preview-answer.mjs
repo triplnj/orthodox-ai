@@ -25,8 +25,8 @@ function hasUnapprovedSharedQuote(answer,excerpt,n=12){
 export function normalizePreviewAnswerText(answer,lang){
  if(lang!=="sr-Cyrl"||typeof answer!=="string")return answer;
  return answer
-  .replace(/,\s*названа\s+Учитељица\b/giu,"")
-  .replace(/\bне\s+тужи(?=\s+као)/giu,"не тугује");
+  .replace(/,\s*названа\s+Учитељица(?=[,.\s]|$)/giu,"")
+  .replace(/не\s+тужи(?=\s+као)/giu,"не тугује");
 }
 
 export function previewQuestionLanguage(question){
