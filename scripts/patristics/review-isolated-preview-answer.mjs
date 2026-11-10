@@ -34,7 +34,7 @@ function answerIsRepeated(answer){
  return new Set(parts).size!==parts.length;
 }
 
-export function reviewIsolatedPreviewAnswer(answer,sources,lang=null){
+export function reviewIsolatedPreviewAnswer(answer,sources,lang=""){
  const errors=[];
  if(typeof answer!=="string"||!answer.trim())errors.push("EMPTY_ANSWER");
  if(lang && !answerLanguageCorrect(answer,lang))errors.push("WRONG_OR_MIXED_ANSWER_LANGUAGE");
