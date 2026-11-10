@@ -13,6 +13,7 @@ import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
 import {buildIsolatedGregoryResearch} from "@/lib/patristics/preview-gregory-research";
+import {reviewIsolatedPreviewAnswer} from "../../../../scripts/patristics/review-isolated-preview-answer.mjs";
 import { shouldRunPatristicResearch } from "@/lib/patristics/should-run-patristic-research";
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
@@ -117,6 +118,8 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       // All generated answers, including bibliographies, must share the
       // streaming path. A deterministic answer previously skipped onDelta,
       // leaving the client with no visible text until the terminal event.
+      // In protected pilot, withhold streamed text until it passes final structural checks.
+      const protectedPilotAnswer=Boolean(research?.providersAttempted.includes("PROTECTED_STAGING_GREGORY") && research.sources.length);
       const result = evidenceUnavailable
         ? (() => {
             onDelta?.(noSourceMessage);
@@ -124,7 +127,16 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
           })()
         : await generateOrthodoxAnswer({ userMessage: message, contextKey,
           extraContext: `${profile}\n\n${sourceChallenge ? `The user is challenging an earlier assertion. Explicitly verify or retract it, admit mistakes clearly, and do not replace it with another unsupported attribution. Previous assistant text is NOT evidence.\n` : followUp ? `This is a follow-up to a previous answer; respond to the implied correction/question in its conversational context, not with a generic definition.\n` : ""}\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
-          patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
+          patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns },
+          onDelta: protectedPilotAnswer ? undefined : onDelta });
+      if(protectedPilotAnswer){
+        const qaReview=reviewIsolatedPreviewAnswer(result.answer,research?.sources ?? []);
+        if(!qaReview.accepted){
+          diagnostic("operation_failed",{operation:"research",failure:"validation"});
+          throw new AiInputError("Preview source guard could not verify this answer. Please ask a narrower question.", 422);
+        }
+        onDelta?.(result.answer);
+      }
       onPhase?.("Reviewing source evidence...");
       const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
       const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
