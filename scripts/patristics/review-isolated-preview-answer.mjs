@@ -21,6 +21,14 @@ function hasUnapprovedSharedQuote(answer,excerpt,n=12){
  for(let i=0;i+n<=a.length;i++)if(samples.has(a.slice(i,i+n).join(" ")))return true;
  return false;
 }
+/** Narrow language-only repair before source/theology checks, never change claims. */
+export function normalizePreviewAnswerText(answer,lang){
+ if(lang!=="sr-Cyrl"||typeof answer!=="string")return answer;
+ return answer
+  .replace(/,\s*названа\s+Учитељица\b/giu,"")
+  .replace(/\bне\s+тужи(?=\s+као)/giu,"не тугује");
+}
+
 export function previewQuestionLanguage(question){
  const q=String(question??"");
  if(/[\u0400-\u052F]/u.test(q))return "sr-Cyrl";
