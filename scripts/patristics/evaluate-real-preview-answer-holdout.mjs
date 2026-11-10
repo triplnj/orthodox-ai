@@ -93,7 +93,7 @@ export async function evaluatePreviewAnswers(env=process.env,deps={}){
      ? "ENGLISH ONLY. Do not write any Serbian, Cyrillic, translation, alternate version or second answer."
      : item.lang==="sr-Latn"
        ? "SERBIAN LATIN SCRIPT ONLY. No English, no Cyrillic, no translations or second version."
-       : "SERBIAN CYRILLIC SCRIPT ONLY. No English or Latin-script Serbian, no translations or repeated answer.";
+       : "SERBIAN CYRILLIC SCRIPT ONLY. No English or Latin-script Serbian, no translations or repeated answer. Use standard Serbian grammar: for grief write туговати, тугује, туга (NOT тужи); when identifying Macrina, write Макрина, звана Учитељица or Макрина, називана Учитељицом.";
    const completion=await ai.chat.completions.create({
     model:MODEL,temperature:0.15,max_completion_tokens:360,
     messages:[
