@@ -102,7 +102,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
         (async () => {
           // Experimental Gregory pilot is deliberately isolated from the other
           // discovery providers and never runs on production or generic previews.
-          const pilot = await buildIsolatedGregoryResearch(query);
+          const pilot = await buildIsolatedGregoryResearch(query, process.env, message);
           return pilot ?? buildPatristicResearchContext(query, () => onPhase?.("Waiting for distant source..."));
         })(),
       ]);
