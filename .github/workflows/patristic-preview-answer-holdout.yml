@@ -8,6 +8,8 @@ on:
       - 'scripts/patristics/evaluate-real-preview-answer-holdout.mjs'
       - 'scripts/patristics/classify-gregory-opening-question.mjs'
       - 'scripts/patristics/review-isolated-preview-answer.mjs'
+      - 'tests/patristic-preview-answer-safety.test.mjs'
+      - 'src/app/api/chat/route.ts'
       - 'tests/fixtures/patristic-gregory-logical-identity-review.json'
   workflow_dispatch:
 permissions:
