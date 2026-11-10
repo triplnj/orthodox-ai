@@ -75,6 +75,7 @@ export async function buildIsolatedGregoryResearch(
  "SERBIAN LANGUAGE PRECISION: use туговати/тугује for mourning, never тужити/тужи (to sue). Macrina is called Учитељица; write Макрина, звана Учитељица or Макрина, називана Учитељицом in correct grammar.",
  "Do NOT attribute any utterance to Gregory or Macrina unless the passage explicitly identifies its speaker; otherwise describe the work as a dialogue.",
  "Do not infer wider doctrine from a short opening passage. No other works have been certified by this pilot.",
+ "SOURCE FIDELITY: do not introduce horses, cavalry or other objects not stated in the original driver/curb metaphor. Explain plainly without embellishing the source.",
  ...selected.map((r,i)=>[
   '[STAGING_PASSAGE_'+(i+1)+']',
   'AUTHOR OF WORK: '+r.authorName,
