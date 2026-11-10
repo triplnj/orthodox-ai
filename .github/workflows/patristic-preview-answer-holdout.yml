@@ -1,0 +1,73 @@
+name: Patristic Preview Answer QA — Real LLM Holdout (Isolated Staging)
+on:
+  push:
+    branches:
+      - experiment/patristic-catalog-author-v2-20261109
+    paths:
+      - '.github/workflows/patristic-preview-answer-holdout.yml'
+      - 'scripts/patristics/evaluate-real-preview-answer-holdout.mjs'
+      - 'scripts/patristics/classify-gregory-opening-question.mjs'
+      - 'scripts/patristics/review-isolated-preview-answer.mjs'
+      - 'tests/fixtures/patristic-gregory-logical-identity-review.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: patristic-preview-real-answer-holdout
+  cancel-in-progress: true
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: patristic-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify review controls and immutable staging branch
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+        run: |
+          node --test tests/patristic-gregory-preview-answer-scope.test.mjs tests/patristic-preview-answer-safety.test.mjs
+          node scripts/patristics/check-staging-connection.mjs
+      - name: Generate and evaluate five real source-grounded AI answers
+        env:
+          LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
+          LIBRARY_STAGING_BRANCH_ID: ${{ secrets.LIBRARY_STAGING_BRANCH_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/patristics/evaluate-real-preview-answer-holdout.mjs > "$RUNNER_TEMP/patristic-preview-real-answer-holdout.json"
+      - name: Summarize generated answers without misrepresenting theological approval
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import {existsSync,readFileSync} from 'node:fs';
+          const path=process.env.RUNNER_TEMP+'/patristic-preview-real-answer-holdout.json';
+          if(!existsSync(path)){process.stdout.write('### Generative holdout did not produce an evidence report. It cannot be considered passed.\n');process.exit(0);}
+          const r=JSON.parse(readFileSync(path,'utf8'));
+          if(r.branchId!=='br-spring-frost-assfzje6'||r.databaseWrites!==0||r.productionChanges!==0)throw Error('Unsafe holdout report');
+          const lines=[
+           '### Five real AI answers — limited source-grounded staging rehearsal',
+           '', 'Generated answers passing structural/language checks: '+r.passed+'/'+r.questionCount,
+           'Negative out-of-scope questions refused before generation: '+r.refusedOutOfScope,
+           'Model: '+r.model,
+           '', '| Question | Language | Structural guard | Language | Outcome |',
+           '|---|---|---|---|---|'
+          ];
+          for(const x of r.results)lines.push('| '+x.id+' | '+x.lang+' | '+(x.structuralGate.accepted?'PASS':'FAIL: '+x.structuralGate.issues.join(','))+' | '+(x.languageCorrect?'PASS':'FAIL')+' | '+(x.accepted?'PASS':'FAIL')+' |');
+          lines.push('','This is NOT a full authenticated HTTP Chat test and does not certify semantic or theological correctness. Review answer text in the uploaded artifact.');
+          process.stdout.write(lines.join('\n')+'\n');
+          NODE
+      - name: Archive complete generated answers for human theological review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patristic-preview-real-answer-holdout
+          path: ${{ runner.temp }}/patristic-preview-real-answer-holdout.json
+          if-no-files-found: warn
+          retention-days: 21
