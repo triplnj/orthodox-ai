@@ -26,6 +26,6 @@ export function SourceCards({ sources }: { sources: MappedSource[] }) {
         <p>{sourceLabels[source.provider] ?? source.provider} · {sourceLabels[source.verificationStatus] ?? source.verificationStatus}{source.originalLanguage ? ` · ${source.originalLanguage}` : ""}</p>
       </li>;
     })}</ul>
-    <p className="mt-2 text-gray-500">An automated excerpt match verifies wording within the retrieved source, not the theological meaning, identity of a dialogue speaker, or permission for direct quotation.</p>
+    <p className="mt-2 text-gray-500">An automated excerpt match verifies wording within the retrieved source. These matches do not assert that the theological meaning, dialogue speaker, or permission for direct quotation has been independently verified.</p>
   </section>;
 }
