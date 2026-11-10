@@ -5,7 +5,7 @@ import {readFileSync} from "node:fs";
 const cards=readFileSync("src/components/chat/SourceCards.tsx","utf8");
 test("automated source matches are clearly text matches, never doctrinal certifications",()=>{
  assert.match(cards,/Automated text match — interpretation not independently verified/);
- assert.match(cards,/not the theological meaning, identity of a dialogue speaker, or permission for direct quotation/);
+ assert.match(cards,/do not assert that the theological meaning, dialogue speaker, or permission for direct quotation/);
  assert.doesNotMatch(cards,/Claim linked to a matching excerpt \(automated review\)/);
 });
 test("source passages without a linked claim have an explanatory label",()=>{
