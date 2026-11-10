@@ -122,3 +122,14 @@ test("remove both 'названа' and 'звана Учитељица' in invali
  const repaired=normalizePreviewAnswerText(raw,"sr-Cyrl");
  assert.equal(repaired,"Код сестре Макрине, Григорије је потражио утеху.");
 });
+
+test("one corrective QA retry never streams rejected text and records only issue codes",()=>{
+ const route=readFileSync("src/app/api/chat/route.ts","utf8");
+ assert.match(route,/PREVIEW_PATRISTIC_ANSWER_RETRY/);
+ assert.match(route,/PREVIEW_PATRISTIC_ANSWER_REJECTED/);
+ assert.match(route,/secondReview=reviewIsolatedPreviewAnswer\(candidate,research\?\.sources \?\? \[\],pilotLanguage\)/);
+ assert.match(route,/if\(!secondReview\.accepted\)/);
+ assert.match(route,/onDelta:undefined/);
+ assert.ok(route.indexOf("if(!secondReview.accepted)")<route.indexOf("onDelta?.(result.answer)"));
+ assert.doesNotMatch(route,/console\.warn\("PREVIEW_PATRISTIC_ANSWER_REJECTED",\{[^}]*answer:/s);
+});
