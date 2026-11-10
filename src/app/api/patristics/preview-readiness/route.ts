@@ -22,7 +22,7 @@ export async function GET(){
     (SELECT count(*) FROM "AiReservation") "reservations",
     (SELECT count(*) FROM "UserActivationFeedback") "feedback"
    FROM "LibraryStagingGuard" g`);
-  const research=await buildIsolatedGregoryResearch("What does St. Gregory of Nyssa write about the soul?");
+  const research=await buildIsolatedGregoryResearch("How does Macrina comfort Gregory of Nyssa in his grief after Basil died?");
   const valid=research?.sources.length===3 &&
    research.providersSucceeded.includes("PROTECTED_STAGING_GREGORY") &&
    research.sources.every(s=>s.verificationStatus==="STAGING_TEXT_MATCH_ONLY"&&
