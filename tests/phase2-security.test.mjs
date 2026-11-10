@@ -114,17 +114,17 @@ function request(body = { message: "Question" }, headers = {}) {
 
 test("simultaneous Free chat reservations cannot overspend the final daily credit", async () => {
   const { load, state } = harness({ user: free });
-  for (let i = 0; i < 4; i++) state.logs.push({ userId: free.id, feature: "chat", createdAt: new Date() });
+  for (let i = 0; i < 2; i++) state.logs.push({ userId: free.id, feature: "chat", createdAt: new Date() });
   const { reserveAiOperation } = load("src/lib/ai/operationLimits.ts");
   const results = await Promise.allSettled(Array.from({ length: 12 }, () => reserveAiOperation(free.id, "chat", free)));
   assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
-  assert.equal(state.logs.length, 5);
+  assert.equal(state.logs.length, 3);
   assert.equal(state.reservations.length, 1);
   assert.equal(results.find((result) => result.status === "fulfilled").value.remaining, 0);
 });
 
 test("Free and Pro chat preserve their daily allowances", async () => {
-  for (const [user, limit] of [[free, 5], [pro, 100]]) {
+  for (const [user, limit] of [[free, 3], [pro, 100]]) {
     const { load, state } = harness({ user });
     for (let i = 0; i < limit; i++) state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120_000) });
     await assert.rejects(load("src/lib/ai/operationLimits.ts").reserveAiOperation(user.id, "chat", user),
@@ -139,7 +139,7 @@ test("inactive Pro subscriptions keep the existing Free quota and cannot access 
     const { load, state } = harness({ user });
     const { reserveAiOperation } = load("src/lib/ai/operationLimits.ts");
     await assert.rejects(reserveAiOperation(user.id, "prayer-plan", user), { status: 403 });
-    for (let i = 0; i < 5; i++) state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120_000) });
+    for (let i = 0; i < 3; i++) state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120_000) });
     await assert.rejects(reserveAiOperation(user.id, "chat", user), { limitType: "daily" });
   }
 });
