@@ -41,7 +41,7 @@ test("structured errors redact internal diagnostics", async () => {
   const safe = await h.load("src/lib/api/response.ts").apiJson({ error: "Checkout outcome is uncertain. Contact billing support before retrying.", code: "BILLING_REQUEST_FAILED" }, {status:503}).json();
   assert.match(safe.error,/Contact billing support before retrying/);
 });
-for (const [user, limit] of [[free, 5], [pro, 100]]) test(`${user.plan}: final admitted chat returns an answer and next request rejects`, async () => {
+for (const [user, limit] of [[free, 3], [pro, 100]]) test(`${user.plan}: final admitted chat returns an answer and next request rejects`, async () => {
   const h = phase6Harness({ user });
   for (let i = 0; i < limit - 1; i++) h.state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120000) });
   const response = await h.send("chat", { message: "Final question", requestId: "final" }); assert.equal(response.status, 200);
@@ -53,8 +53,8 @@ for (const [user, limit] of [[free, 5], [pro, 100]]) test(`${user.plan}: final a
 test("chat replay reports fresh allowance without changing its saved answer snapshot", async () => {
   const h = phase6Harness({ user: free }); const body = { message: "Q", requestId: "same" };
   const original = await (await h.send("chat", body)).json(); await h.send("chat", { message: "Second", requestId: "second" });
-  const replay = await (await h.send("chat", body)).json(); assert.equal(original.remaining, 4); assert.equal(replay.remaining, 3); assert.equal(replay.replayed, true); assert.equal(h.state.modelCalls, 2);
-  assert.equal(h.state.turns[0].responseSnapshot.remaining, 4);
+  const replay = await (await h.send("chat", body)).json(); assert.equal(original.remaining, 2); assert.equal(replay.remaining, 1); assert.equal(replay.replayed, true); assert.equal(h.state.modelCalls, 2);
+  assert.equal(h.state.turns[0].responseSnapshot.remaining, 2);
 });
 test("midnight reset and independent quota pools", async () => {
   const h = phase6Harness(); const clock = h.load("src/lib/ai/quotaClock.ts"); const day = clock.quotaDay();
