@@ -32,3 +32,17 @@ GitHub Actions run https://github.com/triplnj/orthodox-ai/actions/runs/426865835
 - Source transcription audit and Gregory dialogue/identity staging checks — success.
 
 The subsequent documentation-only commit does not change executable code. **Vercel remains HTTP 402 quota-blocked; no authenticated Preview Chat HTTP end-to-end result exists.** Next allowed action is a new branch-targeted Preview deployment once provider quota permits, followed by login of the isolated QA identity and controlled answer/source verification.
+
+## 2026-11-10 — live Preview deployment and read-only runtime validation
+
+Vercel API limit reset and a new Preview deployment of the experimental branch succeeded:
+- Deployment ID `dpl_4PryqtNQpyF2XmvCp3FHExffRLxZ`, `READY`, commit `366281d4e11ffb655aa907381fcf7054b5504731`.
+- Preview URL: https://orthodox-ai-24li-58m79goih-iconismusyahoocoms-projects.vercel.app
+- GitHub Actions run https://github.com/triplnj/orthodox-ai/actions/runs/42806345859 succeeded including `tsc --noEmit`, resolver tests, nine staging question→passage cases and full transcription audit.
+- A read-only Preview-only diagnostics route `/api/patristics/preview-readiness` verifies branch-specific env isolation, single database guard `PATRISTIC_CHAT_ISOLATED_PREVIEW`, no non-QA email accounts, source author route and all six ID+SHA-pinned Gregory passages; the deployed function responded HTTP **200** with `{"status":"READY","environment":"ISOLATED_PREVIEW","sourceProvider":"PROTECTED_STAGING_GREGORY","selectedSourceCount":3,"exactQuoteApproved":false,"speakerAutoVerified":false,"authenticatedChatTested":false}`.
+- The deployed `/login` responded **200** and `GET /api/chat` responded **405**, consistent with a POST-only Chat API. This does not prove a signed-in POST succeeds.
+- Production database **read-only** snapshot after the check: users **74**, conversations **29**, messages **864**, blogs **4**. No production write or migration.
+
+**Remaining for full acceptance of task 3:** an actual logged-in QA `POST /api/chat` and evaluation of the generated response + source cards. The connected read-only URL fetcher supports GET but not an authenticated POST, so this final step has not been independently executed. The QA account already exists only in the isolated database; the user can login in the Preview browser using credentials shared earlier and provide the Chat response for review. The live readiness probe deliberately reports `authenticatedChatTested:false` until such a test is complete.
+
+**Do not merge to production until that result and the following AI answer integrity tests are satisfactory.**
