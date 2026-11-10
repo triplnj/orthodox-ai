@@ -8,6 +8,9 @@ const unsupported=/(?:\b(?:apokatastasis|universal salvation|metempsychosis|pre.
 const griefProhibition=/(?:\b(?:grief is not fitting|grieving is not fitting|sorrow is unbefitting|grieving is unbefitting|grief is forbidden|grief is prohibited|duty not to grieve|not to grieve for those|should not grieve for those|forbidden to grieve|never grieve|grief belongs only to)\b|забрањуј[\p{L}]*\s+да\s+се\s+тугуј[\p{L}]*|не\s+треба\s+жалит[\p{L}]*\s+он[\p{L}]*|не\s+сме\s+се\s+туговат[\p{L}]*|жалост\s+је\s+забрањен[\p{L}]*|zabranjuj[\p{L}]*\s+da\s+se\s+tuguj[\p{L}]*|ne\s+treba\s+žalit[\p{L}]*\s+on[\p{L}]*|ne\s+sme\s+se\s+tugovat[\p{L}]*|tuga\s+je\s+zabranjen[\p{L}]*)/iu;
 // Detect recurrent Serbian translation mistakes in this narrow grief context.
 // "Тужити" means to sue, not to mourn ("туговати").
+// The source says "like a skilful driver"; it never describes an actual horse
+// or cavalry. Prevent a model from expanding the comparison into invented imagery.
+const inventedAnimalMetaphor=/(?:\b(?:wild horse|horses|horse)\b|коњиц[\p{L}]*|коњ[\p{L}]*|konjic[\p{L}]*|konj[\p{L}]*)/iu;
 const serbianGriefGrammar=/(?:не\s+тужи\s+као\s+они|не\s+тужи\s+као\s+они\s+који|названа\s+учитељица(?=[,.\s]))/iu;
 const fabricatedReferences=/(?:\b(?:PG|PL)\s*\d{2,4}\s*(?:[,.:]\s*\d+)?\b|Patrologia (?:Graeca|Latina)\s+\d{1,4})/iu;
 function tokens(text){
@@ -25,7 +28,7 @@ function hasUnapprovedSharedQuote(answer,excerpt,n=12){
 export function normalizePreviewAnswerText(answer,lang){
  if(lang!=="sr-Cyrl"||typeof answer!=="string")return answer;
  return answer
-  .replace(/,\s*названа\s+Учитељица(?=[,.\s]|$)/giu,"")
+  .replace(/,\s*(?:на)?звана\s+Учитељица(?=[,.\s]|$)/giu,"")
   .replace(/не\s+тужи(?=\s+као)/giu,"не тугује")
   .replace(/разуман\s+говором/giu,"разумним говором");
 }
@@ -60,6 +63,7 @@ export function reviewIsolatedPreviewAnswer(answer,sources,lang=""){
  if(fabricatedReferences.test(answer))errors.push("UNVERIFIED_PATROLOGIA_REFERENCE");
  if(griefProhibition.test(answer))errors.push("MISREADS_APOSTOLIC_MOURNING_WITH_HOPE");
  if(serbianGriefGrammar.test(answer))errors.push("SERBIAN_GRIEF_TRANSLATION_ERROR");
+ if(inventedAnimalMetaphor.test(answer))errors.push("INVENTED_SOURCE_METAPHOR");
  if(Array.isArray(sources))for(const s of sources){
   if(s?.verificationStatus!=="STAGING_TEXT_MATCH_ONLY"||s?.authorName!=="St. Gregory of Nyssa"||
      s?.workTitle!=="On the Soul and the Resurrection"||
