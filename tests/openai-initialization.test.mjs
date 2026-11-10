@@ -82,7 +82,9 @@ test("missing runtime credentials raise a stable configuration error without con
   const check = (error) => error instanceof OpenAIConfigurationError && error.code === "OPENAI_NOT_CONFIGURED";
   assert.throws(getOpenAI, check);
   await assert.rejects(load("src/lib/patristics/embeddings.ts").createEmbedding("test"), check);
-  await assert.rejects(load("src/lib/ai/chatService.ts").generateOrthodoxAnswer({ userMessage: "test" }), check);
+  // The public Chat service intentionally sanitizes provider/configuration failures.
+  await assert.rejects(load("src/lib/ai/chatService.ts").generateOrthodoxAnswer({ userMessage: "test" }),
+    error => error?.message === "The AI service is temporarily unavailable. Check saved status before retrying.");
   assert.deepEqual(constructions, []);
 });
 
