@@ -41,7 +41,7 @@ test("no evidence or empty answer cannot pass the pilot",()=>{
 test("Preview pilot buffers answer generation until validation, production keeps streaming",()=>{
  const s=readFileSync("src/app/api/chat/route.ts","utf8");
  assert.match(s,/onDelta: protectedPilotAnswer \? undefined : onDelta/);
- assert.match(s,/reviewIsolatedPreviewAnswer\(result\.answer,research\?\.sources \?\? \[\]\)/);
+ assert.match(s,/reviewIsolatedPreviewAnswer\(result\.answer,research\?\.sources \?\? \[\],previewQuestionLanguage\(message\)\)/);
  assert.ok(s.indexOf("reviewIsolatedPreviewAnswer(result.answer")<s.indexOf("onDelta?.(result.answer)"));
 });
 
