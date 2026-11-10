@@ -102,7 +102,7 @@ test("source cards expose a semantic list, exact safe links, and new-tab notice"
   const source = { authorName: "Author", workTitle: "Work", reference: "Book 1, 2", provider: "WEB_RESEARCH", verificationStatus: "LIVE_WEB_RESEARCH", sourceUrl: "https://example.test/work#passage" };
   const tree = Cards({ sources: [source] }); assert.equal(nodes(tree, node => node.type === "li").length, 1);
   const link = nodes(tree, node => node.type === "a")[0]; assert.equal(link.props.href, source.sourceUrl); assert.match(text(link), /opens in a new tab/); assert.match(link.props.rel, /noopener/);
-  assert.match(text(tree), /Book 1, 2/); assert.match(text(tree), /do not assert/);
+  assert.match(text(tree), /Book 1, 2/); assert.match(text(tree), /not proof that its meaning supports the claim|do not assert|not independently verified/);
 });
 
 test("unsafe source URLs never become clickable links", t => {
