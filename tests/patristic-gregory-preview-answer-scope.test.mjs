@@ -42,3 +42,18 @@ test("all six Gregory source candidates must have matching passage hashes",()=>{
  assert.match(pilot,/exactQuoteAllowed:false/);
  assert.match(pilot,/speakerVerified:false/);
 });
+
+test("an approved previous grief question must never approve a new immortality claim",()=>{
+ const prev="How does Macrina console Gregory of Nyssa after Basil's death?";
+ const current="What does Gregory of Nyssa teach about the immortality of the soul?";
+ assert.equal(classify(current).eligible,false);
+ assert.equal(classify(current).reason,"TOPIC_NOT_ESTABLISHED_BY_OPENING_EXCERPTS");
+ const source=readFileSync("src/lib/patristics/preview-gregory-research.ts","utf8");
+ const route=readFileSync("src/app/api/chat/route.ts","utf8");
+ assert.match(source,/classifyGregoryOpeningQuestion\(currentMessage\)/);
+ assert.match(route,/buildIsolatedGregoryResearch\(query, process\.env, message\)/);
+ const qa=readFileSync("src/app/api/patristics/preview-readiness/route.ts","utf8");
+ assert.match(qa,/unsupportedSoulQuestionRejected/);
+ assert.match(qa,/buildIsolatedGregoryResearch\(composite,process\.env,unsupported\)/);
+ assert.equal(classify(prev).eligible,true);
+});
