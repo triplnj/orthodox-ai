@@ -2,6 +2,10 @@
  * NOT a theological proof or a general semantic truth evaluator.
  */
 const unsupported=/(?:\b(?:apokatastasis|universal salvation|metempsychosis|pre.?existent souls|all souls are saved|the soul is mortal|macrina rejects resurrection|denies the resurrection)\b|апокатастаз[\p{L}]*|свеопшт[\p{L}]* спасењ[\p{L}]*|душа је смртн[\p{L}]*)/iu;
+// 1 Thessalonians 4:13 distinguishes mourning with hope from mourning without hope.
+// Reject categorical prohibition of grief, including a common misleading paraphrase
+// of the historical English translation "duty of not being grieved".
+const griefProhibition=/(?:\b(?:grief is not fitting|grieving is not fitting|sorrow is unbefitting|grieving is unbefitting|grief is forbidden|grief is prohibited|duty not to grieve|not to grieve for those|should not grieve for those|forbidden to grieve|never grieve|grief belongs only to)\b|забрањуј[\p{L}]*\s+да\s+се\s+тугуј[\p{L}]*|не\s+треба\s+жалит[\p{L}]*\s+он[\p{L}]*|не\s+сме\s+се\s+туговат[\p{L}]*|жалост\s+је\s+забрањен[\p{L}]*|zabranjuj[\p{L}]*\s+da\s+se\s+tuguj[\p{L}]*|ne\s+treba\s+žalit[\p{L}]*\s+on[\p{L}]*|ne\s+sme\s+se\s+tugovat[\p{L}]*|tuga\s+je\s+zabranjen[\p{L}]*)/iu;
 const fabricatedReferences=/(?:\b(?:PG|PL)\s*\d{2,4}\s*(?:[,.:]\s*\d+)?\b|Patrologia (?:Graeca|Latina)\s+\d{1,4})/iu;
 function tokens(text){
  return String(text??"").toLowerCase().normalize("NFKC").match(/[\p{L}\p{N}]+/gu)??[];
@@ -42,6 +46,7 @@ export function reviewIsolatedPreviewAnswer(answer,sources,lang=""){
  if(!Array.isArray(sources)||sources.length<1||sources.length>3)errors.push("INVALID_EVIDENCE_COUNT");
  if(unsupported.test(answer))errors.push("UNSUPPORTED_HIGH_RISK_CLAIM");
  if(fabricatedReferences.test(answer))errors.push("UNVERIFIED_PATROLOGIA_REFERENCE");
+ if(griefProhibition.test(answer))errors.push("MISREADS_APOSTOLIC_MOURNING_WITH_HOPE");
  if(Array.isArray(sources))for(const s of sources){
   if(s?.verificationStatus!=="STAGING_TEXT_MATCH_ONLY"||s?.authorName!=="St. Gregory of Nyssa"||
      s?.workTitle!=="On the Soul and the Resurrection"||
