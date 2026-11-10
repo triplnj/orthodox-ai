@@ -49,9 +49,9 @@ test("mobile navigation has a controlled disclosure, matching desktop destinatio
   assert.equal(nodes(tree, node => node.props?.["aria-controls"])[0].props["aria-expanded"], true);
   const navs = nodes(tree, node => node.type === "nav");
   const hrefs = nav => nodes(nav, node => node.props?.href).map(node => node.props.href);
-  assert.deepEqual(hrefs(navs[0]), hrefs(navs[2])); assert.deepEqual(hrefs(navs[1]), hrefs(navs[3]));
+  assert.equal(navs.length, 2); assert.deepEqual(hrefs(navs[0]), hrefs(navs[1]));
   assert.equal(nodes(navs[0], node => node.props?.["aria-current"] === "page")[0].props.href, "/chat");
-  assert.match(navs[2].props.className, /grid-cols-2/);
+  assert.match(navs[1].props.className, /grid-cols-2/);
 });
 
 test("Escape closes the mobile menu and returns focus to its toggle", t => {
@@ -65,7 +65,7 @@ test("Escape closes the mobile menu and returns focus to its toggle", t => {
 test("following a mobile destination closes the disclosure", t => {
   const h = harness(t); const Nav = h.load("src/components/layout/NavbarClient.tsx").NavbarClient;
   let tree = h.render(Nav, { user: null, isPro: false }); nodes(tree, node => node.props?.["aria-controls"])[0].props.onClick();
-  tree = h.render(Nav, { user: null, isPro: false }); nodes(tree, node => node.props?.href === "/journal")[1].props.onClick();
+  tree = h.render(Nav, { user: null, isPro: false }); nodes(tree, node => node.props?.href === "/chat")[1].props.onClick();
   assert.equal(nodes(h.render(Nav, { user: null, isPro: false }), node => node.props?.["aria-controls"])[0].props["aria-expanded"], false);
 });
 
