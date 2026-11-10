@@ -26,7 +26,8 @@ export function normalizePreviewAnswerText(answer,lang){
  if(lang!=="sr-Cyrl"||typeof answer!=="string")return answer;
  return answer
   .replace(/,\s*названа\s+Учитељица(?=[,.\s]|$)/giu,"")
-  .replace(/не\s+тужи(?=\s+као)/giu,"не тугује");
+  .replace(/не\s+тужи(?=\s+као)/giu,"не тугује")
+  .replace(/разуман\s+говором/giu,"разумним говором");
 }
 
 export function previewQuestionLanguage(question){
