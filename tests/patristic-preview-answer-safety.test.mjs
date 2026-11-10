@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {reviewIsolatedPreviewAnswer as review} from "../scripts/patristics/review-isolated-preview-answer.mjs";
+import {reviewIsolatedPreviewAnswer as review, previewQuestionLanguage} from "../scripts/patristics/review-isolated-preview-answer.mjs";
 const opening="But when we were in each other's presence the sight of the Teacher awakened all my pain; for she too was lying in a state of prostration even unto death. Well, she gave in to me for a little while, like a skilful driver, in the ungovernable violence of my grief; and then she tried to check me by speaking, and to correct with the curb of her reasonings the disorder of my soul.";
 const apostolic="She quoted the Apostle's words about the duty of not being grieved for them that sleep; because only men without hope have such feelings.";
 const sampleAnswer="In the dialogue On the Soul and the Resurrection, after the death of Basil, Gregory of Nyssa seeks out his sister Macrina, called the Teacher, to share his grief. Macrina, though herself deeply sorrowful and weakened, gently guides Gregory by encouraging him to bring his intense sorrow under the control of reason. She reminds him of the Apostle’s teaching that Christians should not grieve as those without hope do, because the faithful have the hope of resurrection and eternal life. Through her calm and reasoned words, Macrina helps Gregory begin to transform his overwhelming grief into a more hopeful and measured mourning rooted in Christian faith.";
@@ -43,4 +43,21 @@ test("Preview pilot buffers answer generation until validation, production keeps
  assert.match(s,/onDelta: protectedPilotAnswer \? undefined : onDelta/);
  assert.match(s,/reviewIsolatedPreviewAnswer\(result\.answer,research\?\.sources \?\? \[\]\)/);
  assert.ok(s.indexOf("reviewIsolatedPreviewAnswer(result.answer")<s.indexOf("onDelta?.(result.answer)"));
+});
+
+test("observed bilingual English + Serbian response is denied",()=>{
+ const bilingual=sampleAnswer+"\n\nПосле смрти Василија, Григорије Ниски је тражио утеху код Макрине која му је помогла да разумно обузда тугу.";
+ const r=review(bilingual,sources,"en");
+ assert.equal(r.accepted,false);
+ assert.ok(r.issues.includes("WRONG_OR_MIXED_ANSWER_LANGUAGE"));
+});
+test("duplicated Cyrillic paragraphs are denied even when the script is correct",()=>{
+ const paragraph="Макрина је утешила Григорија након Василијеве смрти разумним речима, подсећајући га на апостолско учење о нади, и тако му помогла да обузда дубоку жалост. Она је остала његова учитељица у тренутку тешке туге.";
+ const r=review(paragraph+"\n\n"+paragraph,sources,"sr-Cyrl");
+ assert.equal(r.accepted,false);assert.ok(r.issues.includes("DUPLICATED_ANSWER_TEXT"));
+});
+test("Preview language selection preserves the user's Serbian script",()=>{
+ assert.equal(previewQuestionLanguage("How does Macrina help Gregory of Nyssa?"),"en");
+ assert.equal(previewQuestionLanguage("Kako je Makrina utešila Grigorija Niskog?"),"sr-Latn");
+ assert.equal(previewQuestionLanguage("Како је Макрина утешила Григорија Ниског?"),"sr-Cyrl");
 });
