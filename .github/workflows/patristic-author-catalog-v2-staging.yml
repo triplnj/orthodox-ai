@@ -29,6 +29,8 @@ on:
       - 'src/app/api/chat/route.ts'
       - 'src/components/chat/SourceCards.tsx'
       - 'tests/patristic-source-cards-clarity.test.mjs'
+      - 'tests/patristic-gregory-preview-answer-scope.test.mjs'
+      - 'scripts/patristics/classify-gregory-opening-question.mjs'
       - 'src/lib/patristics/preview-gregory-research.ts'
       - 'src/app/api/patristics/preview-readiness/route.ts'
       - 'src/lib/email.ts'
@@ -62,7 +64,7 @@ jobs:
           npx prisma generate
           npx tsc --noEmit
       - name: Independent resolver unit tests
-        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs tests/patristic-reviewed-logical-author.test.mjs tests/patristic-chat-preview-isolation.test.mjs tests/patristic-preview-outbound-safety.test.mjs tests/patristic-source-cards-clarity.test.mjs
+        run: node --test tests/patristic-resolve-author-catalog-v2.test.mjs tests/patristic-author-catalog-v2-adversarial.test.mjs tests/patristic-passage-attribution-gate.test.mjs tests/patristic-rank-staging-source-evidence.test.mjs tests/patristic-source-text-audit.test.mjs tests/patristic-finalize-source-review.test.mjs tests/patristic-reviewed-logical-author.test.mjs tests/patristic-chat-preview-isolation.test.mjs tests/patristic-preview-outbound-safety.test.mjs tests/patristic-source-cards-clarity.test.mjs tests/patristic-gregory-preview-answer-scope.test.mjs
       - name: Verify protected staging database
         env:
           LIBRARY_STAGING_DB_URL: ${{ secrets.LIBRARY_STAGING_DB_URL }}
