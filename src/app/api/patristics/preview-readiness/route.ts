@@ -28,9 +28,19 @@ export async function GET(){
    research.sources.every(s=>s.verificationStatus==="STAGING_TEXT_MATCH_ONLY"&&
       s.metadata?.speakerVerified===false&&s.metadata?.exactQuoteAllowed===false);
   if(!valid)throw Error("Failed protected source-only QA validation");
+  // Reproduce the real second user turn, both standalone and with a preceding
+  // permitted grief question in the retrieval context. Neither may use sources.
+  const unsupported="What does Gregory of Nyssa teach about the immortality of the soul?";
+  const standalone=await buildIsolatedGregoryResearch(unsupported);
+  const composite="How does Macrina console Gregory of Nyssa after Basil's death?\\nFollow-up question: "+unsupported;
+  const followUp=await buildIsolatedGregoryResearch(composite,process.env,unsupported);
+  const bothRefused=[standalone,followUp].every(r=>r&&r.sources.length===0&&
+    r.providersAttempted.includes("PROTECTED_STAGING_GREGORY")&&r.providersSucceeded.length===0);
+  if(!bothRefused)throw Error("A broad Gregory claim escaped the current-turn evidence gate");
   return NextResponse.json({status:"READY",environment:"ISOLATED_PREVIEW",
    sourceProvider:"PROTECTED_STAGING_GREGORY",
-   selectedSourceCount:3,exactQuoteApproved:false,speakerAutoVerified:false,
+   selectedSourceCount:3,unsupportedSoulQuestionRejected:bothRefused,
+   unsupportedFollowUpRejected:bothRefused,exactQuoteApproved:false,speakerAutoVerified:false,
    authenticatedChatTested:false},{headers:{"Cache-Control":"no-store"}});
  }catch{
   return NextResponse.json({status:"BLOCKED"},{status:503,headers:{"Cache-Control":"no-store"}});
