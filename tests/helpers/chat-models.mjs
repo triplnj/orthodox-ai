@@ -51,7 +51,7 @@ export function addChatModels(prisma, state) {
   if (!prisma.user) prisma.user = {};
   if (!prisma.user.findUnique) prisma.user.findUnique = async ({where}) => {
     if (!state.user || state.user.id !== where?.id) return null;
-    return {emailVerified:state.user.emailVerified ?? new Date()};
+    return {emailVerified:state.user.emailVerified === undefined ? new Date() : state.user.emailVerified};
   };
   prisma.conversation = model("conversations", { activeTurnId: null });
   prisma.chatTurn = model("turns", { status: "PENDING", responseSnapshot: null });
