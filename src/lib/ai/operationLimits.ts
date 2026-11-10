@@ -4,11 +4,22 @@ import { prisma } from "@/lib/prisma";
 import { FREE_DAILY_CHAT_LIMIT, FULL_ACCESS_DAILY_CHAT_LIMIT, CHAT_RATE_LIMIT_PER_MINUTE } from "@/lib/features";
 import { isProUser, type AppUser } from "@/lib/subscription";
 import { quotaDay } from "./quotaClock";
+import { assertIsolatedPreviewConfig } from "@/lib/preview/chat-isolation";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type AiFeature = "chat" | "prayer-plan" | "fasting-plan" | "scripture-plan" | "journal-summary" | "review" | "research";
 export const PERSONAL_FEATURES = ["prayer-plan", "fasting-plan", "scripture-plan", "journal-summary"];
 const LEASE_MS = 5 * 60_000;
+const QA_PREVIEW_CHAT_LIMIT = 1_000_000_000;
+// Only the hard-guarded Preview QA identity may bypass the normal daily chat cap.
+// Concurrency and per-minute limits remain active to prevent accidental API cost spikes.
+function isIsolatedPreviewQaChat(feature: AiFeature, user?: AppUser) {
+  return feature === "chat" &&
+    user?.email?.toLowerCase() === "patristic-qa@example.test" &&
+    process.env.ORTHODOXAI_CHAT_ISOLATED_PREVIEW === "1" &&
+    assertIsolatedPreviewConfig();
+}
+
 
 export class AiLimitError extends Error {
   constructor(readonly status: number, readonly limitType: string, message: string, readonly upgradeRequired = false,
@@ -24,7 +35,7 @@ export async function quotaSnapshot(subject: string, feature: AiFeature, user?: 
     return quotaSnapshot(subject, feature, user, locked, new Date());
   });
   const day = quotaDay(now);
-  const limit = feature === "chat" ? (user && isProUser(user) ? FULL_ACCESS_DAILY_CHAT_LIMIT : FREE_DAILY_CHAT_LIMIT) : feature === "review" ? 100 : 30;
+  const limit = isIsolatedPreviewQaChat(feature, user) ? QA_PREVIEW_CHAT_LIMIT : feature === "chat" ? (user && isProUser(user) ? FULL_ACCESS_DAILY_CHAT_LIMIT : FREE_DAILY_CHAT_LIMIT) : feature === "review" ? 100 : 30;
   const used = feature === "chat" && user ? await tx.usageLog.count({ where: { userId: user.id, feature: "chat", createdAt: { gte: day.start } } })
     : await tx.aiReservation.count({ where: { subject, createdAt: { gte: day.start }, feature: { in: PERSONAL_FEATURES.includes(feature) ? PERSONAL_FEATURES : [feature] } } });
   return { pool: PERSONAL_FEATURES.includes(feature) ? "personal" : feature, limit, used, remaining: Math.max(0, limit - used), observedAt: now.toISOString(), resetsAt: day.reset.toISOString(), timezone: day.timezone };
@@ -61,7 +72,7 @@ export async function reserveAiOperation(subject: string, feature: AiFeature, us
     }
     const dailyLimit = quota.limit;
     const used = quota.used;
-    if (used >= dailyLimit) {
+    if (!isIsolatedPreviewQaChat(feature, user) && used >= dailyLimit) {
       throw new AiLimitError(429, "daily", "You have reached today's AI usage limit. Please try again tomorrow.",
         feature === "chat" && Boolean(user && !isProUser(user)), quota, Math.max(1, Math.ceil((new Date(quota.resetsAt).getTime() - now.getTime()) / 1000)));
     }
