@@ -30,7 +30,7 @@ for(const [id,question,eligible,reason] of cases){
 test("unsupported named Gregory question cannot silently fall back or generate unsupported answer",()=>{
  const pilot=readFileSync("src/lib/patristics/preview-gregory-research.ts","utf8");
  const route=readFileSync("src/app/api/chat/route.ts","utf8");
- assert.match(pilot,/const coverage=classifyGregoryOpeningQuestion\(query\)/);
+ assert.match(pilot,/const coverage=classifyGregoryOpeningQuestion\(currentMessage\)/);
  assert.match(pilot,/sources:\[\],providersAttempted:\["PROTECTED_STAGING_GREGORY"\]/);
  assert.match(route,/research\?\.providersAttempted\.includes\("PROTECTED_STAGING_GREGORY"\)/);
  assert.match(route,/evidenceRequired && !research\?\.sources\.length/);
