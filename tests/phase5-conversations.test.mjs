@@ -6,7 +6,7 @@ import { createLoader } from "./helpers/load-ts.mjs";
 import { addChatModels } from "./helpers/chat-models.mjs";
 
 mock.method(globalThis, "fetch", () => { throw new Error("Live network forbidden"); });
-mock.method(console, "error", () => {});
+// Temporary baseline CI trace: do not suppress synthetic server errors.
 const encoding = getEncoding("o200k_base");
 const free = { id: "alice", plan: "FREE", email: "alice@example.test", subscriptionStatus: null };
 const pro = { ...free, plan: "PRO", subscriptionStatus: "active", billingAccessUntil: new Date(Date.now() + 86400000) };
