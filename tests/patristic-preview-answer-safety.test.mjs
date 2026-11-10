@@ -61,3 +61,24 @@ test("Preview language selection preserves the user's Serbian script",()=>{
  assert.equal(previewQuestionLanguage("Kako je Makrina utešila Grigorija Niskog?"),"sr-Latn");
  assert.equal(previewQuestionLanguage("Како је Макрина утешила Григорија Ниског?"),"sr-Cyrl");
 });
+
+test("1 Thessalonians 4:13 does not ban ordinary grief: reject observed overstatements",()=>{
+ const misleading=[
+  "Macrina says grief is not fitting for those who have hope.",
+  "The Apostle teaches the duty not to grieve for those who sleep.",
+  "For Christians, sorrow is unbefitting for those who have hope.",
+  "Apostolske reči zabranjuju da se tuguje za pokojnicima.",
+  "Макрина учи да не треба жалити оне који су уснули.",
+  "Grief belongs only to those who lack hope."
+ ];
+ for(const answer of misleading){
+  const r=review(answer,sources);
+  assert.equal(r.accepted,false,answer);
+  assert.ok(r.issues.includes("MISREADS_APOSTOLIC_MOURNING_WITH_HOPE"),answer);
+ }
+});
+test("natural mourning is permitted when joined to Christian hope",()=>{
+ const accurate="Macrina consoles Gregory in his grief over Basil's death. She does not prohibit sorrow; by recalling the Apostle's words she distinguishes grieving with Christian hope from despairing as those without hope.";
+ const r=review(accurate,sources);
+ assert.equal(r.accepted,true);
+});
