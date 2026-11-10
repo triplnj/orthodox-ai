@@ -28,6 +28,7 @@ on:
       - 'src/lib/preview/chat-isolation.ts'
       - 'src/app/api/chat/route.ts'
       - 'src/lib/patristics/preview-gregory-research.ts'
+      - 'src/app/api/patristics/preview-readiness/route.ts'
       - 'src/lib/email.ts'
       - 'src/lib/billing/providers.ts'
       - 'src/lib/security/auth-http.ts'
