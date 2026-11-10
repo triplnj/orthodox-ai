@@ -82,3 +82,17 @@ test("natural mourning is permitted when joined to Christian hope",()=>{
  const r=review(accurate,sources);
  assert.equal(r.accepted,true);
 });
+
+test("reject observed Serbian Cyrillic grief/mourning mistranslations",()=>{
+ for(const text of [
+   "Макрина је рекла да се не тужи као они без наде.",
+   "Након Василијеве смрти, Макрина, названа Учитељица, тешила је Григорија."
+ ]){
+  const r=review(text,sources);
+  assert.ok(r.issues.includes("SERBIAN_GRIEF_TRANSLATION_ERROR"),text);
+ }
+});
+test("permit idiomatic Serbian wording",()=>{
+ const answer="Након смрти Василија, Макрина, називана Учитељицом, утешила је Григорија и помогла му да тугује не губећи хришћанску наду. Она није одбацила природну жалост, већ га је подсетила да се жалост верујућих разликује од безнађа.";
+ assert.equal(review(answer,sources).accepted,true);
+});
