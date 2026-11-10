@@ -71,6 +71,7 @@ export async function buildIsolatedGregoryResearch(
  "Each passage below is an independently source-text-matched English translation snippet.",
  "CRITICAL: Text matches alone do not verify the speaker, theological claim or permission for verbatim quotation.",
  "Do NOT quote these passages verbatim. Paraphrase only what they clearly support.",
+ "APOSTOLIC NUANCE: 1 Thessalonians 4:13 does not forbid natural sorrow. It warns against grieving AS those without hope. Macrina also grieves; her consolation is not a blanket ban on mourning. Never say grief itself is sinful, forbidden or unbefitting.",
  "Do NOT attribute any utterance to Gregory or Macrina unless the passage explicitly identifies its speaker; otherwise describe the work as a dialogue.",
  "Do not infer wider doctrine from a short opening passage. No other works have been certified by this pilot.",
  ...selected.map((r,i)=>[
