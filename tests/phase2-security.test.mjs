@@ -22,7 +22,7 @@ function matches(record, where = {}) {
 
 function harness({ user = pro, failModel = false, modelGate } = {}) {
   const state = { reservations: [], logs: [], jobs: [], modelCalls: 0, researchCalls: 0, dispatchCalls: 0,
-    databaseUnavailable: false, failLog: false, sessionCalls: 0 };
+    databaseUnavailable: false, failLog: false, sessionCalls: 0, user };
   let queue = Promise.resolve();
   let sequence = 0;
   const reservations = {
