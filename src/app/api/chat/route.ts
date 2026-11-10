@@ -109,7 +109,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       // A source-dependent question must not silently fall back to a fluent,
       // unsupported historical or patristic account when all providers fail.
       // Preserve the turn and allow the user to retry later without fabricating facts.
-      const evidenceRequired = shouldRunPatristicResearch(query);
+      const evidenceRequired = shouldRunPatristicResearch(query) || Boolean(research?.providersAttempted.includes("PROTECTED_STAGING_GREGORY"));
       const evidenceUnavailable = evidenceRequired && !research?.sources.length;
       const noSourceMessage = /\p{Script=Cyrillic}/u.test(message)
         ? "Нисам успео да пронађем проверљив извор за овај одговор. Нећу нагађати о историјским личностима, покретима или учењу светих отаца. Покушајте поново касније."
