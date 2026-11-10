@@ -290,3 +290,14 @@ test("new modules import without provider or database credentials", () => {
   const h = harness(); for (const file of ["src/lib/chat/context.ts", "src/lib/chat/conversations.ts", "src/lib/chat/history.ts", "src/lib/chat/provenance.ts"]) assert.doesNotThrow(() => h.load(file));
   assert.equal(h.state.calls.length, 0); assert.equal(h.state.reservations.length, 0);
 });
+
+test("unverified accounts remain blocked before any Chat quota or model request",async()=>{
+ const h=harness({user:{...free,emailVerified:null}});
+ const response=await h.send(input("email-not-confirmed"));
+ assert.equal(response.status,403);
+ const body=await response.json();
+ assert.equal(body.code,"EMAIL_VERIFICATION_REQUIRED");
+ assert.equal(h.state.calls.length,0);
+ assert.equal(h.state.logs.length,0);
+ assert.equal(h.state.turns.length,0);
+});
