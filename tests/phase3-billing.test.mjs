@@ -67,6 +67,9 @@ function harness({ initialUser = user(), subscriptions = [] } = {}) {
     try { return await work(prisma); } catch (error) { Object.assign(state, snapshot); throw error; } finally { release(); }
   };
   const providers = {
+    // Provider-level live-resource validation is covered separately; simulate
+    // an already verified live variant for checkout state-machine unit tests.
+    assertLiveLemonConfiguration: async () => { calls.push("verified-live-lemon-config"); },
     retrieve: async (provider, id) => { calls.push(`retrieve:${id}`); if (options.outage || options.providerOutage === provider) throw new actual.BillingError("Provider unavailable", 503);
       const s = remote.get(`${provider}:${id}`); if (!s) throw new Error("Unknown subscription"); return structuredClone(s); },
     inventory: async (provider, customer) => { if (options.outage || options.providerOutage === provider) throw new actual.BillingError("Provider unavailable", 503);
@@ -336,7 +339,7 @@ test("Stripe mismatched prices and test subscriptions cannot grant production PR
 test("Lemon checkout preserves store, variant and redirect without inventing idempotency support", async t => {
   const h = providerHarness(); let captured;
   t.mock.method(globalThis, "fetch", async (url, init) => { captured = { url, init, body: JSON.parse(init.body) };
-    return Response.json({ data: { id: "checkout", attributes: { url: "https://lemon.test", expires_at: "2030-01-01T00:00:00Z" } } }); });
+    return Response.json({ data: { id: "checkout", attributes: { url: "https://lemon.test", expires_at: "2030-01-01T00:00:00Z", test_mode: false } } }); });
   const result = await h.adapter.createCheckout("LEMONSQUEEZY", user(), "attempt");
   assert.equal(result.url, "https://lemon.test"); assert.equal(captured.body.data.relationships.store.data.id, "store");
   assert.equal(captured.body.data.relationships.variant.data.id, "variant"); assert.equal(captured.body.data.attributes.product_options.redirect_url, "https://app.test/pro/success");
