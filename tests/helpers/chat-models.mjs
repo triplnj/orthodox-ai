@@ -46,6 +46,13 @@ export function addChatModels(prisma, state) {
       const rows = state[key].filter(row => match(row, where)); rows.forEach(row => Object.assign(row, data)); return { count: rows.length };
     },
   });
+  // Chat now verifies the current account on every request; preserve this
+  // security boundary in mocked tests without touching application auth.
+  if (!prisma.user) prisma.user = {};
+  if (!prisma.user.findUnique) prisma.user.findUnique = async ({where}) => {
+    if (!state.user || state.user.id !== where?.id) return null;
+    return {emailVerified:state.user.emailVerified ?? new Date()};
+  };
   prisma.conversation = model("conversations", { activeTurnId: null });
   prisma.chatTurn = model("turns", { status: "PENDING", responseSnapshot: null });
   prisma.chatMessage = model("messages");
