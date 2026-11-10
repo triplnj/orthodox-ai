@@ -46,3 +46,20 @@ Vercel API limit reset and a new Preview deployment of the experimental branch s
 **Remaining for full acceptance of task 3:** an actual logged-in QA `POST /api/chat` and evaluation of the generated response + source cards. The connected read-only URL fetcher supports GET but not an authenticated POST, so this final step has not been independently executed. The QA account already exists only in the isolated database; the user can login in the Preview browser using credentials shared earlier and provide the Chat response for review. The live readiness probe deliberately reports `authenticatedChatTested:false` until such a test is complete.
 
 **Do not merge to production until that result and the following AI answer integrity tests are satisfactory.**
+
+## 2026-11-10 — authenticated Preview Chat end-to-end acceptance
+
+The user logged into the isolated Preview using the synthetic QA account and submitted:
+"How does Macrina help Gregory of Nyssa overcome his grief after Basil’s death?"
+
+The Chat returned a coherent English answer, naming the dialogue author Gregory of Nyssa and describing Macrina’s consoling appeal to the Apostle’s instruction to mourn with hope. The answer was compared against:
+- https://www.newadvent.org/fathers/2915.htm
+- https://www.stninaorlando.org/holy-fathers/gregory-of-nyssa/on-the-soul-and-the-resurrection/
+
+The opening passages confirm Gregory's sorrow over Basil's death, Macrina's reasoned consolation and her invocation of the apostolic teaching. No switch of dialogue speaker or invented quotation was found in the answer. Two excerpt-to-claim links were displayed; a third source card had no linked claim.
+
+A separate **read-only** inspection of isolated Neon `br-empty-breeze-asd2dqrq` confirmed **1 QA user, 1 session, 1 conversation, 1 ChatTurn, 2 messages, 3 ChatMessageSource rows and all 297 library passages**. The three sources have `verificationStatus=STAGING_TEXT_MATCH_ONLY`; mapped-claim counts 1, 1, 0. Production (read-only) remains at **74 users, 29 conversations, 864 chat messages, 4 blog posts**. No production writes or migrations.
+
+The source-card wording was improved in experimental branch files `src/components/chat/SourceCards.tsx` and `tests/patristic-source-cards-clarity.test.mjs`: linked excerpts now explicitly disclose that interpretation has NOT been independently verified; unmatched sources are labeled as additional retrieved passages with no claim link. Verified with successful GitHub Actions run https://github.com/triplnj/orthodox-ai/actions/runs/42809689231 at commit `5ef189dfae925d82c5348047b81837f66772d5da`.
+
+**Task 3: ACCEPTED for isolated Preview end-to-end workflow.** This constitutes one verified Chat response and operational isolation evidence; it does NOT establish high answer accuracy across topics. Task 4 remains the systematic answer/source/attribution stress-test phase, and the new source-card wording has not been separately smoke-tested in a new Preview deployment. No main merge or production deployment authorized.
