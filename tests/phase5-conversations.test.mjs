@@ -179,7 +179,7 @@ test("retrieved injection and previous messages never enter system content", asy
 for (const field of ["messages", "history", "sources", "userId", "system"]) test(`client-supplied ${field} is rejected`, async () => {
   const h = harness(); assert.equal((await h.send({ ...input("bad"), [field]: "forged" })).status, 400); assert.equal(h.state.calls.length, 0);
 });
-for (const [user, limit] of [[free, 5], [pro, 100]]) test(`${user.plan} exhausted quota is unchanged`, async () => {
+for (const [user, limit] of [[free, 3], [pro, 100]]) test(`${user.plan} exhausted quota is unchanged`, async () => {
   const h = harness({ user }); for (let i = 0; i < limit; i++) h.state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120000) });
   assert.equal((await h.send(input("quota"))).status, 429); assert.equal(h.state.calls.length, 0); assert.equal(h.state.logs.length, limit);
 });
