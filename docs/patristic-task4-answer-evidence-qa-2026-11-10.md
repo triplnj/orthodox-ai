@@ -45,3 +45,9 @@ Status: **Pilot answer QA passed with explicit scope boundaries. Full-corpus the
 - 73 of 297 source excerpts remain quarantined in source-review classification; the rest have textual correspondence, **not automatic permission for direct quotation or verified speaker attribution**.
 - Do not connect the Preview pilot to main or production until task 5 safety/release checks and wider editorial coverage are explicitly cleared.
 - Production DB and `main` unchanged. No production payments or email sends from QA.
+
+## Final Preview deployment & post-deploy read-back
+- Preview deployment `dpl_3QbBeZfWMpeknVox8MBiSgrQTBTs`: **READY**, SHA `1f7679063766b051d57a787d1cafdc554104cd53`, https://orthodox-ai-24li-8ne0w46kq-iconismusyahoocoms-projects.vercel.app.
+- Protected read-only `/api/patristics/preview-readiness` returned HTTP 200: `status=READY`, `environment=ISOLATED_PREVIEW`, `selectedSourceCount=3`, `exactQuoteApproved=false`, `speakerAutoVerified=false`, `authenticatedChatTested=false`. This last flag truthfully indicates that a *new* signed-in POST has not been repeated against this specific updated deployment.
+- Database counts after deployment (read-only): isolated Preview 1 synthetic QA user, 1 session, 1 conversation, 2 messages, 297 source passages, `PATRISTIC_CHAT_ISOLATED_PREVIEW` guard. Production 74 users, 29 conversations, 864 messages and 4 blog posts, unchanged from the previous snapshot.
+- **No merge, production deployment, subscription/billing activity or live data mutation was performed.**
