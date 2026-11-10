@@ -17,13 +17,15 @@ function candidates(q:string,rows:PassageRow[]){
  .sort((a,b)=>b.score-a.score||a.row.passageId.localeCompare(b.row.passageId)).slice(0,3).map(x=>x.row);
 }
 export async function buildIsolatedGregoryResearch(
- query:string, env:NodeJS.ProcessEnv=process.env
+ query:string, env:NodeJS.ProcessEnv=process.env, currentMessage:string=query
 ):Promise<PatristicResearchContext|null>{
  if(!assertIsolatedPreviewConfig(env)||!GREGORY_NAMED.test(query))return null;
  // A named author is not permission to answer every question from a few introductory excerpts.
  // Return a non-null, source-empty response: the Chat route must refuse to fabricate an answer,
  // and must NOT silently fall back to legacy providers with different attribution standards.
- const coverage=classifyGregoryOpeningQuestion(query);
+ const coverage=classifyGregoryOpeningQuestion(currentMessage);
+ // Always classify the NEW question independently of prior conversations.
+ // Previous approved topics must never make a new unsupported question eligible.
  if(!coverage.eligible){
   return {context:"The six fully matched opening excerpts do not establish the requested Gregory of Nyssa claim. No direct quotation or further patristic claim is authorized from this pilot. Coverage: "+coverage.reason,
    sources:[],providersAttempted:["PROTECTED_STAGING_GREGORY"],providersSucceeded:[]};
