@@ -137,10 +137,44 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       if(protectedPilotAnswer){
         const pilotLanguage=previewQuestionLanguage(message);
         result.answer=normalizePreviewAnswerText(result.answer,pilotLanguage);
-        const qaReview=reviewIsolatedPreviewAnswer(result.answer,research?.sources ?? [],pilotLanguage);
+        let qaReview=reviewIsolatedPreviewAnswer(result.answer,research?.sources ?? [],pilotLanguage);
         if(!qaReview.accepted){
-          diagnostic("operation_failed",{operation:"research",failure:"validation"});
-          throw new AiInputError("Preview source guard could not verify this answer. Please ask a narrower question.", 422);
+          // Never emit, store or stream rejected model text. Only diagnostic issue codes.
+          console.warn("PREVIEW_PATRISTIC_ANSWER_RETRY",{
+            issues:qaReview.issues,sourceCount:research?.sources.length ?? 0,
+            questionLanguage:pilotLanguage
+          });
+          // One bounded attempt with strict language, quotation and evidence constraints.
+          // This still goes through exactly the same fail-closed source review.
+          const repaired=await generateOrthodoxAnswer({
+            userMessage:message,contextKey,isPro:isProUser(user),
+            conversation:{turns},onDelta:undefined,
+            patristicContext:research?.context ?? null,
+            extraContext:[
+              "ISOLATED PREVIEW QA REGENERATION: Your earlier draft failed the source-safety review.",
+              "Return ONE response in the language and script of the user's CURRENT question only.",
+              "Write 95–135 words, without a duplicated paragraph or translation.",
+              "Base the answer ONLY on the supplied opening passage describing Macrina comforting Gregory after Basil died.",
+              "Distinguish Christian grief WITH HOPE from despair WITHOUT HOPE; never forbid normal grief.",
+              "Paraphrase in your own words: no 12-word verbatim source sequences and no quotation marks.",
+              "Do not mention a horse, invent an animal metaphor, or expand the original driver's comparison.",
+              "Do not assert any other teaching about the soul, immortality or universal salvation.",
+              "Do not give invented Patrologia or bibliographical references.",
+              "Review issue codes: "+qaReview.issues.join(", ")
+            ].join("\n")
+          });
+          const candidate=normalizePreviewAnswerText(repaired.answer,pilotLanguage);
+          const secondReview=reviewIsolatedPreviewAnswer(candidate,research?.sources ?? [],pilotLanguage);
+          if(!secondReview.accepted){
+            console.warn("PREVIEW_PATRISTIC_ANSWER_REJECTED",{
+              firstIssues:qaReview.issues,secondIssues:secondReview.issues,
+              sourceCount:research?.sources.length ?? 0,questionLanguage:pilotLanguage
+            });
+            throw new AiInputError("Preview answer validation failed after a source-safe retry. No unverified answer was saved.",422);
+          }
+          result.answer=candidate;
+          result.budget=repaired.budget;
+          qaReview=secondReview;
         }
         onDelta?.(result.answer);
       }
