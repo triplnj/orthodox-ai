@@ -107,3 +107,18 @@ test("narrow Serbian repair preserves theology while removing erroneous title/ve
  assert.equal(normalizePreviewAnswerText(raw,"sr-Latn"),raw);
  assert.equal(review(fixed,sources).accepted,true);
 });
+
+test("never invent a wild horse or cavalry when source only says skilled driver",()=>{
+ for(const phrase of [
+  "Macrina consoles Gregory like a skilled driver managing a wild horse.",
+  "Макрина је као возач смиривала немирну коњицу његове душе.",
+  "Makrina je držala divljeg konja Grigorijeve tuge."
+ ]){
+  assert.ok(review(phrase,sources).issues.includes("INVENTED_SOURCE_METAPHOR"),phrase);
+ }
+});
+test("remove both 'названа' and 'звана Учитељица' in invalid genitive apposition",()=>{
+ const raw="Код сестре Макрине, звана Учитељица, Григорије је потражио утеху.";
+ const repaired=normalizePreviewAnswerText(raw,"sr-Cyrl");
+ assert.equal(repaired,"Код сестре Макрине, Григорије је потражио утеху.");
+});
