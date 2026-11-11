@@ -1,5 +1,6 @@
 import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import {reviewedGregoryOpeningEvidence} from "./reviewed-gregory-evidence";
+import { sourceBackedBibliographyContext } from "./source-backed-bibliography";
 import {
   buildVerifiedPatristicContext,
   type PatristicLanguage,
@@ -192,6 +193,10 @@ export async function buildPatristicResearchContext(
   currentQuestion: string = query,
 ): Promise<PatristicResearchContext | null> {
   if (!shouldRunPatristicResearch(query)) return null;
+  // Narrow current-turn bibliographic questions use reviewed catalog evidence;
+  // unresolved authors and non-bibliographic topics keep existing retrieval.
+  const bibliography = sourceBackedBibliographyContext(currentQuestion);
+  if (bibliography) return bibliography;
   // Guard on the CURRENT turn only; previous approved questions never authorize
   // unrelated new theological claims. No production schema or staging dependency.
   const reviewed = reviewedGregoryOpeningEvidence(currentQuestion);
