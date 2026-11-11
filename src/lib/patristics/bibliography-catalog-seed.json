@@ -16,6 +16,34 @@
         "Νικόδημος ὁ Ἁγιορείτης"
       ],
       "completeness": "SELECTED"
+    },
+    {
+      "id": "macarius-corinth",
+      "canonicalName": "St. Macarius of Corinth",
+      "nameVariants": [
+        "Макарије Коринтски",
+        "Macarius Notaras"
+      ],
+      "completeness": "UNKNOWN"
+    },
+    {
+      "id": "agapios-leonardos",
+      "canonicalName": "Agapios Leonardos",
+      "nameVariants": [
+        "Агапије Леонардос",
+        "Agapius the Monk",
+        "Агапије монах"
+      ],
+      "completeness": "UNKNOWN"
+    },
+    {
+      "id": "lorenzo-scupoli",
+      "canonicalName": "Lorenzo Scupoli",
+      "nameVariants": [
+        "Лоренцо Скуполи",
+        "Lorenzo Scupoli of Venice"
+      ],
+      "completeness": "UNKNOWN"
     }
   ],
   "works": [
@@ -138,6 +166,29 @@
       "originalLanguage": null,
       "workKind": "COMMENTARY",
       "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-eklogion",
+      "canonicalTitle": "New Eklogion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нови Еклогион",
+        "Neo Eklogion"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected bibliographic entry; full edition and Greek title are not yet reviewed."
+    },
+    {
+      "id": "paul-fourteen-epistles",
+      "canonicalTitle": "Paul's Fourteen Epistles (Modern Greek version of Theophylact)",
+      "originalTitle": null,
+      "titleVariants": [
+        "Тумачење четрнаест посланица апостола Павла"
+      ],
+      "originalLanguage": null,
+      "workKind": "TRANSLATION",
+      "completenessNote": "Selected bibliographic entry; full edition and Greek title are not yet reviewed."
     }
   ],
   "contributions": [
@@ -161,7 +212,8 @@
       ],
       "attribution": "SOURCE_ATTESTED",
       "evidenceIds": [
-        "antioch-unseen-warfare"
+        "antioch-unseen-warfare",
+        "publisher-nicodemus-warfare"
       ],
       "editorialNote": null
     },
@@ -173,7 +225,8 @@
       ],
       "attribution": "REVIEW_REQUIRED",
       "evidenceIds": [
-        "antioch-manual-confession"
+        "antioch-manual-confession",
+        "metallinos-exomologetarion"
       ],
       "editorialNote": "Official account lists his Manual of Confession; provenance of its sources and exact authorial role need further editorial review."
     },
@@ -209,7 +262,8 @@
       ],
       "attribution": "SOURCE_ATTESTED",
       "evidenceIds": [
-        "antioch-pedalion"
+        "antioch-pedalion",
+        "academy-pedalion-nicodemus"
       ],
       "editorialNote": null
     },
@@ -258,6 +312,66 @@
       "attribution": "SOURCE_ATTESTED",
       "evidenceIds": [
         "antioch-new-ladder"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "macarius-corinth",
+      "workId": "philokalia",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "azbyka-macarius-philokalia"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "agapios-leonardos",
+      "workId": "pedalion",
+      "roles": [
+        "CO_AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "lund-agapios-pedalion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "lorenzo-scupoli",
+      "workId": "unseen-warfare",
+      "roles": [
+        "SOURCE_AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "publisher-scupoli-warfare"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-eklogion",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-new-eklogion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "paul-fourteen-epistles",
+      "roles": [
+        "TRANSLATOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-paul-fourteen-epistles"
       ],
       "editorialNote": null
     }
@@ -412,6 +526,126 @@
       "reviewStatus": "REVIEWED",
       "reviewedBy": "source-text-inspection-2026-11-11",
       "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "azbyka-macarius-philokalia",
+      "authorId": "macarius-corinth",
+      "workId": "philokalia",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "url": "https://azbyka.org/otechnik/Nikodim_Svjatogorets/the-philokalia/",
+      "title": "Azbyka — Philokalia Volume Two title page",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "The English Philokalia edition title explicitly attributes compilation to St Nikodimos and St Makarios of Corinth.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "lund-agapios-pedalion",
+      "authorId": "agapios-leonardos",
+      "workId": "pedalion",
+      "rolesSupported": [
+        "CO_AUTHOR"
+      ],
+      "url": "https://www.lunduniversity.lu.se/publication/c82583a6-94af-4670-87d9-a4f1fc2da81d",
+      "title": "Lund University — The Rudder of the Church (doctoral thesis)",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Published Lund doctoral thesis identifies St Nikodemos Hagioreites and Agapios Leonardos as the two authors of the Pedalion.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "publisher-scupoli-warfare",
+      "authorId": "lorenzo-scupoli",
+      "workId": "unseen-warfare",
+      "rolesSupported": [
+        "SOURCE_AUTHOR"
+      ],
+      "url": "https://books.google.com/books/about/Unseen_Warfare.html?id=7ed4DF8tmS8C",
+      "title": "St Vladimir's Seminary Press — Unseen Warfare catalog metadata, 1987",
+      "kind": "PUBLISHER_CATALOG",
+      "supportingStatement": "Bibliographic record identifies Lorenzo Scupoli's Spiritual Combat as the underlying text and Nicodemus as the edition's editor, not its original creator.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "publisher-nicodemus-warfare",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "unseen-warfare",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "url": "https://books.google.com/books/about/Unseen_Warfare.html?id=7ed4DF8tmS8C",
+      "title": "St Vladimir's Seminary Press — Unseen Warfare catalog metadata, 1987",
+      "kind": "PUBLISHER_CATALOG",
+      "supportingStatement": "Publisher edition credits Nicodemus as editor of a revised Scupoli-derived work; adaptation already corroborated by official Antiochian biography.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "academy-pedalion-nicodemus",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "pedalion",
+      "rolesSupported": [
+        "EDITOR"
+      ],
+      "url": "https://publishing.mpda.ru/index.php/theological-herald/article/view/902",
+      "title": "Moscow Theological Academy — Study of St Nicodemus's introduction to Pedalion",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Academic study identifies the collaboration of Nicodemus and Agapios in preparation of the canonical collection and Nicodemus's introductory scholarly contribution.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "metallinos-exomologetarion",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "manual-confession",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "url": "https://orthodoxinfo.com/praxis/manualofconfession",
+      "title": "Protopresbyter George Metallinos — The Exomologetarion of St Nicodemos",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Scholarly introduction discusses Nicodemus's Exomologetarion and the complicated origins and textual composition; exact degree of original versus redacted material remains under review.",
+      "reviewStatus": "PENDING_REVIEW",
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "antioch-new-eklogion",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-eklogion",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official patriarchal life credits Nicodemus's hagiographic New Eklogion, published in Venice in 1803.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "antioch-paul-fourteen-epistles",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "paul-fourteen-epistles",
+      "rolesSupported": [
+        "TRANSLATOR"
+      ],
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official patriarchal life says Nicodemus completed the Modern Greek translation of Theophylact of Bulgaria's work on Paul's fourteen epistles.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
     }
   ]
 }
