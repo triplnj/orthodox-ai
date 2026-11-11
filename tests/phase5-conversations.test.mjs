@@ -179,7 +179,7 @@ test("retrieved injection and previous messages never enter system content", asy
 for (const field of ["messages", "history", "sources", "userId", "system"]) test(`client-supplied ${field} is rejected`, async () => {
   const h = harness(); assert.equal((await h.send({ ...input("bad"), [field]: "forged" })).status, 400); assert.equal(h.state.calls.length, 0);
 });
-for (const [user, limit] of [[free, 5], [pro, 100]]) test(`${user.plan} exhausted quota is unchanged`, async () => {
+for (const [user, limit] of [[free, 3], [pro, 100]]) test(`${user.plan} exhausted quota is unchanged`, async () => {
   const h = harness({ user }); for (let i = 0; i < limit; i++) h.state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120000) });
   assert.equal((await h.send(input("quota"))).status, 429); assert.equal(h.state.calls.length, 0); assert.equal(h.state.logs.length, limit);
 });
@@ -289,4 +289,15 @@ test("bounded context and output caps can be adjusted with server configuration"
 test("new modules import without provider or database credentials", () => {
   const h = harness(); for (const file of ["src/lib/chat/context.ts", "src/lib/chat/conversations.ts", "src/lib/chat/history.ts", "src/lib/chat/provenance.ts"]) assert.doesNotThrow(() => h.load(file));
   assert.equal(h.state.calls.length, 0); assert.equal(h.state.reservations.length, 0);
+});
+
+test("unverified accounts remain blocked before any Chat quota or model request",async()=>{
+ const h=harness({user:{...free,emailVerified:null}});
+ const response=await h.send(input("email-not-confirmed"));
+ assert.equal(response.status,403);
+ const body=await response.json();
+ assert.equal(body.code,"EMAIL_VERIFICATION_REQUIRED");
+ assert.equal(h.state.calls.length,0);
+ assert.equal(h.state.logs.length,0);
+ assert.equal(h.state.turns.length,0);
 });

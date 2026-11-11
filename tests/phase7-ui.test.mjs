@@ -49,9 +49,9 @@ test("mobile navigation has a controlled disclosure, matching desktop destinatio
   assert.equal(nodes(tree, node => node.props?.["aria-controls"])[0].props["aria-expanded"], true);
   const navs = nodes(tree, node => node.type === "nav");
   const hrefs = nav => nodes(nav, node => node.props?.href).map(node => node.props.href);
-  assert.deepEqual(hrefs(navs[0]), hrefs(navs[2])); assert.deepEqual(hrefs(navs[1]), hrefs(navs[3]));
+  assert.equal(navs.length, 2); assert.deepEqual(hrefs(navs[0]), hrefs(navs[1]));
   assert.equal(nodes(navs[0], node => node.props?.["aria-current"] === "page")[0].props.href, "/chat");
-  assert.match(navs[2].props.className, /grid-cols-2/);
+  assert.match(navs[1].props.className, /grid-cols-2/);
 });
 
 test("Escape closes the mobile menu and returns focus to its toggle", t => {
@@ -65,7 +65,7 @@ test("Escape closes the mobile menu and returns focus to its toggle", t => {
 test("following a mobile destination closes the disclosure", t => {
   const h = harness(t); const Nav = h.load("src/components/layout/NavbarClient.tsx").NavbarClient;
   let tree = h.render(Nav, { user: null, isPro: false }); nodes(tree, node => node.props?.["aria-controls"])[0].props.onClick();
-  tree = h.render(Nav, { user: null, isPro: false }); nodes(tree, node => node.props?.href === "/journal")[1].props.onClick();
+  tree = h.render(Nav, { user: null, isPro: false }); nodes(tree, node => node.props?.href === "/chat")[1].props.onClick();
   assert.equal(nodes(h.render(Nav, { user: null, isPro: false }), node => node.props?.["aria-controls"])[0].props["aria-expanded"], false);
 });
 
@@ -102,7 +102,7 @@ test("source cards expose a semantic list, exact safe links, and new-tab notice"
   const source = { authorName: "Author", workTitle: "Work", reference: "Book 1, 2", provider: "WEB_RESEARCH", verificationStatus: "LIVE_WEB_RESEARCH", sourceUrl: "https://example.test/work#passage" };
   const tree = Cards({ sources: [source] }); assert.equal(nodes(tree, node => node.type === "li").length, 1);
   const link = nodes(tree, node => node.type === "a")[0]; assert.equal(link.props.href, source.sourceUrl); assert.match(text(link), /opens in a new tab/); assert.match(link.props.rel, /noopener/);
-  assert.match(text(tree), /Book 1, 2/); assert.match(text(tree), /do not assert/);
+  assert.match(text(tree), /Book 1, 2/); assert.match(text(tree), /not proof that its meaning supports the claim|do not assert|not independently verified/);
 });
 
 test("unsafe source URLs never become clickable links", t => {

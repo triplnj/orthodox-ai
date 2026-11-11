@@ -12,6 +12,7 @@ import { chatContexts, type ChatContextKey } from "@/lib/ai/chatContexts";
 import { getUserProfileContext } from "@/lib/userProfileContext";
 import { buildPatristicResearchContext } from "@/lib/patristics/build-patristic-research-context";
 import { shouldRunPatristicResearch } from "@/lib/patristics/should-run-patristic-research";
+import { reviewedGregoryAnswerIssues } from "@/lib/patristics/reviewed-gregory-answer";
 import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnConflict, type TurnAttempt } from "@/lib/chat/conversations";
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
@@ -76,11 +77,12 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
             ? `${priorQuestions.slice(-2).join("\n")}\nFollow-up question: ${message}`
             : message;
       onPhase?.("Searching and checking patristic sources...");
-      const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query, () => onPhase?.("Waiting for distant source..."))]);
+      const [profile, research] = await Promise.all([getUserProfileContext(user.id), buildPatristicResearchContext(query, () => onPhase?.("Waiting for distant source..."), message)]);
       onPhase?.("Writing the answer...");
       // A source-dependent question must not silently fall back to a fluent,
       // unsupported historical or patristic account when all providers fail.
       // Preserve the turn and allow the user to retry later without fabricating facts.
+      const reviewedPilot = !!research?.sources.length && research.sources.every(source => source.metadata?.reviewedPilot === true);
       const evidenceRequired = shouldRunPatristicResearch(query);
       const evidenceUnavailable = evidenceRequired && !research?.sources.length;
       const noSourceMessage = /\p{Script=Cyrillic}/u.test(message)
@@ -89,14 +91,49 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       // All generated answers, including bibliographies, must share the
       // streaming path. A deterministic answer previously skipped onDelta,
       // leaving the client with no visible text until the terminal event.
-      const result = evidenceUnavailable
+      let result = evidenceUnavailable
         ? (() => {
             onDelta?.(noSourceMessage);
             return { answer: noSourceMessage, budget: {} };
           })()
         : await generateOrthodoxAnswer({ userMessage: message, contextKey,
           extraContext: `${profile}\n\n${sourceChallenge ? `The user is challenging an earlier assertion. Explicitly verify or retract it, admit mistakes clearly, and do not replace it with another unsupported attribution. Previous assistant text is NOT evidence.\n` : followUp ? `This is a follow-up to a previous answer; respond to the implied correction/question in its conversational context, not with a generic definition.\n` : ""}\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
-          patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns }, onDelta });
+          patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns },
+          // Never stream an unreviewed pilot answer before the source safety gate.
+          onDelta: reviewedPilot ? undefined : onDelta });
+      if (reviewedPilot && research) {
+        let issues = reviewedGregoryAnswerIssues(result.answer, research.sources, message);
+        if (issues.length) {
+          diagnostic("operation_failed", { operation: "research", failure: "validation" });
+          // Only the source issue codes are sent to the model; no discarded answer
+          // is leaked or saved. The second answer passes the very same validator.
+          const regenerated = await generateOrthodoxAnswer({
+            userMessage: message, contextKey, isPro: isProUser(user),
+            conversation: { turns }, patristicContext: research.context,
+            extraContext: [
+              "The first draft did not pass the reviewed primary-text safeguards.",
+              "Write one clear paragraph in the original user's language and script.",
+              "Base every historical or theological claim only on the three supplied",
+              "opening excerpts describing Macrina consoling Gregory after Basil's death.",
+              "Natural grief is permitted; distinguish mourning from hopeless despair.",
+              "No horses, cavalry, outside works, direct quotations or PG references.",
+              "Review issue codes: " + issues.join(", ")
+            ].join("\n"),
+            onDelta: undefined,
+          });
+          issues = reviewedGregoryAnswerIssues(regenerated.answer, research.sources, message);
+          if (issues.length) {
+            diagnostic("operation_failed", { operation: "research", failure: "validation" });
+            throw new AiInputError(
+              "The reviewed source could not support a safe answer to this question. Please rephrase your question.",
+              422
+            );
+          }
+          result = regenerated;
+        }
+        // Stream only the answer that passed the pilot's source guard.
+        onDelta?.(result.answer);
+      }
       onPhase?.("Reviewing source evidence...");
       const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
       const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
