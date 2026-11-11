@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 import {createLoader} from "./helpers/load-ts.mjs";
 
 const seed=JSON.parse(readFileSync(new URL("../src/lib/patristics/bibliography-catalog-seed.json",import.meta.url),"utf8"));
-const adapter=createLoader({"./bibliography-catalog-seed.json":{default:seed}});
+const adapter=createLoader({"./bibliography-catalog-seed.json":seed});
 const {sourceBackedBibliographyContext:research}=adapter("src/lib/patristics/source-backed-bibliography.ts");
 
 test("Nicodemus bibliographic question emits reviewed role-scoped evidence, never pending works",()=>{
