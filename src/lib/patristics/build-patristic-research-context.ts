@@ -192,11 +192,12 @@ export async function buildPatristicResearchContext(
   onWaitingForSource?: () => void,
   currentQuestion: string = query,
 ): Promise<PatristicResearchContext | null> {
-  if (!shouldRunPatristicResearch(query)) return null;
   // Narrow current-turn bibliographic questions use reviewed catalog evidence;
-  // unresolved authors and non-bibliographic topics keep existing retrieval.
+  // even non-saint contributors (e.g. an underlying source author) are eligible.
+  // Unresolved authors and non-bibliographic topics keep existing retrieval.
   const bibliography = sourceBackedBibliographyContext(currentQuestion);
   if (bibliography) return bibliography;
+  if (!shouldRunPatristicResearch(query)) return null;
   // Guard on the CURRENT turn only; previous approved questions never authorize
   // unrelated new theological claims. No production schema or staging dependency.
   const reviewed = reviewedGregoryOpeningEvidence(currentQuestion);
