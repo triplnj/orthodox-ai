@@ -1,4 +1,5 @@
 import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import {reviewedGregoryOpeningEvidence} from "./reviewed-gregory-evidence";
 import {
   buildVerifiedPatristicContext,
   type PatristicLanguage,
@@ -188,8 +189,13 @@ function finalize(
 export async function buildPatristicResearchContext(
   query: string,
   onWaitingForSource?: () => void,
+  currentQuestion: string = query,
 ): Promise<PatristicResearchContext | null> {
   if (!shouldRunPatristicResearch(query)) return null;
+  // Guard on the CURRENT turn only; previous approved questions never authorize
+  // unrelated new theological claims. No production schema or staging dependency.
+  const reviewed = reviewedGregoryOpeningEvidence(currentQuestion);
+  if (reviewed) return reviewed;
 
   const providersAttempted: string[] = [];
   const providersSucceeded: string[] = [];
