@@ -23,7 +23,7 @@ test("source-dependent answers cannot silently proceed without evidence", () => 
   const route = read("src/app/api/chat/route.ts");
   assert.match(route, /evidenceRequired\s*=\s*shouldRunPatristicResearch\(query\)/);
   assert.match(route, /evidenceUnavailable\s*=\s*evidenceRequired\s*&&\s*!research\?\.sources\.length/);
-  assert.match(route, /const result\s*=\s*evidenceUnavailable\s*\?/);
+  assert.match(route, /(?:const|let) result\s*=\s*evidenceUnavailable\s*\?/);
 });
 
 test("general OpenAI research uses required broad web search rather than a restricted timeout-starving first pass", () => {
@@ -51,7 +51,7 @@ test("Maximus doctrinal question cannot be replaced by a Justin bibliography", (
   assert.doesNotMatch(route, /verifiedBibliographyAnswer/);
   assert.doesNotMatch(route, /bibliographyUnavailable/);
   assert.match(route, /await generateOrthodoxAnswer\(/);
-  assert.match(route, /conversation: \{ turns \}, onDelta/);
+  assert.match(route, /conversation: \{ turns \},(?:\s*\/\/[^\n]*\n)*\s*onDelta: reviewedPilot \? undefined : onDelta/);
 });
 test("fallback responses also emit streaming deltas", () => {
   const route = read("src/app/api/chat/route.ts");
