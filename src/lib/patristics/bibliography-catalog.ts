@@ -7,7 +7,8 @@
  */
 export type BibliographicRole =
   | "AUTHOR" | "CO_AUTHOR" | "EDITOR" | "CO_EDITOR"
-  | "COMPILER" | "TRANSLATOR" | "ADAPTOR" | "COMMENTATOR";
+  | "COMPILER" | "TRANSLATOR" | "ADAPTOR" | "COMMENTATOR"
+  | "SOURCE_AUTHOR";
 export type AttributionStatus =
   | "REVIEW_REQUIRED" | "SOURCE_ATTESTED" | "DISPUTED" | "REJECTED";
 export type SourceKind =
@@ -66,7 +67,7 @@ const httpUrl=(value:string)=>{
   catch {return false;}
 };
 function fail(why:string):never{throw new Error("BIBLIOGRAPHY_CATALOG_INVALID: "+why);}
-const legalRoles=new Set<BibliographicRole>(["AUTHOR","CO_AUTHOR","EDITOR","CO_EDITOR","COMPILER","TRANSLATOR","ADAPTOR","COMMENTATOR"]);
+const legalRoles=new Set<BibliographicRole>(["AUTHOR","CO_AUTHOR","EDITOR","CO_EDITOR","COMPILER","TRANSLATOR","ADAPTOR","COMMENTATOR","SOURCE_AUTHOR"]);
 const legalStatus=new Set<AttributionStatus>(["REVIEW_REQUIRED","SOURCE_ATTESTED","DISPUTED","REJECTED"]);
 const legalKind=new Set<SourceKind>(["PRIMARY_EDITION","OFFICIAL_CHURCH","SCHOLARLY_BIBLIOGRAPHY","PUBLISHER_CATALOG","COMMUNITY_REFERENCE"]);
 const legalWorkKind=new Set<CatalogWork["workKind"]>(["ORIGINAL","ANTHOLOGY","TRANSLATION","ADAPTATION","COMMENTARY","COMPILATION","UNCERTAIN"]);
@@ -184,4 +185,32 @@ export function listCatalogWorks(catalog:BibliographyCatalog,authorId:string):Bi
   .map(c=>({work:catalog.works.find(w=>w.id===c.workId)!,roles:c.roles,status:c.attribution,
     evidence:catalog.evidence.filter(e=>c.evidenceIds.includes(e.id)),editorialNote:c.editorialNote}));
  return entries.sort((a,b)=>a.work.canonicalTitle.localeCompare(b.work.canonicalTitle,"en"));
+}
+
+/**
+ * Evidence-scoped attribution dossier. Only the exact author's reviewed,
+ * non-community citation can authorize SOURCE_ATTESTED. No title inference.
+ * SOURCE_AUTHOR means authorship of the underlying text of an adaptation,
+ * not of the adapted publication. Pending or disputed roles remain visible
+ * for editorial review, never silently promoted to a user-facing fact.
+ */
+export type AttributionReviewRow = {
+  authorId:string; workId:string; roles:BibliographicRole[];
+  status:AttributionStatus; evidenceUrls:string[];
+  verifiedEvidenceIds:string[]; openQuestions:string[];
+};
+export function attributionReviewMatrix(catalog:BibliographyCatalog):AttributionReviewRow[]{
+ validateBibliographyCatalog(catalog);
+ return catalog.contributions.map(c=>{
+  const supporting=catalog.evidence.filter(e=>c.evidenceIds.includes(e.id));
+  const verified=supporting.filter(e=>e.reviewStatus==="REVIEWED"&&e.kind!=="COMMUNITY_REFERENCE");
+  const openQuestions:string[]=[];
+  if(!verified.length)openQuestions.push("NO_REVIEWED_INDEPENDENT_SOURCE");
+  if(c.attribution==="REVIEW_REQUIRED")openQuestions.push("ROLE_NEEDS_REVIEW");
+  if(c.attribution==="DISPUTED")openQuestions.push("CONFLICTING_ATTRIBUTION");
+  if(c.attribution==="REJECTED")openQuestions.push("ATTRIBUTION_REJECTED");
+  return {authorId:c.authorId,workId:c.workId,roles:[...c.roles],
+    status:c.attribution,evidenceUrls:supporting.map(e=>e.url),
+    verifiedEvidenceIds:verified.map(e=>e.id),openQuestions};
+ });
 }
