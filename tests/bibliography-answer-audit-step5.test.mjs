@@ -62,6 +62,7 @@ test("known noncatalog, multi-author and unrelated theological questions do not 
   "Шта Никодим Светогорац учи о молитви?",
   "What did St. Macarius of Corinth teach about Holy Communion?",
   "Tell me a story",
+  "Who authored the Philokalia?",
  ];
  for(const question of negative)assert.equal(research(question),null,question);
 });
