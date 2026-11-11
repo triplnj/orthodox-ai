@@ -1,0 +1,417 @@
+{
+  "schemaVersion": 1,
+  "authors": [
+    {
+      "id": "nicodemus-hagiorite",
+      "canonicalName": "St. Nicodemus the Hagiorite",
+      "nameVariants": [
+        "Свети Никодим Светогорац",
+        "Никодим Агиорит",
+        "Никодим Светогорац",
+        "Никодима Светогорца",
+        "Никодима Агиорита",
+        "Saint Nicodemos of the Holy Mountain",
+        "Nicodemus the Hagiorite",
+        "Nikodimos Agioritis",
+        "Νικόδημος ὁ Ἁγιορείτης"
+      ],
+      "completeness": "SELECTED"
+    }
+  ],
+  "works": [
+    {
+      "id": "philokalia",
+      "canonicalTitle": "Philokalia",
+      "originalTitle": "Φιλοκαλία",
+      "titleVariants": [
+        "Филокалија",
+        "Добротољубље"
+      ],
+      "originalLanguage": "Greek",
+      "workKind": "ANTHOLOGY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "unseen-warfare",
+      "canonicalTitle": "Unseen Warfare",
+      "originalTitle": null,
+      "titleVariants": [
+        "Невидљива борба",
+        "Аоратос полемос"
+      ],
+      "originalLanguage": null,
+      "workKind": "ADAPTATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "manual-confession",
+      "canonicalTitle": "Manual of Confession",
+      "originalTitle": null,
+      "titleVariants": [
+        "Ексомологитарион",
+        "Exomologetarion"
+      ],
+      "originalLanguage": null,
+      "workKind": "UNCERTAIN",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "christian-morality",
+      "canonicalTitle": "Christian Morality",
+      "originalTitle": null,
+      "titleVariants": [
+        "Хришћанско благонравије",
+        "Chrestoethia of Christians"
+      ],
+      "originalLanguage": null,
+      "workKind": "ORIGINAL",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-theotokarion",
+      "canonicalTitle": "New Theotokarion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нови Богородичник",
+        "Theotokarion"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "pedalion",
+      "canonicalTitle": "Pedalion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Пидалион",
+        "Кормчило",
+        "The Rudder"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-synaxarion",
+      "canonicalTitle": "The New Synaxarion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нови Синаксар",
+        "Synaxaristes"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "seven-catholic-epistles",
+      "canonicalTitle": "Interpretation of the Seven Catholic Epistles",
+      "originalTitle": null,
+      "titleVariants": [
+        "Тумачење седам саборних посланица"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMMENTARY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "heortodromion",
+      "canonicalTitle": "Heortodromion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Еортодромион",
+        "Eortodromion"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMMENTARY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-ladder",
+      "canonicalTitle": "The New Ladder",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нова лествица",
+        "New Klimax"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMMENTARY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    }
+  ],
+  "contributions": [
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "philokalia",
+      "roles": [
+        "EDITOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-philokalia"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "unseen-warfare",
+      "roles": [
+        "ADAPTOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-unseen-warfare"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "manual-confession",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "REVIEW_REQUIRED",
+      "evidenceIds": [
+        "antioch-manual-confession"
+      ],
+      "editorialNote": "Official account lists his Manual of Confession; provenance of its sources and exact authorial role need further editorial review."
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "christian-morality",
+      "roles": [
+        "AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-christian-morality"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-theotokarion",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-new-theotokarion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "pedalion",
+      "roles": [
+        "EDITOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-pedalion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-synaxarion",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "REVIEW_REQUIRED",
+      "evidenceIds": [
+        "antioch-new-synaxarion"
+      ],
+      "editorialNote": "Official account lists the posthumously published three-volume New Synaxarion; scope of authorial versus editorial contribution still requires review."
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "seven-catholic-epistles",
+      "roles": [
+        "AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-seven-catholic-epistles"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "heortodromion",
+      "roles": [
+        "COMMENTATOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-heortodromion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-ladder",
+      "roles": [
+        "COMMENTATOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-new-ladder"
+      ],
+      "editorialNote": null
+    }
+  ],
+  "evidence": [
+    {
+      "id": "antioch-philokalia",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Edited the Philokalia manuscript at the assignment of St Macarius of Corinth; he also wrote its preface (official patriarchal account).",
+      "workId": "philokalia",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "EDITOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-unseen-warfare",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Edited and adapted Lorenzo Scupoli's Spiritual Combat as Unseen Warfare; not an independently original work.",
+      "workId": "unseen-warfare",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-manual-confession",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account lists his Manual of Confession; provenance of its sources and exact authorial role need further editorial review.",
+      "workId": "manual-confession",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "reviewStatus": "PENDING_REVIEW",
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "antioch-christian-morality",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account identifies Christian Morality (Venice, 1803) among his works.",
+      "workId": "christian-morality",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "AUTHOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-new-theotokarion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Published sixty-two canons to the Theotokos from Mount Athos manuscript collections, under New Theotokarion.",
+      "workId": "new-theotokarion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-pedalion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Prepared a new edition of the Pedalion, collecting and explaining ecclesiastical canons.",
+      "workId": "pedalion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "EDITOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-new-synaxarion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account lists the posthumously published three-volume New Synaxarion; scope of authorial versus editorial contribution still requires review.",
+      "workId": "new-synaxarion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "reviewStatus": "PENDING_REVIEW",
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "antioch-seven-catholic-epistles",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account identifies his Interpretation of the Seven Catholic Epistles, Venice 1806/1819.",
+      "workId": "seven-catholic-epistles",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "AUTHOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-heortodromion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Interpretation of canons sung on feasts of Christ and the Theotokos; published posthumously.",
+      "workId": "heortodromion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMMENTATOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-new-ladder",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Interpretation of 75 Hymns of Degrees in the Octoechos; published posthumously.",
+      "workId": "new-ladder",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMMENTATOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    }
+  ]
+}
