@@ -149,16 +149,31 @@ export type BibliographyMatch=
 export function findCatalogAuthor(query:string,catalog:BibliographyCatalog):BibliographyMatch{
  const input=" "+canonical(query)+" ";
  if(!input.trim())return {status:"AUTHOR_NOT_FOUND"};
- // Whole phrases, not substring matches (e.g. John != John Chrysostom).
- const matching=catalog.authors.filter(a=>
-  [a.canonicalName,...a.nameVariants].some(v=>{
-    const normalized=canonical(v);
-    return normalized.length>=4&&input.includes(" "+normalized+" ");
-  }));
- if(!matching.length)return {status:"AUTHOR_NOT_FOUND"};
- if(matching.length>1)return {status:"AMBIGUOUS_AUTHOR",authorIds:matching.map(a=>a.id)};
- return {status:"EXACT_AUTHOR",author:matching[0],
-  workContributions:catalog.contributions.filter(c=>c.authorId===matching[0].id&&c.attribution!=="REJECTED")};
+ // Match only complete phrases; a short generic alias fully inside a longer
+ // author alias must not falsely create ambiguity. Independent names in the
+ // same question, and exact alias collisions, remain AMBIGUOUS_AUTHOR.
+ const hits:{author:CatalogAuthor;start:number;end:number}[]=[];
+ for(const author of catalog.authors){
+  for(const variant of [author.canonicalName,...author.nameVariants]){
+   const alias=canonical(variant);
+   if(alias.length<4)continue;
+   const needle=" "+alias+" ";
+   let pos=0;
+   while((pos=input.indexOf(needle,pos))>=0){
+    hits.push({author,start:pos,end:pos+needle.length});
+    pos+=needle.length-1;
+   }
+  }
+ }
+ if(!hits.length)return {status:"AUTHOR_NOT_FOUND"};
+ const strongest=hits.filter(hit=>!hits.some(other=>
+  other!==hit&&other.start<=hit.start&&other.end>=hit.end&&
+  other.end-other.start>hit.end-hit.start));
+ const authorIds=[...new Set(strongest.map(hit=>hit.author.id))];
+ if(authorIds.length>1)return {status:"AMBIGUOUS_AUTHOR",authorIds:authorIds.sort()};
+ const author=catalog.authors.find(author=>author.id===authorIds[0])!;
+ return {status:"EXACT_AUTHOR",author,
+  workContributions:catalog.contributions.filter(c=>c.authorId===author.id&&c.attribution!=="REJECTED")};
 }
 export type BibliographicEntry={
  work:CatalogWork; roles:BibliographicRole[]; status:AttributionStatus;
