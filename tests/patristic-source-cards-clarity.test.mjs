@@ -12,3 +12,10 @@ test("source passages without a linked claim have an explanatory label",()=>{
  assert.match(cards,/!\(source\.claimMappings \?\? \[\]\)\.length/);
  assert.match(cards,/No specific claim in this answer was linked to a matching excerpt/);
 });
+
+test("bibliographic evidence has a work-role grouping rather than an unmatched excerpt warning",()=>{
+ assert.match(cards,/bibliographyUrls = new Map/);
+ assert.match(cards,/metadata\\?\\.bibliographyCatalog === true/);
+ assert.match(cards,/Reviewed bibliographic attribution records/);
+ assert.match(cards,/metadata\\?\\.supportingStatement/);
+});

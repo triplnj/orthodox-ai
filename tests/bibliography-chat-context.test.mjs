@@ -41,3 +41,13 @@ test("research router uses current question and remains unchanged for unrelated 
  assert.match(router,/if \(bibliography\) return bibliography/);
  assert.match(router,/researchPatristicQuestionOnWeb\(query/);
 });
+
+test("three named works receive only their reviewed work-role edges, including Pinamonti",()=>{
+ const r=research("Да ли је свети Никодим Светогорац оригинални аутор Добротољубља, Невидљиве борбе и Духовних вежби?");
+ assert.ok(r);
+ const works=new Set(r.sources.map(x=>x.metadata.workId));
+ assert.deepEqual([...works].sort(),["philokalia","spiritual-exercises","unseen-warfare"]);
+ assert.match(r.context,/Giovanni Pietro Pinamonti \\(SOURCE_AUTHOR\\)/);
+ assert.match(r.context,/NOT CATALOGUED HERE/);
+ assert.doesNotMatch(r.context,/TITLE: Christian Morality/);
+});

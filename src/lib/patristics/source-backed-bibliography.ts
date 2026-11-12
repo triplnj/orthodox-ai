@@ -11,7 +11,7 @@ import {
 } from "./bibliography-catalog";
 import type { PatristicResearchContext, PatristicResearchSource } from "./build-patristic-research-context";
 
-const bibliographyIntent = /(?:\b(?:works|writings|books|bibliograph\w*|publications|authored|compiled|edited|translated)\b|\b(?:dela|djela|spisi|knjige|bibliografija|napisao|sastavio|uredio|preveo)\b|дел[аоуи]|спис[а-я]*|књиг[а-я]*|библиограф[а-я]*|написа[а-я]*|састави[а-я]*|уреди[а-я]*|преве[а-я]*)/iu;
+const bibliographyIntent = /(?:\b(?:works|writings|books|bibliograph\w*|publications|authored|compiled|edited|translated)\b|\b(?:dela|djela|spisi|knjige|bibliografija|napisao|sastavio|uredio|preveo)\b|аутор[а-я]*|адапт[а-я]*|оригиналн[а-я]*|дел[аоуи]|спис[а-я]*|књиг[а-я]*|библиограф[а-я]*|написа[а-я]*|састави[а-я]*|уреди[а-я]*|преве[а-я]*)/iu;
 
 export function sourceBackedBibliographyContext(currentQuestion: string): PatristicResearchContext | null {
   // Resolve ONLY the current user question: never inherit an author from a
@@ -21,7 +21,17 @@ export function sourceBackedBibliographyContext(currentQuestion: string): Patris
   const match = findCatalogAuthor(currentQuestion, catalog);
   if (match.status !== "EXACT_AUTHOR") return null;
 
+  // An explicitly named work narrows the evidence set; a general bibliography
+  // request still receives the selective attested catalogue.
+  const normalized = (text: string) => text.normalize("NFKC").toLocaleLowerCase("en").replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+  const input = " " + normalized(currentQuestion) + " ";
+  const namedWorks = catalog.works.filter(work =>
+    [work.canonicalTitle, work.originalTitle, ...work.titleVariants]
+      .filter((title): title is string => typeof title === "string")
+      .some(title => input.includes(" " + normalized(title) + " ")));
+  const namedWorkIds = new Set(namedWorks.map(work => work.id));
   const confirmed = listCatalogWorks(catalog, match.author.id)
+    .filter(entry => !namedWorkIds.size || namedWorkIds.has(entry.work.id))
     .filter(entry => entry.status === "SOURCE_ATTESTED")
     .map(entry => ({
       ...entry,
@@ -54,7 +64,8 @@ export function sourceBackedBibliographyContext(currentQuestion: string): Patris
       verificationStatus: "REVIEWED_BIBLIOGRAPHIC_ATTRIBUTION",
       webpageTitle: evidence.title,
       metadata: { bibliographyCatalog: true, workId: entry.work.id,
-        roles: entry.roles, sourceKind: evidence.kind },
+        roles: entry.roles, sourceKind: evidence.kind,
+        evidenceId: evidence.id, supportingStatement: evidence.supportingStatement },
     });
     return [
       `[REVIEWED_BIBLIOGRAPHY_${index + 1}]`,
@@ -80,6 +91,9 @@ export function sourceBackedBibliographyContext(currentQuestion: string): Patris
       "These are bibliographic metadata, not text excerpts: no direct quotation, doctrinal interpretation, or invented page references.",
       `There are ${provisionalCount} additional provisional/disputed attribution(s) intentionally excluded; do not guess their titles or present this selection as a complete bibliography.`,
       "If asked for a complete bibliography, explicitly state that the catalog is selective.",
+      "Never infer that an omitted work does not exist or has no historical relationship with this author. Missing in this selective catalogue means NOT CATALOGUED HERE, not disproved.",
+      "If a work explicitly named in the question is not covered by reviewed evidence, state that this catalogue cannot establish its attribution; never declare that no historical connection is known.",
+      "For every bibliographic claim, name its corresponding reviewed work and source URL from the evidence blocks; do not treat bibliographic metadata as verbatim book excerpts.",
       "Do not use unsupported prior assistant statements to expand the list.",
       ...blocks,
     ].join("\n\n"),

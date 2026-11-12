@@ -46,6 +46,16 @@
         "Lorenzo Scupoli of Venice"
       ],
       "completeness": "UNKNOWN"
+    },
+    {
+      "id": "giovanni-pietro-pinamonti",
+      "canonicalName": "Giovanni Pietro Pinamonti",
+      "nameVariants": [
+        "Giampietro Pinamonti",
+        "Giovanni Pinamonti",
+        "Ђовани Пјетро Пинамонти"
+      ],
+      "completeness": "UNKNOWN"
     }
   ],
   "works": [
@@ -191,6 +201,22 @@
       "originalLanguage": null,
       "workKind": "TRANSLATION",
       "completenessNote": "Selected bibliographic entry; full edition and Greek title are not yet reviewed."
+    },
+    {
+      "id": "spiritual-exercises",
+      "canonicalTitle": "Spiritual Exercises (Gymnasmata Pneumatika)",
+      "originalTitle": "Γυμνάσματα πνευματικά",
+      "titleVariants": [
+        "Spiritual Exercises",
+        "Духовне вежбе",
+        "Духовних вежби",
+        "Духовне вјежбе",
+        "Gymnasmata Pneumatika",
+        "Духовни упражнения"
+      ],
+      "originalLanguage": "Greek",
+      "workKind": "ADAPTATION",
+      "completenessNote": "Venice 1800; Nikodemos adapted Pinamonti's works into an Orthodox ascetical setting; not an original Ignatius of Loyola text. Translation and compositional history require distinction."
     }
   ],
   "contributions": [
@@ -376,6 +402,31 @@
         "antioch-paul-fourteen-epistles"
       ],
       "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "spiritual-exercises",
+      "roles": [
+        "ADAPTOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "russell-nicodemus-spiritual-exercises",
+        "pravenc-nicodemus-spiritual-exercises"
+      ],
+      "editorialNote": "Pinamonti supplied underlying works; Nikodemos reshaped them with Orthodox commentary and additions. Do not claim sole original authorship or direct derivation from Loyola."
+    },
+    {
+      "authorId": "giovanni-pietro-pinamonti",
+      "workId": "spiritual-exercises",
+      "roles": [
+        "SOURCE_AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "russell-pinamonti-spiritual-exercises"
+      ],
+      "editorialNote": "Author of the underlying Esercitii spirituali, not sole author of Nikodemos's Greek adaptation."
     }
   ],
   "evidence": [
@@ -648,6 +699,51 @@
       "reviewStatus": "REVIEWED",
       "reviewedBy": "source-crosscheck-2026-11-11",
       "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "russell-nicodemus-spiritual-exercises",
+      "url": "https://www.theway.org.uk/back/564Russell.pdf",
+      "title": "Norman Russell — St Nikodemos the Hagiorite (The Way)",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Russell identifies Nikodemos's Gymnasmata pneumatika (Venice, 1800) as an adaptation of Giampietro Pinamonti's two works, not an independently authored original.",
+      "workId": "spiritual-exercises",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-inspection-2026-11-12",
+      "reviewedAt": "2026-11-12T00:00:00.000Z"
+    },
+    {
+      "id": "pravenc-nicodemus-spiritual-exercises",
+      "url": "https://www.pravenc.ru/text/Никодим%20Святогорец.html",
+      "title": "Православная энциклопедия — Никодим Святогорец: Духовные упражнения",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "The encyclopedia identifies the Venice 1800 edition, Pinamonti's book as the main source, and Nikodemos's prefatory and patristic additions.",
+      "workId": "spiritual-exercises",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-inspection-2026-11-12",
+      "reviewedAt": "2026-11-12T00:00:00.000Z"
+    },
+    {
+      "id": "russell-pinamonti-spiritual-exercises",
+      "url": "https://www.theway.org.uk/back/564Russell.pdf",
+      "title": "Norman Russell — St Nikodemos the Hagiorite (The Way)",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Russell names the Jesuit Giampietro Pinamonti and his Esercitii spirituali and La religiosa in solitudine as the underlying source works for Nikodemos's Greek adaptation.",
+      "workId": "spiritual-exercises",
+      "authorId": "giovanni-pietro-pinamonti",
+      "rolesSupported": [
+        "SOURCE_AUTHOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-inspection-2026-11-12",
+      "reviewedAt": "2026-11-12T00:00:00.000Z"
     }
   ]
 }

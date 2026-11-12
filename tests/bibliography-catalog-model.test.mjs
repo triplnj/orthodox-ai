@@ -9,10 +9,10 @@ const fixture=()=>JSON.parse(readFileSync(filename,"utf8"));
 test("seed catalog validates a source-backed, finite, editorially qualified graph",()=>{
  const cat=m.validateBibliographyCatalog(fixture());
  assert.equal(cat.schemaVersion,1);
- assert.equal(cat.authors.length,4);
- assert.equal(cat.works.length,12);
- assert.equal(cat.contributions.length,15);
- assert.equal(cat.evidence.length,18);
+ assert.equal(cat.authors.length,5);
+ assert.equal(cat.works.length,13);
+ assert.equal(cat.contributions.length,17);
+ assert.equal(cat.evidence.length,21);
  assert.equal(cat.authors[0].completeness,"SELECTED");
  assert.ok(cat.evidence.every(e=>e.url.startsWith("https://")&&e.supportingStatement.length>=25));
  assert.equal(cat.contributions.filter(c=>c.attribution==="REVIEW_REQUIRED").length,2);
@@ -28,14 +28,14 @@ test("resolve aliases, transliterations and inflected Serbian without per-author
   const r=m.findCatalogAuthor(query,cat);
   assert.equal(r.status,"EXACT_AUTHOR",query);
   assert.equal(r.author.id,"nicodemus-hagiorite");
-  assert.equal(r.workContributions.length,12);
+  assert.equal(r.workContributions.length,13);
  }
  assert.equal(m.findCatalogAuthor("What did St Gregory of Nyssa say?",cat).status,"AUTHOR_NOT_FOUND");
 });
 test("every classified work keeps exact role and source evidence; anthology not sole authorship",()=>{
  const cat=m.validateBibliographyCatalog(fixture());
  const rows=m.listCatalogWorks(cat,"nicodemus-hagiorite");
- assert.equal(rows.length,12);
+ assert.equal(rows.length,13);
  const phil=rows.find(x=>x.work.id==="philokalia");
  assert.deepEqual(Array.from(phil.roles),["EDITOR"]);
  assert.equal(phil.work.workKind,"ANTHOLOGY");
@@ -112,4 +112,15 @@ test("reject coauthor sources wrongly reused as another author's evidence",()=>{
  const mac=copy.contributions.find(r=>r.authorId==="macarius-corinth");
  mac.evidenceIds=["antioch-philokalia"];
  assert.throws(()=>m.validateBibliographyCatalog(copy),/evidence does not support contribution/);
+});
+
+test("Spiritual Exercises records Nikodemos as adaptor and Pinamonti as underlying source author",()=>{
+ const cat=m.validateBibliographyCatalog(fixture());
+ const nic=m.listCatalogWorks(cat,"nicodemus-hagiorite").find(x=>x.work.id==="spiritual-exercises");
+ const pin=m.listCatalogWorks(cat,"giovanni-pietro-pinamonti").find(x=>x.work.id==="spiritual-exercises");
+ assert.deepEqual(nic.roles,["ADAPTOR"]);
+ assert.deepEqual(pin.roles,["SOURCE_AUTHOR"]);
+ assert.equal(nic.work.workKind,"ADAPTATION");
+ assert.ok(nic.evidence.every(x=>x.reviewStatus==="REVIEWED"));
+ assert.ok(!pin.roles.includes("AUTHOR"));
 });
