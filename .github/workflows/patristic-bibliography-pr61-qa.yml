@@ -17,6 +17,8 @@ on:
       - 'tests/universal-bibliography-resolver.test.mjs'
       - 'tests/bibliography-step5-matrix.test.mjs'
       - 'docs/qa/bibliography-step5-matrix.md'
+      - 'docs/qa/bibliography-step6-release-decision.md'
+      - 'tests/bibliography-step6-release-gate.test.mjs'
       - 'src/lib/patristics/universal-bibliography-resolver.ts'
       - 'src/lib/patristics/build-patristic-research-context.ts'
       - 'src/lib/patristics/web-patristic-research.ts'
@@ -52,6 +54,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run bibliography and source-card regression suites
-        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver bibliography-step5-matrix fast-patristic-research phase4-ssrf
+        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver bibliography-step5-matrix bibliography-step6-release-gate fast-patristic-research phase4-ssrf
       - name: Typecheck
         run: npx tsc --noEmit
