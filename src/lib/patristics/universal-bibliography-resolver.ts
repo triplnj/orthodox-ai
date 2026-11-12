@@ -178,6 +178,13 @@ export async function resolveUniversalBibliography(
   if (!claims.length) return curatedWitnesses.length
     ? curatedOnlyFallback(curatedWitnesses)
     : { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
+  // A single successful extraction must not discard other author-matched
+  // pre-approved editions. Keep these as UNKNOWN-role records, not invented
+  // original-authorship conclusions.
+  const supplementary = curatedWitnesses.length ? curatedOnlyFallback(curatedWitnesses) : null;
+  const extractedSourceUrls = new Set(claims.map(claim => claim.sourceUrl));
+  const additionalSources = (supplementary?.sources ?? [])
+    .filter(source => !extractedSourceUrls.has(source.sourceUrl));
   const sources: PatristicResearchSource[] = claims.map((claim, i) => ({
     provider: "WEB_RESEARCH", authorName: null, workTitle: claim.work,
     reference: null, originalLanguage: null, sourceUrl: claim.sourceUrl,
@@ -199,6 +206,13 @@ export async function resolveUniversalBibliography(
       "INDEPENDENT means no parent established by this evidence; do not claim no parent exists.",
       "If some information is unsupported, state that the available sources do not establish it. Never imply the corpus is complete.",
       "For claims based on a single secondary source, use appropriately cautious attribution.",
+      "Preserve original-language title exactly as supplied in source evidence; do NOT improvise translations into the user's language. If you do not have a sourced localized title, keep the original-language work title.",
+      "Do not say that other well-known works by this person do not exist merely because the current verified source sample is incomplete.",
+      "When supplemental CURATED_WORK_IDENTITY entries are present, list those edition titles separately from the validated work-role claims. Their author role is UNKNOWN, not disproved.",
+      ...(additionalSources.length ? [
+        "ADDITIONAL PRE-APPROVED EDITION IDENTITIES — NOT PROOF OF SPECIFIC AUTHORSHIP ROLE.",
+        ...additionalSources.map(source => "CURATED_WORK: " + source.authorName + " | " + source.workTitle + " | " + source.sourceUrl + " | ROLE: UNKNOWN"),
+      ] : []),
       ...claims.map((claim, i) => [
         "[BIBLIOGRAPHIC_CLAIM_" + (i + 1) + "]",
         "WORK: " + claim.work, "ROLE: " + claim.role, "RELATION: " + claim.relation,
@@ -209,6 +223,8 @@ export async function resolveUniversalBibliography(
         "[/BIBLIOGRAPHIC_CLAIM_" + (i + 1) + "]",
       ].join("\n")),
     ].join("\n\n"),
-    sources, providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: ["UNIVERSAL_BIBLIOGRAPHY"],
+    sources: [...sources, ...additionalSources],
+    providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY", ...(supplementary ? ["CURATED_WORK_IDENTITY"] : [])],
+    providersSucceeded: ["UNIVERSAL_BIBLIOGRAPHY", ...(additionalSources.length ? ["CURATED_WORK_IDENTITY"] : [])],
   };
 }

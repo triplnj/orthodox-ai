@@ -101,3 +101,29 @@ test("curated work identities yield a safe partial bibliography instead of the g
  assert.match(r.context,/NEVER infer that listed translations/);
  assert.doesNotMatch(r.context,/AUTHOR: St. John of Damascus is original author/);
 });
+
+test("one validated work supplements other curated editions without fabricating authorship", async()=>{
+ const witness=[
+  {authorName:"St. John of Damascus",workTitle:"Περὶ εἰκόνων",
+   sourceUrl:page.url,sourceName:"Primary text",verificationStatus:"CURATED_PRIMARY_TEXT"},
+  {authorName:"St. John of Damascus",workTitle:"An Exposition of the Orthodox Faith, Book IV",
+   sourceUrl:"https://www.newadvent.org/fathers/33044.htm",sourceName:"New Advent",
+   verificationStatus:"CURATED_PATRISTIC_TEXT_REPOSITORY"},
+  {authorName:"St. John of Damascus",workTitle:"St John Damascene on Holy Images",
+   sourceUrl:"https://www.gutenberg.org/cache/epub/49917/pg49917-images.html",
+   sourceName:"Project Gutenberg",verificationStatus:"CURATED_PUBLIC_DOMAIN_EDITION"},
+ ];
+ const claim={work:"Περὶ εἰκόνων",role:"AUTHOR",relation:"INDEPENDENT",parentWork:null,
+   sourceUrl:page.url,evidenceQuote:"John of Damascus composed The Fount of Knowledge, comprising three major parts.",
+   note:"A source-matched work title with provisional authorship attribution."};
+ const greekPage={...page,text:page.text+" John of Damascus wrote Περὶ εἰκόνων."};
+ const result=await resolveUniversalBibliography(input,urls,{
+    fetchText:async()=>greekPage,extract:async()=>({claims:[claim]})
+ },witness);
+ assert.equal(result.sources.length,3);
+ assert.deepEqual(result.sources.filter(s=>s.verificationStatus==="CURATED_BIBLIOGRAPHIC_IDENTITY_ONLY").map(s=>s.workTitle).sort(),
+   ["An Exposition of the Orthodox Faith, Book IV","St John Damascene on Holy Images"]);
+ assert.match(result.context,/ADDITIONAL PRE-APPROVED EDITION IDENTITIES/);
+ assert.match(result.context,/do NOT improvise translations/);
+ assert.doesNotMatch(result.context,/ROLE: AUTHOR.*An Exposition/);
+});
