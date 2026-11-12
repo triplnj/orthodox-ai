@@ -67,7 +67,7 @@ test("missing parent, empty corpus, and failed model extraction fail closed",asy
 test("same generic engine works for unrelated author without per-saint tables",async()=>{
  const basil={
   url:"https://press.example.edu/basil", title:"Critical edition — Saint Basil", text:
-   "Saint Basil the Great wrote On the Holy Spirit as a theological treatise on the Spirit and Christian worship."
+   "Saint Basil the Great wrote On the Holy Spirit as a theological treatise on the Spirit and Christian worship. This study of the Holy Spirit is discussed in multiple scholarly editions of Basil\u0027s theological writings. The treatise considers the Christian liturgical confession of the Spirit alongside the Father and the Son."
  };
  const r=await resolveUniversalBibliography("List works by Saint Basil the Great",
   {context:"Web search",sources:[{sourceUrl:basil.url,title:basil.title}]},
