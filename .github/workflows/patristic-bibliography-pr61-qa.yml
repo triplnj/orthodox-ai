@@ -1,0 +1,46 @@
+name: Bibliography PR61 regression QA
+
+on:
+  push:
+    branches:
+      - feature/patristic-bibliography-step5-answer-audit-20261111
+    paths:
+      - 'src/lib/patristics/bibliography-*'
+      - 'src/lib/patristics/source-backed-bibliography.ts'
+      - 'src/components/chat/SourceCards.tsx'
+      - 'tests/bibliography-*.test.mjs'
+      - 'tests/patristic-source-cards-clarity.test.mjs'
+      - 'tests/run-regressions.mjs'
+      - '.github/workflows/patristic-bibliography-pr61-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bibliography-pr61-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bibliography:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+      OPENAI_API_KEY: ""
+      RESEND_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run bibliography and source-card regression suites
+        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity
+      - name: Typecheck
+        run: npx tsc --noEmit
