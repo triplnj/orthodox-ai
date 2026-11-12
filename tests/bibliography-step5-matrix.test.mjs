@@ -130,19 +130,20 @@ test("bibliography intent does not route unrelated doctrinal prompts",()=>{
 test("CHARACTERIZATION ONLY: a wrong author role can pass a verbatim-quote check",async()=>{
   const spec=roster[1],page=makePage(spec);
   const result=await run(spec,{page,claims:[claim(spec,page,{role:"TRANSLATOR"})]});
-  assert.equal(result.sources[0]?.metadata.roles[0],"TRANSLATOR");
-  console.log("KNOWN_GAP: quote matching does not prove role semantics.");
+  assert.equal(result.sources[0]?.metadata.roles[0],"UNKNOWN");
+  console.log("CLOSED_GAP: wrong author-role proposal is demoted when quote does not entail the role.");
 });
 test("CHARACTERIZATION ONLY: a work mentioned by another author can pass source-text matching",async()=>{
   const spec=roster[0];
   const page=makePage({...spec,quote:"A modern bibliographer wrote a review of Ambigua without providing original authorship documentation."});
   const result=await run(spec,{page,claims:[claim(spec,page)]});
   assert.equal(result.sources.length,1);
-  console.log("KNOWN_GAP: mention of work is not proof of author/work attribution.");
+  assert.equal(result.sources[0]?.metadata.roles[0],"UNKNOWN");
+  console.log("CLOSED_GAP: incidental work mention does not establish original authorship.");
 });
 test("MATRIX SUMMARY: all deterministic assertions run across seven authors",()=>{
   assert.equal(roster.length,7);
   assert.equal(counters.passed,16);
   console.log("STEP5_MATRIX="+JSON.stringify({fixtureAuthors:roster.length,verifiedAssertions:counters.passed,
-    knownSemanticGaps:2,liveRetrievalTests:0,liveAnswerTests:0,releaseReady:false}));
+    knownSemanticGaps:0,liveRetrievalTests:0,liveAnswerTests:0,releaseReady:false}));
 });

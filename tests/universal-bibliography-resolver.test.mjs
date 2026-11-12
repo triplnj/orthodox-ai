@@ -40,6 +40,7 @@ test("universal gate identifies named-author bibliography without overriding the
 test("John of Damascus shows three parts under one parent work, never three standalone books", async()=>{
  const r=await resolveUniversalBibliography(input,urls,{fetchText:async()=>page,extract:async()=>candidates});
  assert.equal(r.sources.length,3);
+ assert.ok(r.sources.every(x=>x.metadata.roles[0]==="UNKNOWN"));
  assert.ok(r.sources.every(x=>x.metadata.relation==="PART_OF"&&x.metadata.parentWorkTitle==="The Fount of Knowledge"));
  assert.match(r.context,/PART_OF requires explaining/);
  assert.match(r.context,/The Dialectica is the first part/);
@@ -84,6 +85,7 @@ test("same generic engine works for unrelated author without per-saint tables",a
    sourceUrl:basil.url,evidenceQuote:basil.text,note:"Source explicitly credits Saint Basil with this work."
   }]})});
  assert.equal(r.sources.length,1);
+ assert.deepEqual(r.sources[0].metadata.roles,["AUTHOR"]);
  assert.match(r.context,/On the Holy Spirit/);
 });
 

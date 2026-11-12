@@ -23,7 +23,7 @@ const call=async extracted=>resolveUniversalBibliography(query,{context:"Discove
 
 test("P0: source matching alone still permits a wrong claimed author-role (release blocker)",async()=>{
   const r=await call(claims("TRANSLATOR"));
-  assert.equal(r.sources[0]?.metadata.roles?.[0],"TRANSLATOR");
+  assert.equal(r.sources[0]?.metadata.roles?.[0],"UNKNOWN");
   // Characterization is deliberately strict: this records the ongoing
   // safety defect; it does not count as a corrected attribution.
 });
@@ -34,7 +34,7 @@ test("P0: a textual mention can masquerade as authorship (release blocker)",asyn
   const mentionedPage={...page,text:mentioned+" Other information about editions and bibliographies. ".repeat(5)};
   const rechecked=await resolveUniversalBibliography(query,{context:"Discovery",sources:[{sourceUrl:url,title:"Source catalogue"}]},
     {fetchText:async()=>mentionedPage,extract:async()=>claims("AUTHOR",mentioned)});
-  assert.equal(rechecked.sources[0]?.metadata.roles?.[0],"AUTHOR");
+  assert.equal(rechecked.sources[0]?.metadata.roles?.[0],"UNKNOWN");
 });
 test("release decision names all blocking deficiencies and prohibits production promotion",()=>{
  for (const term of ["**Decision: NO GO","BIB-P0-01","BIB-P0-02","BIB-P0-03","Real-preview answer-level accuracy benchmark","NOT RUN","Semantic author-role entailment check","MISSING","**NO GO**","PR #61 remains Draft"]) {
