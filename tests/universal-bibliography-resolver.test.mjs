@@ -32,7 +32,9 @@ test("universal gate identifies named-author bibliography without overriding the
  assert.equal(isUniversalBibliographyQuestion(input),true);
  assert.equal(isUniversalBibliographyQuestion("List the works of Saint Basil the Great"),true);
  assert.equal(isUniversalBibliographyQuestion("What does Saint Basil say about grace?"),false);
- assert.equal(isUniversalBibliographyQuestion("Наведи дела Јустина Поповића"),false); // no saint title: remain in prior pipeline
+ assert.equal(isUniversalBibliographyQuestion("Наведи дела Јустина Поповића"),true);
+ assert.equal(isUniversalBibliographyQuestion("List works by John of Damascus"),true);
+ assert.equal(isUniversalBibliographyQuestion("Tell me a story about clouds"),false);
 });
 test("John of Damascus shows three parts under one parent work, never three standalone books", async()=>{
  const r=await resolveUniversalBibliography(input,urls,{fetchText:async()=>page,extract:async()=>candidates});

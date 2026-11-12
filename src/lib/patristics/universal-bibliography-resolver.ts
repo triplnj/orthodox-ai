@@ -30,7 +30,9 @@ const safeUrl = (value: string): string | null => {
 export function isUniversalBibliographyQuestion(query: string): boolean {
   const listing = /(?:наведи|наброј|поброј|која су|које су|списак|list|enumerate|which|what are|bibliograph|дел[аоуи]|књиг[аеу]|спис[а-я]*|works|writings|books|authorship|ауторств|оригинални аутор)/iu.test(query);
   const works = /(?:дел[аоуи]|књиг[аеу]|спис[а-я]*|bibliograph|works|writings|books|аутор|author|припис|атрибут)/iu.test(query);
-  const person = /(?:свет[иаоуг]|svet[ioa]|saint|st\.|преподобн|father|отац|отца)/iu.test(query);
+  const person = /(?:свет[иаоуг]|св\\.|svet[ioa]|sv\\.|saint|st\\.|преподобн|father|отац|отца)/iu.test(query)
+    || /(?:works|writings|books)\\s+(?:of|by)\\s+[A-Z][a-z]+(?:\\s+(?:of|the|von|de|[A-Z][a-z]+)){1,4}/u.test(query)
+    || /(?:дела|списе|књиге)\\s+(?:[А-Я][а-я]+\\s+){1,3}[А-Я][а-я]+/u.test(query);
   return listing && works && person;
 }
 type ExtractedPage = { url: string; title: string; text: string };
