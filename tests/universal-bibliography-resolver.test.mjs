@@ -85,3 +85,18 @@ test("same generic engine works for unrelated author without per-saint tables",a
  assert.equal(r.sources.length,1);
  assert.match(r.context,/On the Holy Spirit/);
 });
+
+test("curated work identities yield a safe partial bibliography instead of the generic refusal", async()=>{
+ const witness=[{
+  authorName:"St. John of Damascus",workTitle:"St John Damascene on Holy Images",
+  sourceUrl:"https://www.gutenberg.org/cache/epub/49917/pg49917-images.html",
+  sourceName:"Project Gutenberg",verificationStatus:"CURATED_PUBLIC_DOMAIN_EDITION",
+ }];
+ const r=await resolveUniversalBibliography(input,null,
+   {fetchText:async()=>page,extract:async()=>({claims:[]})},witness);
+ assert.equal(r.sources.length,1);
+ assert.deepEqual(r.sources[0].metadata.roles,["UNKNOWN"]);
+ assert.equal(r.sources[0].verificationStatus,"CURATED_BIBLIOGRAPHIC_IDENTITY_ONLY");
+ assert.match(r.context,/NEVER infer that listed translations/);
+ assert.doesNotMatch(r.context,/AUTHOR: St. John of Damascus is original author/);
+});

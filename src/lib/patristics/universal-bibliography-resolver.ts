@@ -37,6 +37,52 @@ export function isUniversalBibliographyQuestion(query: string): boolean {
   return listing && works && person;
 }
 type ExtractedPage = { url: string; title: string; text: string };
+type CuratedBibliographicWitness = {
+  authorName: string;
+  workTitle: string;
+  sourceUrl: string;
+  sourceName: string;
+  verificationStatus: string;
+};
+/**
+ * Pre-approved source descriptions are not proof of precise authorship roles,
+ * but may legitimately identify an edition by its catalogued work title.
+ * Use them only as a sparse, explicitly unverified-role bibliography when
+ * live claim extraction yields zero validated work-role records.
+ */
+function curatedOnlyFallback(witnesses: CuratedBibliographicWitness[]): PatristicResearchContext {
+  const unique = [...new Map(witnesses.filter(w => !!safeUrl(w.sourceUrl) && w.workTitle.trim().length >= 4)
+    .map(w => [normalize(w.workTitle), w])).values()].slice(0, 6);
+  const sources: PatristicResearchSource[] = unique.map((w, index) => ({
+    provider: "CURATED_TEXT",
+    authorName: w.authorName,
+    workTitle: w.workTitle,
+    reference: null,
+    originalLanguage: null,
+    sourceUrl: safeUrl(w.sourceUrl)!,
+    scanUrl: null,
+    verificationStatus: "CURATED_BIBLIOGRAPHIC_IDENTITY_ONLY",
+    webpageTitle: w.sourceName,
+    metadata: { bibliographyCatalog: true, workId: normalize(w.workTitle), sourceKind: "CURATED_WORK_IDENTITY",
+      evidenceId: "curated-identity-" + index, roles: ["UNKNOWN"],
+      supportingStatement: "This curated edition identifies the named work and its associated author; it does not independently establish whether the author was an original author, compiler, editor or adaptor.",
+      editorialReview: false },
+  }));
+  return {
+    context: [
+      "LIMITED BIBLIOGRAPHIC RESULT: PRE-APPROVED EDITION METADATA ONLY.",
+      "You may list ONLY the identified work titles below. These are verified catalogue identifications, NOT independently verified original-authorship roles.",
+      "Explicitly state that precise AUTHOR/EDITOR/COMPILER/ADAPTOR roles and larger collection hierarchy have not been established from a bibliography here.",
+      "NEVER infer that listed translations are the originally authored work, or claim that an edited anthology is independently original.",
+      "Do not insert extra work titles or source links from memory or the conversation.",
+      ...unique.map(w => "CURATED_WORK: " + w.authorName + " | " + w.workTitle + " | " + w.sourceName + " | " + w.sourceUrl),
+    ].join("\n"),
+    sources,
+    providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY", "CURATED_WORK_IDENTITY"],
+    providersSucceeded: sources.length ? ["CURATED_WORK_IDENTITY"] : [],
+  };
+}
+
 function validateClaims(raw: unknown, pages: ExtractedPage[]) {
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as { claims?: unknown }).claims)) return [];
   const lookup = new Map(pages.map(page => [page.url, page]));
@@ -80,6 +126,7 @@ export async function resolveUniversalBibliography(
     fetchText?: typeof fetchSourceText;
     extract?: (query: string, pages: ExtractedPage[]) => Promise<unknown>;
   } = {},
+  curatedWitnesses: CuratedBibliographicWitness[] = [],
 ): Promise<PatristicResearchContext | null> {
   if (!isUniversalBibliographyQuestion(query)) return null;
   const fetchText = dependencies.fetchText ?? fetchSourceText;
@@ -95,7 +142,9 @@ export async function resolveUniversalBibliography(
     } catch { return null; }
   }))).filter((page): page is ExtractedPage => page !== null);
   diagnostic("operation_completed", { operation: "retrieval", count: pages.length });
-  if (!pages.length) return { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
+  if (!pages.length) return curatedWitnesses.length
+    ? curatedOnlyFallback(curatedWitnesses)
+    : { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
   let extracted: unknown;
   try {
     if (dependencies.extract) extracted = await dependencies.extract(query, pages);
@@ -126,7 +175,9 @@ export async function resolveUniversalBibliography(
   }
   const claims = validateClaims(extracted, pages);
   diagnostic("operation_completed", { operation: "verification", count: claims.length });
-  if (!claims.length) return { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
+  if (!claims.length) return curatedWitnesses.length
+    ? curatedOnlyFallback(curatedWitnesses)
+    : { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
   const sources: PatristicResearchSource[] = claims.map((claim, i) => ({
     provider: "WEB_RESEARCH", authorName: null, workTitle: claim.work,
     reference: null, originalLanguage: null, sourceUrl: claim.sourceUrl,

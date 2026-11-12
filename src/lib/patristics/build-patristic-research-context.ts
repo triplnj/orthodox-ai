@@ -217,7 +217,15 @@ export async function buildPatristicResearchContext(
     ];
     return resolveUniversalBibliography(currentQuestion, candidates.length
       ? { context: discovered?.context ?? "Curated author-specific source candidates", sources: candidates }
-      : null);
+      : null, {}, findCuratedPatristicDocuments(currentQuestion)
+        .filter(doc => doc.documentType === "PRIMARY_TEXT" || doc.documentType === "TRANSLATION" || doc.documentType === "BIBLIOGRAPHIC")
+        .map(doc => ({
+          authorName: doc.authorName,
+          workTitle: doc.workTitle,
+          sourceUrl: doc.sourceUrl,
+          sourceName: doc.sourceName,
+          verificationStatus: doc.verificationStatus,
+        })));
   }
   if (!shouldRunPatristicResearch(query)) return null;
   // Guard on the CURRENT turn only; previous approved questions never authorize
