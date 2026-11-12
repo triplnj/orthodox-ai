@@ -203,6 +203,7 @@ function decodeHtml(
 
 export async function fetchSourceText(
   url: string,
+  signal?: AbortSignal,
 ) {
   const response =
     await safeSourceFetch(
@@ -216,6 +217,7 @@ export async function fetchSourceText(
             "text/html,application/xhtml+xml,application/pdf",
         },
 
+        signal,
         next: {
           revalidate:
             86400,

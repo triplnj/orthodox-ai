@@ -83,7 +83,7 @@ export async function resolveUniversalBibliography(
   const pages = (await Promise.all(urls.map(async url => {
     if (/\.pdf(?:$|\?)/iu.test(url)) return null;
     try {
-      const page = await fetchText(url);
+      const page = await fetchText(url, AbortSignal.timeout(7000));
       if (page.text.length < 200) return null;
       return { url, title: page.title.slice(0, 180), text: page.text.slice(0, 19000) };
     } catch { return null; }
@@ -94,7 +94,7 @@ export async function resolveUniversalBibliography(
     if (dependencies.extract) extracted = await dependencies.extract(query, pages);
     else {
       const response = await getOpenAI().chat.completions.create({
-        model: "gpt-4.1-mini", temperature: 0, max_completion_tokens: 2600,
+        model: "gpt-4.1-mini", temperature: 0, max_completion_tokens: 1900,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: [
@@ -110,7 +110,7 @@ export async function resolveUniversalBibliography(
           ].join("\n") },
           { role: "user", content: JSON.stringify({ question: query, pages: pages.map(p => ({ url: p.url, title: p.title, text: p.text.slice(0, 12500) })) }) },
         ],
-      }, { signal: AbortSignal.timeout(16000), maxRetries: 0 });
+      }, { signal: AbortSignal.timeout(12000), maxRetries: 0 });
       extracted = JSON.parse(response.choices[0]?.message?.content ?? "{}");
     }
   } catch { extracted = null; }

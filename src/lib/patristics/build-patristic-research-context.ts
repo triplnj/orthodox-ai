@@ -202,7 +202,7 @@ export async function buildPatristicResearchContext(
   // unsorted biography and theology snippets to the answer model as proof.
   if (isUniversalBibliographyQuestion(currentQuestion)) {
     let discovered = null;
-    try { discovered = await researchPatristicQuestionOnWeb(query, onWaitingForSource); }
+    try { discovered = await researchPatristicQuestionOnWeb(query, onWaitingForSource, "bibliography"); }
     catch (error) { diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) }); }
     return resolveUniversalBibliography(currentQuestion, discovered);
   }
