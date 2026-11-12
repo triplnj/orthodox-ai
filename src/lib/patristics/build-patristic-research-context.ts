@@ -204,7 +204,15 @@ export async function buildPatristicResearchContext(
     let discovered = null;
     try { discovered = await researchPatristicQuestionOnWeb(query, onWaitingForSource, "bibliography"); }
     catch (error) { diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) }); }
-    return resolveUniversalBibliography(currentQuestion, discovered);
+    // Reuse existing author-matched curated editions as additional candidates
+    // across all authors; do not rely only on changing web-search rankings.
+    const curatedBibliographyCandidates = findCuratedPatristicDocuments(currentQuestion)
+      .filter(doc => doc.documentType === "PRIMARY_TEXT" || doc.documentType === "TRANSLATION" || doc.documentType === "BIBLIOGRAPHIC")
+      .map(doc => ({ sourceUrl: doc.sourceUrl, title: doc.sourceName }));
+    const candidates = [...(discovered?.sources ?? []), ...curatedBibliographyCandidates];
+    return resolveUniversalBibliography(currentQuestion, candidates.length
+      ? { context: discovered?.context ?? "Curated author-specific source candidates", sources: candidates }
+      : null);
   }
   if (!shouldRunPatristicResearch(query)) return null;
   // Guard on the CURRENT turn only; previous approved questions never authorize
