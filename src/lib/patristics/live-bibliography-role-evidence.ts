@@ -13,7 +13,7 @@ const nameVariants = (person: string) => {
   return [...new Set([value,sansArticles].filter(v=>v.length>=6))];
 };
 export function namedAuthorFromEnglishQuestion(query: string): string | null {
-  const m=query.match(/\b(?:saint|st\.?)\s+([A-Z][\p{L}]+(?:\s+(?:of|the|[A-Z][\p{L}]+)){0,5})/u);
+  const m=query.match(/\b(?:saint|st\.?)\s+([A-Z][\p{L}]+(?:\s+(?:of|the|[A-Z][\p{L}]+)){0,5})/iu);
   return m ? "Saint "+m[1] : null;
 }
 export function explicitRoleAttested(input:{
