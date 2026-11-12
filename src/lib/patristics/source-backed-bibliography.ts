@@ -23,7 +23,7 @@ export function sourceBackedBibliographyContext(currentQuestion: string): Patris
 
   // An explicitly named work narrows the evidence set; a general bibliography
   // request still receives the selective attested catalogue.
-  const normalized = (text: string) => text.normalize("NFKC").toLocaleLowerCase("en").replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+  const normalized = (text: string) => text.normalize("NFKC").toLocaleLowerCase("en").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   const input = " " + normalized(currentQuestion) + " ";
   const namedWorks = catalog.works.filter(work =>
     [work.canonicalTitle, work.originalTitle, ...work.titleVariants]

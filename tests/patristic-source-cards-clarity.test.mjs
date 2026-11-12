@@ -15,7 +15,7 @@ test("source passages without a linked claim have an explanatory label",()=>{
 
 test("bibliographic evidence has a work-role grouping rather than an unmatched excerpt warning",()=>{
  assert.match(cards,/bibliographyUrls = new Map/);
- assert.match(cards,/metadata\\?\\.bibliographyCatalog === true/);
+ assert.match(cards,/metadata\?\.bibliographyCatalog === true/);
  assert.match(cards,/Reviewed bibliographic attribution records/);
- assert.match(cards,/metadata\\?\\.supportingStatement/);
+ assert.match(cards,/metadata\?\.supportingStatement/);
 });
