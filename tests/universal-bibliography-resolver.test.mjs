@@ -54,6 +54,11 @@ test("rejects invented quotations, bogus source URLs, extra author attribution a
  const r=await resolveUniversalBibliography(input,urls,{fetchText:async()=>page,extract:async()=>raw});
  assert.equal(r.sources.length,1);
 });
+test("invented parent collection cannot be asserted from an unrelated excerpt", async()=>{
+ const claim={...candidates.claims[0], parentWork:"Imaginary Collection of Texts"};
+ const r=await resolveUniversalBibliography(input,urls,{fetchText:async()=>page,extract:async()=>({claims:[claim]})});
+ assert.equal(r.sources.length,0);
+});
 test("missing parent, empty corpus, and failed model extraction fail closed",async()=>{
  const invalid={claims:[{...candidates.claims[0], parentWork:null}]};
  for (const extract of [async()=>invalid,async()=>{throw Error("model offline");}]){

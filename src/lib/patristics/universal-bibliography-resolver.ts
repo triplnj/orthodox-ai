@@ -54,6 +54,9 @@ function validateClaims(raw: unknown, pages: ExtractedPage[]) {
     if (x.relation === "PART_OF" && !x.parentWork) continue;
     if (x.relation === "ADAPTATION_OF" && !x.parentWork) continue;
     if (x.relation === "TRANSLATION_OF" && !x.parentWork) continue;
+    // A model-supplied parent is not evidence of a real work hierarchy.
+    if (typeof x.parentWork === "string" && x.relation !== "UNCERTAIN" &&
+        !normalize(x.evidenceQuote).includes(normalize(x.parentWork))) continue;
     // Work name must appear in the actual fetched source page, not just in the model output.
     if (!normalize(page.text).includes(normalize(x.work))) continue;
     const key = normalize(x.work) + "|" + x.role + "|" + x.relation + "|" + url;
