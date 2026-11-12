@@ -4,7 +4,7 @@ import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const suites = process.argv.slice(2);
-if (!suites.length) suites.push("bibliography-catalog-model", "bibliography-chat-context", "bibliography-answer-audit-step5", "patristic-source-cards-clarity", "reviewed-gregory-production", "gregory-soul-evidence", "fast-patristic-research", "orthodoxwiki-bibliography", "official-saint-life", "blog-security", "openai-initialization", "stripe-initialization", "phase2-security", "phase3-billing", "phase4-auth", "phase4-ssrf", "phase5-conversations", "phase6-api", "phase6-retries", "phase6-postgres", "phase6-frontend", "phase7-ui", "phase8-review-security", "phase8-privacy-legacy");
+if (!suites.length) suites.push("bibliography-catalog-model", "bibliography-chat-context", "bibliography-answer-audit-step5", "preview-qa-chat-access", "patristic-source-cards-clarity", "reviewed-gregory-production", "gregory-soul-evidence", "fast-patristic-research", "orthodoxwiki-bibliography", "official-saint-life", "blog-security", "openai-initialization", "stripe-initialization", "phase2-security", "phase3-billing", "phase4-auth", "phase4-ssrf", "phase5-conversations", "phase6-api", "phase6-retries", "phase6-postgres", "phase6-frontend", "phase7-ui", "phase8-review-security", "phase8-privacy-legacy");
 const env = { ...process.env };
 for (const key of Object.keys(env)) if (/OPENAI|STRIPE|LEMONSQUEEZY|RESEND|DATABASE|DIRECT_URL|PGPASSWORD|PGHOST|PGUSER/i.test(key)) delete env[key];
 let failed = false;
