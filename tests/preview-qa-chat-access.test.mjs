@@ -25,7 +25,11 @@ test("no QA allowance for production, other branches, or missing isolation guard
     ["ORTHODOXAI_CHAT_PREVIEW_DB_BRANCH_ID", "br-flat-mode-as1mxdf8"],
     ["ORTHODOXAI_PREVIEW_QA_CHAT", "disabled"],
   ]) assert.equal(fn({ ...good, [key]: value })("pr61_preview_test_20261112"), false, key);
-  for (const key of Object.keys(good)) assert.equal(fn({ ...good, [key]: "" })("pr61_preview_test_20261112"), false, key);
+  for (const key of Object.keys(good).filter(key => key !== "VERCEL_GIT_COMMIT_REF"))
+    assert.equal(fn({ ...good, [key]: "" })("pr61_preview_test_20261112"), false, key);
+  assert.equal(fn({ ...good, VERCEL_GIT_COMMIT_REF: "" })("pr61_preview_test_20261112"), true);
+  const { VERCEL_GIT_COMMIT_REF: unused, ...withoutGitRef } = good;
+  assert.equal(fn(withoutGitRef)("pr61_preview_test_20261112"), true);
 });
 test("QA setting stays chat-only and keeps normal quota admission controls", async () => {
   const fs = await import("node:fs");
