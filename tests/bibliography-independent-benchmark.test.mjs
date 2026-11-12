@@ -28,15 +28,25 @@ test("100 percent index coverage still does not certify a historically accurate 
  assert.equal(score.attributionReleaseReady,false);
 });
 test("measure present reviewed-catalogue coverage without calling LLM or external services",()=>{
- const localAuthors=local.authors.map(x=>x.canonicalName.toLowerCase());
- const matched=ref.positive.filter(x=>localAuthors.some(y=>y===x.author.toLowerCase()));
- const score=evaluateIndexCoverage(ref.positive,matched,ref.negative);
+ const canon=(value)=>value.normalize("NFKC").toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu," ").trim().replace(/\\s+/g," ");
+ const getMatchedAuthor=(name)=>local.authors.find(a=>[a.canonicalName,...a.nameVariants].some(alias=>canon(alias)===canon(name)));
+ const nameOverlap=ref.positive.filter(x=>!!getMatchedAuthor(x.author));
+ const verifiedPairs=ref.positive.filter(x=>{
+   const author=getMatchedAuthor(x.author);
+   if(!author)return false;
+   const work=local.works.find(w=>[w.canonicalTitle,w.originalTitle,...w.titleVariants].filter(Boolean).some(t=>canon(t)===canon(x.work)));
+   if(!work)return false;
+   return local.contributions.some(c=>c.authorId===author.id&&c.workId===work.id&&c.attribution==="SOURCE_ATTESTED"&&
+     c.evidenceIds.some(eid=>local.evidence.some(e=>e.id===eid&&e.reviewStatus==="REVIEWED"&&e.kind!=="COMMUNITY_REFERENCE")));
+ });
+ const score=evaluateIndexCoverage(ref.positive,verifiedPairs,ref.negative);
  console.log("EXTERNAL_BIBLIOGRAPHY_BASELINE="+JSON.stringify({
     externalSource:"https://www.newadvent.org/fathers/",
     externalAuthors:20,indexListedPairs:ref.positive.length,
     explicitNegativeExamples:ref.negative.length,
-    sameNameOverlapWithReviewedCatalog:matched.length,
-    nameOverlapNotAuthorWorkRoleCoverage:true,
+    sameNameOverlapWithReviewedCatalog:nameOverlap.length,
+    reviewedAuthorWorkTitleExactMatches:score.exactIndexMatches,
+    exactCatalogTitleCoverage:score.indexCoverage,
     independentlyAdjudicated:false,
     liveAnswerBenchmarkRun:false,
     releaseReady:false,
