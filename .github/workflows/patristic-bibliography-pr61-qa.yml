@@ -17,6 +17,9 @@ on:
       - 'tests/universal-bibliography-resolver.test.mjs'
       - 'src/lib/patristics/universal-bibliography-resolver.ts'
       - 'src/lib/patristics/build-patristic-research-context.ts'
+      - 'src/lib/patristics/web-patristic-research.ts'
+      - 'src/lib/patristics/fetch-source.ts'
+      - 'src/lib/security/source-policy.ts'
       - '.github/workflows/patristic-bibliography-pr61-qa.yml'
   workflow_dispatch:
 
@@ -47,6 +50,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run bibliography and source-card regression suites
-        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver
+        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver fast-patristic-research phase4-ssrf
       - name: Typecheck
         run: npx tsc --noEmit
