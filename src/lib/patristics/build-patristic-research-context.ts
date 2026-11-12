@@ -1,6 +1,7 @@
 import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import {reviewedGregoryOpeningEvidence} from "./reviewed-gregory-evidence";
 import { sourceBackedBibliographyContext } from "./source-backed-bibliography";
+import { isUniversalBibliographyQuestion, resolveUniversalBibliography } from "./universal-bibliography-resolver";
 import {
   buildVerifiedPatristicContext,
   type PatristicLanguage,
@@ -197,6 +198,14 @@ export async function buildPatristicResearchContext(
   // Unresolved authors and non-bibliographic topics keep existing retrieval.
   const bibliography = sourceBackedBibliographyContext(currentQuestion);
   if (bibliography) return bibliography;
+  // General bibliographies require a work-role evidence ledger. Do not feed
+  // unsorted biography and theology snippets to the answer model as proof.
+  if (isUniversalBibliographyQuestion(currentQuestion)) {
+    let discovered = null;
+    try { discovered = await researchPatristicQuestionOnWeb(query, onWaitingForSource); }
+    catch (error) { diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) }); }
+    return resolveUniversalBibliography(currentQuestion, discovered);
+  }
   if (!shouldRunPatristicResearch(query)) return null;
   // Guard on the CURRENT turn only; previous approved questions never authorize
   // unrelated new theological claims. No production schema or staging dependency.
