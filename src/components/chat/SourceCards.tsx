@@ -56,6 +56,6 @@ export function SourceCards({ sources }: { sources: MappedSource[] }) {
           `${sourceLabels[source.provider] ?? source.provider} · ${sourceLabels[source.verificationStatus] ?? source.verificationStatus}${source.originalLanguage ? ` · ${source.originalLanguage}` : ""}`}</p>
       </li>;
     })}</ul>
-    <p className="mt-2 text-gray-500">An automated excerpt match verifies wording within a retrieved source only; bibliographic metadata documents cataloged work-role relations. Neither independently verifies the complete generated answer or its theological interpretation.</p>
+    <p className="mt-2 text-gray-500">An automated excerpt match verifies wording within a retrieved source. These matches do not assert that the theological meaning, dialogue speaker, or permission for direct quotation has been independently verified. Bibliographic metadata documents cataloged work-role relations, not independent verification of every claim in the generated answer.</p>
   </section>;
 }
