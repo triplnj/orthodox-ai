@@ -98,6 +98,7 @@ test("curated work identities yield a safe partial bibliography instead of the g
  const r=await resolveUniversalBibliography(input,null,
    {fetchText:async()=>page,extract:async()=>({claims:[]})},witness);
  assert.equal(r.sources.length,1);
+ assert.equal(r.sources[0].metadata.recordType,"EDITION");
  assert.deepEqual(r.sources[0].metadata.roles,["UNKNOWN"]);
  assert.equal(r.sources[0].verificationStatus,"CURATED_BIBLIOGRAPHIC_IDENTITY_ONLY");
  assert.match(r.context,/NEVER infer that listed translations/);

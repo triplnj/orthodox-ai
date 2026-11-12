@@ -64,7 +64,7 @@ function curatedOnlyFallback(witnesses: CuratedBibliographicWitness[]): Patristi
     scanUrl: null,
     verificationStatus: "CURATED_BIBLIOGRAPHIC_IDENTITY_ONLY",
     webpageTitle: w.sourceName,
-    metadata: { bibliographyCatalog: true, workId: normalize(w.workTitle), sourceKind: "CURATED_WORK_IDENTITY",
+    metadata: { bibliographyCatalog: true, workId: normalize(w.workTitle), sourceKind: "CURATED_EDITION_IDENTITY", recordType: "EDITION",
       evidenceId: "curated-identity-" + index, roles: ["UNKNOWN"],
       supportingStatement: "This curated edition identifies the named work and its associated author; it does not independently establish whether the author was an original author, compiler, editor or adaptor.",
       editorialReview: false },
@@ -72,11 +72,11 @@ function curatedOnlyFallback(witnesses: CuratedBibliographicWitness[]): Patristi
   return {
     context: [
       "LIMITED BIBLIOGRAPHIC RESULT: PRE-APPROVED EDITION METADATA ONLY.",
-      "You may list ONLY the identified work titles below. These are verified catalogue identifications, NOT independently verified original-authorship roles.",
+      "You may list ONLY the catalogued EDITION titles below. These edition records are NOT evidence that each one is a separate originally authored work.",
       "Explicitly state that precise AUTHOR/EDITOR/COMPILER/ADAPTOR roles and larger collection hierarchy have not been established from a bibliography here. UNKNOWN must not be rewritten as perhaps an editor, compiler or adaptor.",
       "NEVER infer that listed translations are the originally authored work, or claim that an edited anthology is independently original.",
       "Do not insert extra work titles or source links from memory or the conversation.",
-      ...unique.map(w => "CURATED_WORK: " + w.authorName + " | " + w.workTitle + " | " + w.sourceName + " | " + w.sourceUrl),
+      ...unique.map(w => "CURATED_EDITION: " + w.authorName + " | " + w.workTitle + " | " + w.sourceName + " | " + w.sourceUrl + " | ORIGINAL_WORK_IDENTITY: NOT_ESTABLISHED"),
     ].join("\n"),
     sources,
     providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY", "CURATED_WORK_IDENTITY"],
@@ -217,10 +217,10 @@ export async function resolveUniversalBibliography(
       "For claims based on a single secondary source, use appropriately cautious attribution.",
       "Preserve original-language title exactly as supplied in source evidence; do NOT improvise translations into the user's language. If you do not have a sourced localized title, keep the original-language work title.",
       "Do not say that other well-known works by this person do not exist merely because the current verified source sample is incomplete.",
-      "When supplemental CURATED_WORK_IDENTITY entries are present, list those edition titles separately from the validated work-role claims. Their author role is UNKNOWN, not disproved.",
+      "When supplemental CURATED_EDITION_IDENTITY entries are present, list those edition titles separately from validated original works. Never present an edition title as a separately original authored work. Their role is UNKNOWN, not disproved.",
       ...(additionalSources.length ? [
         "ADDITIONAL PRE-APPROVED EDITION IDENTITIES — NOT PROOF OF SPECIFIC AUTHORSHIP ROLE.",
-        ...additionalSources.map(source => "CURATED_WORK: " + source.authorName + " | " + source.workTitle + " | " + source.sourceUrl + " | ROLE: UNKNOWN"),
+        ...additionalSources.map(source => "CURATED_EDITION: " + source.authorName + " | " + source.workTitle + " | " + source.sourceUrl + " | ROLE: UNKNOWN | ORIGINAL_WORK_IDENTITY: NOT_ESTABLISHED"),
       ] : []),
       ...claims.map((claim, i) => [
         "[BIBLIOGRAPHIC_CLAIM_" + (i + 1) + "]",

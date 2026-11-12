@@ -139,11 +139,11 @@ test("CHARACTERIZATION ONLY: a work mentioned by another author can pass source-
   const result=await run(spec,{page,claims:[claim(spec,page)]});
   assert.equal(result.sources.length,1);
   assert.equal(result.sources[0]?.metadata.roles[0],"UNKNOWN");
-  console.log("CLOSED_GAP: incidental work mention does not establish original authorship.");
+  console.log("PARTIAL_GAP: incidental mention no longer establishes role, but an unrelated work identity may remain listed.");
 });
 test("MATRIX SUMMARY: all deterministic assertions run across seven authors",()=>{
   assert.equal(roster.length,7);
   assert.equal(counters.passed,16);
   console.log("STEP5_MATRIX="+JSON.stringify({fixtureAuthors:roster.length,verifiedAssertions:counters.passed,
-    knownSemanticGaps:0,liveRetrievalTests:0,liveAnswerTests:0,releaseReady:false}));
+    knownSemanticGaps:1,liveRetrievalTests:0,liveAnswerTests:0,releaseReady:false}));
 });

@@ -19,6 +19,13 @@
 | BIB-P1-04 | P1 | A strict literal-quotation check can reject legitimate scholarly attribution and produce a misleading partial bibliography. | Report coverage and missing evidence per work; never infer bibliographic completeness from retrieval count. |
 | BIB-P1-05 | P1 | Arbitrary source-derived translated titles can be wrong; displayed links can be malformed. | Preserve sourced titles; use reviewed/attested title variants and consistent source URL rendering. |
 
+## New implementation since the initial NO-GO decision
+
+- Added `live-bibliography-role-evidence.ts`, a conservative **English-language** deterministic evidence check. Model-proposed author roles are downgraded to `UNKNOWN` unless the quoted passage explicitly connects a recognized author, work and role in the same statement. Opposite roles, incidental mention and explicit negation fail this check.
+- Added multi-author positive and adversarial regressions, plus a separate identity marker for catalogued **editions** that are not proof of original work identity. These are concrete risk reductions, not a universal academic verification engine.
+- **Still open:** ambiguous/person-specific multilingual names (especially Greek and Serbian), maliciously fabricated online claims, sources that mention a work by another person, collection/translation identity, full bibliographic coverage, and no independently judged live-answer accuracy benchmark.
+- Therefore the `NO GO` verdict **remains unchanged**. A GO requires the objective acceptance benchmark below, not a green CI alone.
+
 ## Architecture decision
 
 **Retain** the reviewed, source-backed catalogue for established author-work-role relations; continue using broad live research for **discovery only**.
