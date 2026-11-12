@@ -28,7 +28,7 @@ test("100 percent index coverage still does not certify a historically accurate 
  assert.equal(score.attributionReleaseReady,false);
 });
 test("measure present reviewed-catalogue coverage without calling LLM or external services",()=>{
- const canon=(value)=>value.normalize("NFKC").toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu," ").trim().replace(/\\s+/g," ");
+ const canon=(value)=>value.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," ");
  const getMatchedAuthor=(name)=>local.authors.find(a=>[a.canonicalName,...a.nameVariants].some(alias=>canon(alias)===canon(name)));
  const nameOverlap=ref.positive.filter(x=>!!getMatchedAuthor(x.author));
  const verifiedPairs=ref.positive.filter(x=>{
