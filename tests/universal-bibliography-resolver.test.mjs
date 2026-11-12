@@ -4,6 +4,7 @@ import { createLoader } from "./helpers/load-ts.mjs";
 
 const { isUniversalBibliographyQuestion, resolveUniversalBibliography } = createLoader({
   "@/lib/ai/openaiClient": { getOpenAI: () => { throw Error("network forbidden"); } },
+  "@/lib/diagnostics": { diagnostic: () => {}, failureCategory: () => "unexpected" },
   "./fetch-source": { fetchSourceText: async () => { throw Error("network forbidden"); } },
 })("src/lib/patristics/universal-bibliography-resolver.ts");
 const page = {
