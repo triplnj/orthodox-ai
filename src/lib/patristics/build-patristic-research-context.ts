@@ -209,7 +209,12 @@ export async function buildPatristicResearchContext(
     const curatedBibliographyCandidates = findCuratedPatristicDocuments(currentQuestion)
       .filter(doc => doc.documentType === "PRIMARY_TEXT" || doc.documentType === "TRANSLATION" || doc.documentType === "BIBLIOGRAPHIC")
       .map(doc => ({ sourceUrl: doc.sourceUrl, title: doc.sourceName }));
-    const candidates = [...(discovered?.sources ?? []), ...curatedBibliographyCandidates];
+    // Bibliography retrieval should use author-matched curated witnesses first;
+    // an unpredictable six-link web result must not crowd out actual editions.
+    const candidates = [
+      ...curatedBibliographyCandidates,
+      ...(discovered?.sources ?? []),
+    ];
     return resolveUniversalBibliography(currentQuestion, candidates.length
       ? { context: discovered?.context ?? "Curated author-specific source candidates", sources: candidates }
       : null);

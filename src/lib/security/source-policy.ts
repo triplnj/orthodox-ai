@@ -9,7 +9,7 @@ const baseHosts = ["azbyka.ru", "pravoslavie.ru", "doxologia.ro", "svetigora.com
   "archive.org", "patrologiagraeca.org", "biblegateway.com", "philokalia.com",
   "oca.org", "goarch.org", "ccel.org", "tertullian.org", "myriobiblos.gr", "antiochpatriarchate.org",
   "cambridge.org", "oup.com", "academic.oup.com", "brill.com", "degruyter.com",
-  "books.google.com", "jstor.org", "perseus.tufts.edu", "perseids.org", "pravenc.ru"];
+  "books.google.com", "jstor.org", "cuapress.org", "theway.org", "perseus.tufts.edu", "perseids.org", "pravenc.ru"];
 export const SOURCE_HOSTS = new Set([...baseHosts.flatMap(host => [host, `www.${host}`]),
   ...VERIFIED_SOURCE_HOSTS,
   "en.wikisource.org", "el.wikisource.org", "la.wikisource.org", "commons.wikimedia.org", "upload.wikimedia.org",

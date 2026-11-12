@@ -1,5 +1,6 @@
 import { getOpenAI } from "@/lib/ai/openaiClient";
 import { fetchSourceText } from "./fetch-source";
+import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import type { PatristicResearchContext, PatristicResearchSource } from "./build-patristic-research-context";
 import type { WebPatristicResearchResult } from "./web-patristic-research";
 
@@ -82,17 +83,18 @@ export async function resolveUniversalBibliography(
 ): Promise<PatristicResearchContext | null> {
   if (!isUniversalBibliographyQuestion(query)) return null;
   const fetchText = dependencies.fetchText ?? fetchSourceText;
-  const urls = [...new Set((discovery?.sources ?? []).map(s => safeUrl(s.sourceUrl)).filter((url): url is string => !!url))].slice(0, 6);
+  const urls = [...new Set((discovery?.sources ?? []).map(s => safeUrl(s.sourceUrl)).filter((url): url is string => !!url))].slice(0, 10);
   // SSRF-protected fetchSourceText enforces destination and redirect checks.
   // Only HTML sources are used here to avoid processing unbounded PDF input.
   const pages = (await Promise.all(urls.map(async url => {
     if (/\.pdf(?:$|\?)/iu.test(url)) return null;
     try {
-      const page = await fetchText(url, AbortSignal.timeout(7000));
+      const page = await fetchText(url, AbortSignal.timeout(11500));
       if (page.text.length < 200) return null;
       return { url, title: page.title.slice(0, 180), text: page.text.slice(0, 19000) };
     } catch { return null; }
   }))).filter((page): page is ExtractedPage => page !== null);
+  diagnostic("operation_completed", { operation: "retrieval", count: pages.length });
   if (!pages.length) return { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
   let extracted: unknown;
   try {
@@ -118,8 +120,12 @@ export async function resolveUniversalBibliography(
       }, { signal: AbortSignal.timeout(12000), maxRetries: 0 });
       extracted = JSON.parse(response.choices[0]?.message?.content ?? "{}");
     }
-  } catch { extracted = null; }
+  } catch (error) {
+    diagnostic("operation_failed", { operation: "extraction", failure: failureCategory(error) });
+    extracted = null;
+  }
   const claims = validateClaims(extracted, pages);
+  diagnostic("operation_completed", { operation: "verification", count: claims.length });
   if (!claims.length) return { context: "No independently text-matched bibliographic evidence found. Do not guess titles or author roles.", sources: [], providersAttempted: ["UNIVERSAL_BIBLIOGRAPHY"], providersSucceeded: [] };
   const sources: PatristicResearchSource[] = claims.map((claim, i) => ({
     provider: "WEB_RESEARCH", authorName: null, workTitle: claim.work,
