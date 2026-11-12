@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "capture": "User supplied authentic OrthodoxAI Preview answer, 2026-11-12",
+  "question": "Наведи најпознатија дела светог Јована Дамаскина. За свако дело назначи да ли је он његов оригинални аутор, састављач или приређивач и наведи проверљив библиографски извор.",
+  "samples": [
+    {
+      "id": "john-damascus-preview-20261112",
+      "source": "USER_SUPPLIED_REAL_PREVIEW_CHAT",
+      "sampleType": "REAL_ANSWER_NOT_SYNTHETIC",
+      "author": "John of Damascus",
+      "claimCount": 3,
+      "records": [
+        {
+          "displayedTitle": "Περὶ εἰκόνων (О писму о светим иконама)",
+          "attributedRole": "AUTHOR",
+          "url": "https://www.vlioras.gr/Philologia/History/Byzantine/Texts/Damaskinos_Peri_Eikonon.htm",
+          "issues": [
+            "UNSOURCED_SERBIAN_TITLE_TRANSLATION"
+          ],
+          "roleReviewed": false
+        },
+        {
+          "displayedTitle": "An Exposition of the Orthodox Faith, Book IV",
+          "attributedRole": "UNKNOWN_WITH_SPECULATIVE_EDITOR_COMPILER",
+          "url": "https://www.newadvent.org/fathers/33044.htm",
+          "issues": [
+            "EDITION_SECTION_LISTED_AS_INDEPENDENT_WORK",
+            "SPECULATIVE_ROLE"
+          ],
+          "roleReviewed": false
+        },
+        {
+          "displayedTitle": "St John Damascene on Holy Images",
+          "attributedRole": "UNKNOWN_WITH_SPECULATIVE_EDITOR_COMPILER",
+          "url": "https://www.gutenberg.org/cache/epub/49917/pg49917-images.html",
+          "issues": [
+            "EDITORIAL_EDITION_TITLE_LISTED_AS_INDEPENDENT_WORK",
+            "SPECULATIVE_ROLE"
+          ],
+          "roleReviewed": false
+        }
+      ],
+      "reviewerStatus": "ASSISTANT_SCREENED_NOT_INDEPENDENT_HUMAN_REVIEW",
+      "sourceOfTruthNotes": "This audit only codes visible defects in one user-provided real answer. It is not a statistically valid benchmark and not human independent review."
+    }
+  ]
+}

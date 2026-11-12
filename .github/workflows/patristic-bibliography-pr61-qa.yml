@@ -22,6 +22,8 @@ on:
       - 'tests/bibliography-independent-benchmark.test.mjs'
       - 'docs/qa/external-fathers-index-benchmark.json'
       - 'docs/qa/external-bibliography-benchmark.md'
+      - 'docs/qa/observed-chat-bibliography-audit.json'
+      - 'tests/bibliography-observed-answer-audit.test.mjs'
       - 'src/lib/patristics/bibliography-benchmark.ts'
       - 'src/lib/patristics/universal-bibliography-resolver.ts'
       - 'src/lib/patristics/live-bibliography-role-evidence.ts'
@@ -60,6 +62,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run bibliography and source-card regression suites
-        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver live-bibliography-role-evidence bibliography-step5-matrix bibliography-step6-release-gate bibliography-independent-benchmark fast-patristic-research phase4-ssrf
+        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver live-bibliography-role-evidence bibliography-step5-matrix bibliography-step6-release-gate bibliography-independent-benchmark bibliography-observed-answer-audit fast-patristic-research phase4-ssrf
       - name: Typecheck
         run: npx tsc --noEmit
