@@ -1,6 +1,7 @@
 import { getOpenAI } from "@/lib/ai/openaiClient";
 import { fetchSourceText } from "./fetch-source";
 import { diagnostic, failureCategory } from "@/lib/diagnostics";
+import { explicitRoleAttested, namedAuthorFromEnglishQuestion } from "./live-bibliography-role-evidence";
 import type { PatristicResearchContext, PatristicResearchSource } from "./build-patristic-research-context";
 import type { WebPatristicResearchResult } from "./web-patristic-research";
 
@@ -72,7 +73,7 @@ function curatedOnlyFallback(witnesses: CuratedBibliographicWitness[]): Patristi
     context: [
       "LIMITED BIBLIOGRAPHIC RESULT: PRE-APPROVED EDITION METADATA ONLY.",
       "You may list ONLY the identified work titles below. These are verified catalogue identifications, NOT independently verified original-authorship roles.",
-      "Explicitly state that precise AUTHOR/EDITOR/COMPILER/ADAPTOR roles and larger collection hierarchy have not been established from a bibliography here.",
+      "Explicitly state that precise AUTHOR/EDITOR/COMPILER/ADAPTOR roles and larger collection hierarchy have not been established from a bibliography here. UNKNOWN must not be rewritten as perhaps an editor, compiler or adaptor.",
       "NEVER infer that listed translations are the originally authored work, or claim that an edited anthology is independently original.",
       "Do not insert extra work titles or source links from memory or the conversation.",
       ...unique.map(w => "CURATED_WORK: " + w.authorName + " | " + w.workTitle + " | " + w.sourceName + " | " + w.sourceUrl),
@@ -83,7 +84,7 @@ function curatedOnlyFallback(witnesses: CuratedBibliographicWitness[]): Patristi
   };
 }
 
-function validateClaims(raw: unknown, pages: ExtractedPage[]) {
+function validateClaims(raw: unknown, pages: ExtractedPage[], query: string, curatedWitnesses: CuratedBibliographicWitness[]) {
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as { claims?: unknown }).claims)) return [];
   const lookup = new Map(pages.map(page => [page.url, page]));
   const result: Array<Candidate & { page: ExtractedPage }> = [];
@@ -111,8 +112,16 @@ function validateClaims(raw: unknown, pages: ExtractedPage[]) {
     const key = normalize(x.work) + "|" + x.role + "|" + x.relation + "|" + url;
     if (seen.has(key)) continue;
     seen.add(key);
+    const authorNames = [
+      ...curatedWitnesses.map(w => w.authorName),
+      namedAuthorFromEnglishQuestion(query),
+    ].filter((name): name is string => !!name);
+    const claimedRole = x.role as Role;
+    const role: Role = explicitRoleAttested({
+      quote: x.evidenceQuote, work: x.work, role: claimedRole, authorNames,
+    }) ? claimedRole : "UNKNOWN";
     result.push({
-      work: x.work.trim(), role: x.role as Role, relation: x.relation as Relation,
+      work: x.work.trim(), role, relation: x.relation as Relation,
       parentWork: typeof x.parentWork === "string" ? x.parentWork.trim() : null,
       sourceUrl: url!, evidenceQuote: x.evidenceQuote.trim(), note: x.note.trim(), page,
     });
@@ -173,7 +182,7 @@ export async function resolveUniversalBibliography(
     diagnostic("operation_failed", { operation: "extraction", failure: failureCategory(error) });
     extracted = null;
   }
-  const claims = validateClaims(extracted, pages);
+  const claims = validateClaims(extracted, pages, query, curatedWitnesses);
   diagnostic("operation_completed", { operation: "verification", count: claims.length });
   if (!claims.length) return curatedWitnesses.length
     ? curatedOnlyFallback(curatedWitnesses)
@@ -200,8 +209,8 @@ export async function resolveUniversalBibliography(
   return {
     context: [
       "UNIVERSAL BIBLIOGRAPHY: AUTOMATICALLY EXTRACTED, TEXT-MATCHED, NOT EDITORIALLY VERIFIED.",
-      "Only the records below have literal quotations matched in a fetched page. The role and work relationship are machine-extracted interpretations, not critical-bibliography certification.",
-      "Answer ONLY from these work-role records. Do not add familiar titles from memory. Do not turn an UNKNOWN role into original authorship.",
+      "Only the records below have literal quotations matched in a fetched page. Live author roles are UNKNOWN unless an explicit author-work-role statement also passed a conservative text check; even accepted roles are provisional, not critically reviewed.",
+      "Answer ONLY from these work-role records. Do not add familiar titles from memory. UNKNOWN means not established; never speculate that the person may be an editor, compiler, translator or adaptor without positive evidence.",
       "PART_OF requires explaining that the work is a component of parentWork; it must not be counted as an independent book.",
       "INDEPENDENT means no parent established by this evidence; do not claim no parent exists.",
       "If some information is unsupported, state that the available sources do not establish it. Never imply the corpus is complete.",
