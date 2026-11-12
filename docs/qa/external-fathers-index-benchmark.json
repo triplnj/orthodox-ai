@@ -1,0 +1,961 @@
+{
+  "schemaVersion": 1,
+  "origin": "EXTERNAL_INDEPENDENT_OF_ORTHODOXAI",
+  "datasetLabel": "New Advent Fathers index frozen external catalog assertions, not scholarly adjudication",
+  "sourcePages": [
+    {
+      "id": "newadvent-fathers-index",
+      "url": "https://www.newadvent.org/fathers/",
+      "title": "The Fathers of the Church — New Advent",
+      "accessDate": "2026-11-12",
+      "scope": "Author headings and listed works; spurious and by-other labels explicitly present"
+    }
+  ],
+  "positive": [
+    {
+      "id": "idx-ambrose-1",
+      "author": "Ambrose",
+      "work": "On the Christian Faith (De fide)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-2",
+      "author": "Ambrose",
+      "work": "On the Holy Spirit",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-3",
+      "author": "Ambrose",
+      "work": "On the Mysteries",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-4",
+      "author": "Ambrose",
+      "work": "On Repentance",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-5",
+      "author": "Ambrose",
+      "work": "On the Duties of the Clergy",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-6",
+      "author": "Ambrose",
+      "work": "Concerning Virgins",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-7",
+      "author": "Ambrose",
+      "work": "Concerning Widows",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ambrose-8",
+      "author": "Ambrose",
+      "work": "On the Death of Satyrus",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-1",
+      "author": "Athanasius",
+      "work": "Against the Heathen",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-2",
+      "author": "Athanasius",
+      "work": "On the Incarnation of the Word",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-3",
+      "author": "Athanasius",
+      "work": "Deposition of Arius",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-4",
+      "author": "Athanasius",
+      "work": "Statement of Faith",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-5",
+      "author": "Athanasius",
+      "work": "Apologia Contra Arianos",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-6",
+      "author": "Athanasius",
+      "work": "De Decretis",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-7",
+      "author": "Athanasius",
+      "work": "De Sententia Dionysii",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-athanasius-8",
+      "author": "Athanasius",
+      "work": "Four Discourses Against the Arians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-1",
+      "author": "Augustine of Hippo",
+      "work": "Confessions",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-2",
+      "author": "Augustine of Hippo",
+      "work": "Letters",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-3",
+      "author": "Augustine of Hippo",
+      "work": "City of God",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-4",
+      "author": "Augustine of Hippo",
+      "work": "Christian Doctrine",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-5",
+      "author": "Augustine of Hippo",
+      "work": "On the Holy Trinity",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-6",
+      "author": "Augustine of Hippo",
+      "work": "The Enchiridion",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-7",
+      "author": "Augustine of Hippo",
+      "work": "On the Catechising of the Uninstructed",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-8",
+      "author": "Augustine of Hippo",
+      "work": "On Faith and the Creed",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-9",
+      "author": "Augustine of Hippo",
+      "work": "On Continence",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-augustine-of-hippo-10",
+      "author": "Augustine of Hippo",
+      "work": "On the Good of Marriage",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-basil-the-great-1",
+      "author": "Basil the Great",
+      "work": "De Spiritu Sancto",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-basil-the-great-2",
+      "author": "Basil the Great",
+      "work": "Nine Homilies of Hexaemeron",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-basil-the-great-3",
+      "author": "Basil the Great",
+      "work": "Letters",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-clement-of-alexandria-1",
+      "author": "Clement of Alexandria",
+      "work": "Who is the Rich Man That Shall Be Saved?",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-clement-of-alexandria-2",
+      "author": "Clement of Alexandria",
+      "work": "Exhortation to the Heathen",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-clement-of-alexandria-3",
+      "author": "Clement of Alexandria",
+      "work": "The Instructor",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-clement-of-alexandria-4",
+      "author": "Clement of Alexandria",
+      "work": "The Stromata, or Miscellanies",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-cyprian-of-carthage-1",
+      "author": "Cyprian of Carthage",
+      "work": "The Epistles of Cyprian",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-cyprian-of-carthage-2",
+      "author": "Cyprian of Carthage",
+      "work": "The Treatises of Cyprian",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ephraim-the-syrian-1",
+      "author": "Ephraim the Syrian",
+      "work": "Nisibene Hymns",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ephraim-the-syrian-2",
+      "author": "Ephraim the Syrian",
+      "work": "On the Nativity of Christ in the Flesh",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ephraim-the-syrian-3",
+      "author": "Ephraim the Syrian",
+      "work": "For the Feast of the Epiphany",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-nazianzen-1",
+      "author": "Gregory Nazianzen",
+      "work": "Orations",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-nazianzen-2",
+      "author": "Gregory Nazianzen",
+      "work": "Letters",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-1",
+      "author": "Gregory of Nyssa",
+      "work": "Against Eunomius",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-2",
+      "author": "Gregory of Nyssa",
+      "work": "Answer to Eunomius' Second Book",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-3",
+      "author": "Gregory of Nyssa",
+      "work": "On the Holy Spirit (Against the Followers of Macedonius)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-4",
+      "author": "Gregory of Nyssa",
+      "work": "On the Holy Trinity, and of the Godhead of the Holy Spirit (To Eustathius)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-5",
+      "author": "Gregory of Nyssa",
+      "work": "On \"Not Three Gods\" (To Ablabius)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-6",
+      "author": "Gregory of Nyssa",
+      "work": "On Virginity",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-7",
+      "author": "Gregory of Nyssa",
+      "work": "On Infants' Early Deaths",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-8",
+      "author": "Gregory of Nyssa",
+      "work": "On the Making of Man",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-9",
+      "author": "Gregory of Nyssa",
+      "work": "On the Soul and the Resurrection",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-of-nyssa-10",
+      "author": "Gregory of Nyssa",
+      "work": "The Great Catechism",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-thaumaturgus-1",
+      "author": "Gregory Thaumaturgus",
+      "work": "A Declaration of Faith",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-thaumaturgus-2",
+      "author": "Gregory Thaumaturgus",
+      "work": "A Metaphrase of the Book of Ecclesiastes",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-thaumaturgus-3",
+      "author": "Gregory Thaumaturgus",
+      "work": "Canonical Epistle",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-gregory-thaumaturgus-4",
+      "author": "Gregory Thaumaturgus",
+      "work": "The Oration and Panegyric Addressed to Origen",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-hilary-of-poitiers-1",
+      "author": "Hilary of Poitiers",
+      "work": "On the Councils, or the Faith of the Easterns",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-hilary-of-poitiers-2",
+      "author": "Hilary of Poitiers",
+      "work": "On the Trinity",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-hilary-of-poitiers-3",
+      "author": "Hilary of Poitiers",
+      "work": "Homilies on the Psalms",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-1",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to the Ephesians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-2",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to the Magnesians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-3",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to the Trallians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-4",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to the Romans",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-5",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to the Philadelphians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-6",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to the Smyrnæans",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-ignatius-of-antioch-7",
+      "author": "Ignatius of Antioch",
+      "work": "Epistle to Polycarp",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-irenaeus-of-lyons-1",
+      "author": "Irenaeus of Lyons",
+      "work": "Adversus haereses",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-1",
+      "author": "Jerome",
+      "work": "Letters",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-2",
+      "author": "Jerome",
+      "work": "The Perpetual Virginity of Blessed Mary",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-3",
+      "author": "Jerome",
+      "work": "To Pammachius Against John of Jerusalem",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-4",
+      "author": "Jerome",
+      "work": "The Dialogue Against the Luciferians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-5",
+      "author": "Jerome",
+      "work": "The Life of Malchus, the Captive Monk",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-6",
+      "author": "Jerome",
+      "work": "The Life of S. Hilarion",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-jerome-7",
+      "author": "Jerome",
+      "work": "Against Jovinianus",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-cassian-1",
+      "author": "John Cassian",
+      "work": "Institutes",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-cassian-2",
+      "author": "John Cassian",
+      "work": "Conferences",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-cassian-3",
+      "author": "John Cassian",
+      "work": "On the Incarnation of the Lord (Against Nestorius)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-1",
+      "author": "John Chrysostom",
+      "work": "Homilies on the Gospel of St. Matthew",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-2",
+      "author": "John Chrysostom",
+      "work": "Homilies on Acts",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-3",
+      "author": "John Chrysostom",
+      "work": "Homilies on Romans",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-4",
+      "author": "John Chrysostom",
+      "work": "Homilies on First Corinthians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-5",
+      "author": "John Chrysostom",
+      "work": "Homilies on Second Corinthians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-6",
+      "author": "John Chrysostom",
+      "work": "Homilies on Ephesians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-7",
+      "author": "John Chrysostom",
+      "work": "Homilies on Philippians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-8",
+      "author": "John Chrysostom",
+      "work": "Homilies on Colossians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-9",
+      "author": "John Chrysostom",
+      "work": "Homilies on First Thessalonians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-10",
+      "author": "John Chrysostom",
+      "work": "Homilies on First Timothy",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-11",
+      "author": "John Chrysostom",
+      "work": "Commentary on Galatians",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-chrysostom-12",
+      "author": "John Chrysostom",
+      "work": "On the Priesthood",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-john-of-damascus-1",
+      "author": "John of Damascus",
+      "work": "Exposition of the Faith",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-lactantius-1",
+      "author": "Lactantius",
+      "work": "The Divine Institutes",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-lactantius-2",
+      "author": "Lactantius",
+      "work": "The Epitome of the Divine Institutes",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-lactantius-3",
+      "author": "Lactantius",
+      "work": "On the Anger of God",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-lactantius-4",
+      "author": "Lactantius",
+      "work": "On the Workmanship of God",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-lactantius-5",
+      "author": "Lactantius",
+      "work": "Of the Manner In Which the Persecutors Died",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-origen-1",
+      "author": "Origen",
+      "work": "De Principiis",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-origen-2",
+      "author": "Origen",
+      "work": "Origen to Africanus",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-origen-3",
+      "author": "Origen",
+      "work": "Origen to Gregory",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-origen-4",
+      "author": "Origen",
+      "work": "Against Celsus",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-origen-5",
+      "author": "Origen",
+      "work": "Commentary on the Gospel of John",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-1",
+      "author": "Tertullian",
+      "work": "The Apology",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-2",
+      "author": "Tertullian",
+      "work": "On Idolatry",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-3",
+      "author": "Tertullian",
+      "work": "De Spectaculis (The Shows)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-4",
+      "author": "Tertullian",
+      "work": "De Corona (The Chaplet)",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-5",
+      "author": "Tertullian",
+      "work": "An Answer to the Jews",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-6",
+      "author": "Tertullian",
+      "work": "A Treatise on the Soul",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-7",
+      "author": "Tertullian",
+      "work": "The Prescription Against Heretics",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    },
+    {
+      "id": "idx-tertullian-8",
+      "author": "Tertullian",
+      "work": "Against Marcion",
+      "relation": "INDEX_LISTED",
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_ATTESTED_NOT_SCHOLARLY_ADJUDICATED"
+    }
+  ],
+  "negative": [
+    {
+      "id": "negative-1",
+      "author": "Clement of Rome",
+      "work": "Second Epistle",
+      "reason": "SPURIOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-2",
+      "author": "Clement of Rome",
+      "work": "Two Epistles Concerning Virginity",
+      "reason": "SPURIOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-3",
+      "author": "Clement of Rome",
+      "work": "Recognitions",
+      "reason": "SPURIOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-4",
+      "author": "Clement of Rome",
+      "work": "Clementine Homilies",
+      "reason": "SPURIOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-5",
+      "author": "Cyprian of Carthage",
+      "work": "The Life and Passion of Cyprian",
+      "reason": "BY_PONTIUS_THE_DEACON",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-6",
+      "author": "Hippolytus",
+      "work": "The End of the World",
+      "reason": "PSEUDONYMOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-7",
+      "author": "Hippolytus",
+      "work": "The Apostles and the Disciples",
+      "reason": "PSEUDONYMOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-8",
+      "author": "Ignatius of Antioch",
+      "work": "The Spurious Epistles",
+      "reason": "SPURIOUS",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-9",
+      "author": "Polycarp",
+      "work": "The Martyrdom of Polycarp",
+      "reason": "ABOUT_NOT_BY",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    },
+    {
+      "id": "negative-10",
+      "author": "Eusebius of Caesarea",
+      "work": "Oration of Constantine \"to the Assembly of the Saints\"",
+      "reason": "BY_CONSTANTINE",
+      "expectedOriginalAuthorship": false,
+      "sourceId": "newadvent-fathers-index",
+      "reviewStatus": "INDEX_EXPLICIT_WARNING"
+    }
+  ],
+  "limitations": [
+    "Only index-listed title relations; NOT independent critical-edition review or proof of original author role.",
+    "Does not establish translated editions or original-language title equivalence.",
+    "Must not be used as training examples for the resolver or as a substitute for held-out reviewed ground truth."
+  ]
+}
