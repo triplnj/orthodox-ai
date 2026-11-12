@@ -32,7 +32,7 @@ export function isUniversalBibliographyQuestion(query: string): boolean {
   const works = /(?:дел[аоуи]|књиг[аеу]|спис[а-я]*|bibliograph|works|writings|books|аутор|author|припис|атрибут)/iu.test(query);
   const person = /(?:свет[иаоуг]|св\.|svet[ioa]|sv\.|saint|st\.|преподобн|father|отац|отца)/iu.test(query)
     || /(?:works|writings|books)\s+(?:of|by)\s+[A-Z][a-z]+(?:\s+(?:of|the|von|de|[A-Z][a-z]+)){1,4}/u.test(query)
-    || /(?:дела|списе|књиге)\s+(?:[А-Я][а-я]+\s+){1,3}[А-Я][а-я]+/u.test(query);
+    || /(?:дела|списе|књиге)\s+(?:\p{Lu}\p{Ll}+\s+){1,3}\p{Lu}\p{Ll}+/u.test(query);
   return listing && works && person;
 }
 type ExtractedPage = { url: string; title: string; text: string };
