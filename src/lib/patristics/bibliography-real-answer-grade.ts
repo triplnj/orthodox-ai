@@ -51,14 +51,15 @@ export function gradeRealBibliographyAnswer(
  const eligible=rows.filter(x=>x.independentlyReviewed);
  const evaluated=rows.filter(x=>x.inCorpus&&x.independentlyReviewed);
  const correct=evaluated.filter(x=>x.exactReferenceMatch).length;
- const evaluableUnique=new Set(evaluated.map(x=>key(x)));
  return {
    rows,observedClaims:rows.length,referenceClaims:references.length,
    humanReviewedClaims:eligible.length,
    inCorpusHumanReviewedClaims:evaluated.length,
    correctHumanReviewedClaims:correct,
-   humanReviewedPrecision:evaluated.length?correct/evaluated.length:null,
-   humanReviewedRecall:references.length?evaluableUnique.size/references.length:0,
+   // Unsupported reviewed claims must count against precision; otherwise a
+   // model could fabricate dozens of titles and still score 100%.
+   humanReviewedPrecision:eligible.length?correct/eligible.length:null,
+   humanReviewedRecall:references.length?new Set(evaluated.filter(x=>x.exactReferenceMatch).map(x=>key(x))).size/references.length:0,
    unassessedClaims:rows.filter(x=>!x.independentlyReviewed).length,
    independentlyValidated:rows.length>0&&rows.every(x=>x.independentlyReviewed),
    releaseReady:false,
