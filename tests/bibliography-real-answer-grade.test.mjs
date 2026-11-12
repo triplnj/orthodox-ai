@@ -51,3 +51,16 @@ test("fully cited and properly attributed human-reviewed claims score correctly"
  assert.equal(score.correctHumanReviewedClaims,1);
  assert.equal(score.releaseReady,false);
 });
+
+test("unsupported human-reviewed inventions reduce precision and are not excluded from its denominator",()=>{
+ const truth=corpus.claims.find(x=>x.id==="basil-spirit");
+ const correct={author:truth.author,work:truth.work,role:truth.role,relation:truth.relation,
+   citedUrls:truth.sourceIds.map(id=>corpus.sourceRegistry[id].url),adjudication:"HUMAN_REVIEWED"};
+ const invented={author:"Fictitious Scholar",work:"An Invented Patristic Book",
+   role:"AUTHOR",relation:"WORK",citedUrls:["https://untrusted.example.net/fake"],
+   adjudication:"HUMAN_REVIEWED"};
+ const result=gradeRealBibliographyAnswer([truth],corpus.sourceRegistry,[correct,invented]);
+ assert.equal(result.humanReviewedPrecision,0.5);
+ assert.equal(result.humanReviewedRecall,1);
+ assert.ok(result.rows[1].issues.includes("NOT_IN_REFERENCE_CORPUS"));
+});
