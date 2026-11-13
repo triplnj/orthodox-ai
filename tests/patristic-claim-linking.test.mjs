@@ -9,7 +9,11 @@ const excerpts = [
 ];
 const mockedOpenAI = {
  chat:{completions:{create:async ({messages})=>{
-  const {units} = JSON.parse(messages.at(-1).content);
+  const request = JSON.parse(messages.at(-1).content);
+  if (Object.hasOwn(request,"claim")) {
+    return {choices:[{message:{content:JSON.stringify({fullySupported:!request.claim.includes("number 1")})}}]};
+  }
+  const {units} = request;
   return {choices:[{message:{content:JSON.stringify({links:units.map(item=>({
    unit:item.unit, sourceIndex: item.unit===0 ? 0 : 1,
    evidenceQuote:item.unit===0 ? "Parents should guide their children with correction and exhortation" : "Invented evidence from an unrelated URL"
@@ -45,4 +49,18 @@ test("an offer of additional citations is not misidentified as a patristic claim
 test("real theological claim is retained while conversational offer is excluded",()=>{
  const units=splitAuditableClaims("Родитељи имају важну одговорност у васпитању деце. Ако желите, могу вам понудити и цитате.");
  assert.equal(units.length,1);
+});
+
+test("independent verifier rejects excerpt which does not entail the claim",async()=>{
+ const badOpenAI = {chat:{completions:{create:async ({messages})=>{
+  const input=JSON.parse(messages.at(-1).content);
+  if (input.claim) return {choices:[{message:{content:'{"fullySupported":false}'}}]};
+  return {choices:[{message:{content:JSON.stringify({links:[{unit:0,sourceIndex:0,evidenceQuote:"Parents should guide their children with correction and exhortation"}]})}}]};
+ }}}};
+ const {auditPatristicClaims:audit}=createLoader({
+  "server-only":{}, "@/lib/ai/openaiClient":{getOpenAI:()=>badOpenAI}
+ })("src/lib/chat/claim-audit.ts");
+ const result=await audit("Children must be punished with blows for every mistake.",excerpts);
+ assert.equal(result.claims[0].status,"needs_review");
+ assert.equal(result.claims[0].sourceIndex,null);
 });
