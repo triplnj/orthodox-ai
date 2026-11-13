@@ -64,3 +64,19 @@ test("independent verifier rejects excerpt which does not entail the claim",asyn
  assert.equal(result.claims[0].status,"needs_review");
  assert.equal(result.claims[0].sourceIndex,null);
 });
+
+test("specific discipline claim cannot be linked to generic virtue passage",()=>{
+ const {evidenceHasClaimAnchors}=createLoader({
+  "server-only":{}, "@/lib/ai/openaiClient":{getOpenAI:()=>mockedOpenAI},
+ })("src/lib/chat/claim-audit.ts");
+ const claim="Свети Јован препоручује употребу погледа, прекора и физичких казни.";
+ const quote="In all wisdom, teaching and admonishing one another. Virtue he calls wisdom.";
+ assert.equal(evidenceHasClaimAnchors(claim,quote),false);
+});
+test("parents-as-primary-educators claim is not established by obedience verse",()=>{
+ const {evidenceHasClaimAnchors}=createLoader({
+  "server-only":{}, "@/lib/ai/openaiClient":{getOpenAI:()=>mockedOpenAI},
+ })("src/lib/chat/claim-audit.ts");
+ assert.equal(evidenceHasClaimAnchors("Родитељи треба да буду први и најважнији васпитачи.","Children, obey your parents in the Lord, for this is right."),false);
+ assert.equal(evidenceHasClaimAnchors("Родитељи треба да буду први и најважнији васпитачи.","Parents must teach their children wisely."),true);
+});
