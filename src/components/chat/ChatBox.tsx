@@ -142,6 +142,27 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let finalResult: Record<string, any> | undefined;
         let partialStarted = false;
+        // Audit finishes before this one-shot delta is sent. Reveal the
+        // already-verified response gradually without leaking draft tokens.
+        let verifiedReveal: Promise<void> | null = null;
+        const revealVerifiedDelta = (text: string): Promise<void> => {
+          const words = text.match(/\S+\s*|\s+/gu) ?? [text];
+          const wordsPerFrame = Math.max(1, Math.ceil(words.length / 65));
+          let offset = 0;
+          partialStarted = true;
+          setMessages(current => [...current, { role: "assistant", content: "" }]);
+          return new Promise<void>(resolve => {
+            const tick = () => {
+              const chunk = words.slice(offset, offset + wordsPerFrame).join("");
+              offset += wordsPerFrame;
+              if (chunk) setMessages(current => current.map((item, index) =>
+                index === current.length - 1 ? { ...item, content: item.content + chunk } : item));
+              if (offset < words.length) window.setTimeout(tick, 22);
+              else resolve();
+            };
+            tick();
+          });
+        };
         const parseEvent = (frame: string) => {
           const event = frame.match(/^event: (.+)$/m)?.[1];
           const line = frame.split("\n").find(line => line.startsWith("data: "));
@@ -149,10 +170,12 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
           const value = JSON.parse(line.slice(6));
           if (event === "phase") setNotice(value.message);
           if (event === "delta" && typeof value.text === "string") {
-            if (!partialStarted) {
+            if (!partialStarted && value.text.length >= 160) {
+              verifiedReveal = revealVerifiedDelta(value.text);
+            } else if (!partialStarted) {
               partialStarted = true;
               setMessages(current => [...current, { role: "assistant", content: value.text }]);
-            } else {
+            } else if (!verifiedReveal) {
               setMessages(current => current.map((item, index) =>
                 index === current.length - 1 ? { ...item, content: item.content + value.text } : item));
             }
@@ -172,6 +195,8 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
           }
           if (buffer.trim()) parseEvent(buffer);
           if (!finalResult) throw new Error("Stream ended without a saved result.");
+          // The committed response wins after progressive verified rendering.
+          if (verifiedReveal) await verifiedReveal;
           data = finalResult;
         } catch (streamError) {
           if (partialStarted) setMessages(current => current.slice(0, -1));
