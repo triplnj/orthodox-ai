@@ -26,7 +26,7 @@ export function evidenceHasClaimAnchors(claim: string, quote: string): boolean {
     { claim: /први и најважнији (?:васпитач|учитељ)|first and (?:most )?important (?:teacher|educator)/u,
       evidence: /teach|educat|instruct|train|bring up|upbring|васпита|учитељ/u },
     { claim: /васпитањ.{0,45}темељ|темељ.{0,45}живот.{0,20}детет|foundation.{0,45}(?:education|child)/u,
-      evidence: /child|children|educat|upbring|parent|train|детет|дец|васпит/u },
+      evidence: /educat|upbring|train|teach|васпит|подуч|образова/u },
     { claim: /уче.{0,30}молитв|уче.{0,30}врлин|teach.{0,30}pray|teach.{0,30}virtue/u,
       evidence: /pray|prayer|virtue|teach|practis|молитв|врлин/u },
   ];
