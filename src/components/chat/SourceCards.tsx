@@ -34,13 +34,15 @@ export function SourceCards({ sources }: { sources: MappedSource[] }) {
     <ul className="space-y-2">{groups.map(({ source, bibliography }, index) => {
       const isBibliography = bibliography.length > 0;
       const isLiveBibliography = bibliography.some(item => item.verificationStatus === "LIVE_BIBLIOGRAPHY_EXCERPT_MATCH");
-      const label = isBibliography ? (source.webpageTitle ?? "Reviewed bibliography source") :
+      const isProvisionalGraph = bibliography.some(item => item.metadata?.graphRecord === true || item.metadata?.editorialReview === false);
+      const isReviewedBibliography = isBibliography && !isLiveBibliography && !isProvisionalGraph;
+      const label = isBibliography ? (source.webpageTitle ?? (isReviewedBibliography ? "Reviewed bibliography source" : "Bibliographic reference")) :
         [source.authorName, source.workTitle ?? source.webpageTitle, source.reference].filter(Boolean).join(" — ") || "Patristic research source";
       const url = safeLink(source.scanUrl ?? source.originalSourceUrl ?? source.sourceUrl);
       return <li key={`${source.sourceUrl}-${index}`} className="mt-2 rounded border border-gray-200 p-2">
         {url ? <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block py-2 underline">{label}<span className="sr-only"> (opens in a new tab)</span></a> : <span>{label}</span>}
         {isBibliography ? <>
-          <p className="mt-1 text-xs text-gray-600">{isLiveBibliography ? "Automatically extracted bibliographic claims with verbatim source-text matches; roles and relationships have NOT been independently editorially verified." : "Reviewed bibliographic attribution records; these are metadata, not verbatim text excerpts or automated matches to every sentence of the answer."}</p>
+          <p className="mt-1 text-xs text-gray-600">{isLiveBibliography ? "Automatically extracted bibliographic claims with verbatim source-text matches; roles and relationships have NOT been independently editorially verified." : isProvisionalGraph ? "External bibliography index or source-crosschecked metadata; author roles and work relationships have NOT been independently editorially verified." : "Reviewed bibliographic attribution records; these are metadata, not verbatim text excerpts or automated matches to every sentence of the answer."}</p>
           <ul className="mt-2 space-y-1">{bibliography.map((item, evidenceIndex) =>
             <li key={String(item.metadata?.evidenceId ?? evidenceIndex)} className="border-l-2 border-gray-300 pl-3 text-xs">
               <strong>{item.workTitle}</strong> — {Array.isArray(item.metadata?.roles) ? item.metadata.roles.join(", ") : "attribution"}
@@ -55,7 +57,7 @@ export function SourceCards({ sources }: { sources: MappedSource[] }) {
           </div>)}
           {!(source.claimMappings ?? []).length && <p className="mt-2 text-xs text-gray-500">Additional retrieved passage. No specific claim in this answer was linked to a matching excerpt.</p>}
         </>}
-        <p className="mt-2 text-xs text-gray-500">{isBibliography ? (isLiveBibliography ? "Automated source-text match — bibliographic interpretation unreviewed" : "Reviewed bibliographic attribution") :
+        <p className="mt-2 text-xs text-gray-500">{isBibliography ? (isLiveBibliography ? "Automated source-text match — bibliographic interpretation unreviewed" : isProvisionalGraph ? "External bibliographic metadata — independent review pending" : "Reviewed bibliographic attribution") :
           `${sourceLabels[source.provider] ?? source.provider} · ${sourceLabels[source.verificationStatus] ?? source.verificationStatus}${source.originalLanguage ? ` · ${source.originalLanguage}` : ""}`}</p>
       </li>;
     })}</ul>
