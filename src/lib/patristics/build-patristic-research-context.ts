@@ -86,7 +86,7 @@ function mapPgSources(sources: LivePgSource[]): PatristicResearchSource[] {
     sourceUrl: source.sourceUrl,
     scanUrl: source.pageImageUrl,
     verificationStatus: "PRIMARY_SOURCE_OCR",
-    metadata: { pgVolume: source.pgVolume, scanPage: source.scanPage, pgReference: source.pgReference },
+    metadata: { pgVolume: source.pgVolume, scanPage: source.scanPage, pgReference: source.pgReference, excerpt: source.excerpt, sourceKind: "PRIMARY_PASSAGE" },
   }));
 }
 
