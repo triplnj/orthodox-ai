@@ -1,6 +1,7 @@
 import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import {reviewedGregoryOpeningEvidence} from "./reviewed-gregory-evidence";
 import { sourceBackedBibliographyContext } from "./source-backed-bibliography";
+import { bibliographyGraphContext } from "./bibliography-knowledge-graph";
 import { isUniversalBibliographyQuestion, resolveUniversalBibliography } from "./universal-bibliography-resolver";
 import {
   buildVerifiedPatristicContext,
@@ -198,6 +199,10 @@ export async function buildPatristicResearchContext(
   // Unresolved authors and non-bibliographic topics keep existing retrieval.
   const bibliography = sourceBackedBibliographyContext(currentQuestion);
   if (bibliography) return bibliography;
+  // Identity-first external bibliography graph: source-tagged records before
+  // uncertain live search. Reviewed internal catalogue continues to win.
+  const graph = bibliographyGraphContext(currentQuestion);
+  if (graph) return graph;
   // General bibliographies require a work-role evidence ledger. Do not feed
   // unsorted biography and theology snippets to the answer model as proof.
   if (isUniversalBibliographyQuestion(currentQuestion)) {
