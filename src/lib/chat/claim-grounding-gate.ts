@@ -47,9 +47,9 @@ export function answerUnits(answer:string): {id:number;text:string}[] {
     // Keep paragraphs intact when punctuation may be a bibliographic initial,
     // abbreviation or work reference; the verifier must validate every claim
     // in the unit, not only one conveniently chosen sentence.
-    return body.length>=16?[{text:line.trim()}]:[];
+    return body.length>=4?[{text:line.trim()}]:[];
   });
-  return rows.slice(0,28).map((row,id)=>({id,text:row.text}));
+  return rows.map((row,id)=>({id,text:row.text}));
 }
 
 function extractSupported(source:Evidence|undefined, quote:unknown, kind?:unknown):string|null{
@@ -101,7 +101,8 @@ export async function verifyPatristicAnswerClaims(answer:string,sources:Patristi
  const units=answerUnits(answer);
  if(!units.length)return {answer,audit:{status:"completed",claims:[]},checked:0,rejected:0,status:"completed"};
  const evidence=evidenceFrom(sources);
- if(!evidence.length)return failClosed(answer,units);
+ // Never leave overflow units unexamined simply because a request is long.
+ if(units.length>24||!evidence.length)return failClosed(answer,units);
  try{
    const completion=await getOpenAI().chat.completions.create({
      model:"gpt-4.1-mini",temperature:0,response_format:{type:"json_object"},max_completion_tokens:2200,

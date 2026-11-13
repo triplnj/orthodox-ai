@@ -14,8 +14,8 @@ test("Chrysostom unsupported punitive attribution removed while genuinely source
 });
 test("Maximus claim unsupported by unrelated Gregory evidence, and skipping a verdict never retains it",()=>{
  const q="Свети Максим учи да је душа самобитно вечна.\nДуша је створена.";
- const result=applyClaimVerdicts(q,[src("Gregory of Nyssa","And Macrina sought to console him regarding the death of Basil.")],{verdicts:[support(0,0,"And Macrina sought to console him regarding the death of Basil.")]});
- assert.match(result.answer,/Душа је створена|Нисам могао/);assert.equal(result.rejected,1);assert.doesNotMatch(result.answer,/самобитно вечна/);
+ const result=applyClaimVerdicts(q,[src("Gregory of Nyssa","And Macrina sought to console him regarding the death of Basil.")],{verdicts:[{id:0,verdict:"unsupported",sourceIndex:null,evidenceQuote:null}]});
+ assert.match(result.answer,/Нисам могао/);assert.equal(result.rejected,2);assert.doesNotMatch(result.answer,/самобитно вечна/);
 });
 test("rejects model-fabricated evidence quote, wrong source index and duplicate verdicts",()=>{
  const q="Свети Исак говори о смирењу и молитви.";
@@ -49,4 +49,13 @@ test("new claim gate executes before user-visible delta, existing audit and pers
  const g=route.indexOf("verifyPatristicAnswerClaims(result.answer");
  const d=route.indexOf("onDelta?.(result.answer)",g),audit=route.indexOf("const claimAudit =",g),db=route.indexOf("await completeTurn(",g);
  assert.ok(g>=0&&d>g&&audit>d&&db>audit);
+});
+
+test("more than 24 prose units fail closed, not leave unreviewed tail published",()=>{
+ const q=Array.from({length:30},(_,i)=>"Свети отац тврди да правило важи за сваког човека "+i+".").join("\n");
+ const units=answerUnits(q);
+ assert.equal(units.length,30);
+ const r=applyClaimVerdicts(q,[],{verdicts:[]});
+ assert.equal(r.rejected,30);
+ assert.doesNotMatch(r.answer,/важи за сваког човека 29/);
 });
