@@ -18,6 +18,11 @@ export function createLoader(mocks = {}, env = {}) {
     if (cache.has(filename)) return cache.get(filename).exports;
     const loadedModule = { exports: {} };
     cache.set(filename, loadedModule);
+    // JSON is a first-class structured source, not TypeScript to transpile.
+    if (filename.endsWith(".json")) {
+      loadedModule.exports = JSON.parse(fs.readFileSync(filename, "utf8"));
+      return loadedModule.exports;
+    }
     const source = fs.readFileSync(filename, "utf8");
     const result = ts.transpileModule(source, {
       fileName: filename,
