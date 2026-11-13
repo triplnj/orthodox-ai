@@ -19,3 +19,11 @@ test("bibliographic evidence has a work-role grouping rather than an unmatched e
  assert.match(cards,/Reviewed bibliographic attribution records/);
  assert.match(cards,/metadata\?\.supportingStatement/);
 });
+
+test("unreviewed bibliography graph sources cannot be falsely labeled reviewed in the UI",()=>{
+ assert.match(cards,/const isProvisionalGraph = bibliography\.some/);
+ assert.match(cards,/metadata\?\.graphRecord === true/);
+ assert.match(cards,/External bibliography index or source-crosschecked metadata/);
+ assert.match(cards,/External bibliographic metadata — independent review pending/);
+ assert.match(cards,/isProvisionalGraph \?/);
+});
