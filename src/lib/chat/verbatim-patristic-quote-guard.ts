@@ -49,10 +49,15 @@ export function enforceVerbatimPatristicQuotes(answer: string, sources: Patristi
   const lines = answer.split("\n");
   const cleaned = lines.filter(line => {
     const quotes = [...line.matchAll(quotePattern)]
-      .map(match => match[1] ?? match[2] ?? match[3] ?? match[4] ?? "")
-      // Short quoted technical terms or book titles are not purported verbatim
-      // sentences by a Father; do not block harmless titles.
-      .filter(value => words(value).length >= 4);
+      .map(match => ({
+        value: match[1] ?? match[2] ?? match[3] ?? match[4] ?? "",
+        before: line.slice(Math.max(0, match.index - 65), match.index),
+      }))
+      // A quoted title after an explicit bibliographic cue is not presented
+      // as a verbatim patristic sentence. Short technical terms are also safe.
+      .filter(({ value, before }) => words(value).length >= 4 &&
+        !/(?:написао је|написала је|(?:дело|спис|књига|наслов)\s*[:—-]?\s*$|(?:titled|title|work|book)\s*[:—-]?\s*$)/iu.test(before))
+      .map(item => item.value);
     if (!quotes.length) return true;
     const supported = quotes.every(quote => passages.some(passage => passage.includes(norm(quote))));
     if (supported) { retained += quotes.length; return true; }
