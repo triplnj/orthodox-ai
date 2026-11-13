@@ -316,6 +316,11 @@ export function expandCuratedSearchTerms(
     }
   }
 
+  // Cross-script parenting lexicon for English translations of patristic writings.
+  if (/васпит|родитељ|дец[аеуи]|детет|кажњава|parent|child|children|upbring|disciplin|odgoj|vaspit/i.test(normalized) && targetLanguage === "English") {
+    terms.push("child", "children", "parents", "father", "mother", "upbringing", "education", "discipline", "punishment", "virtue", "boy");
+  }
+
   if (/причешћ|pričeš|prices|communion|eucharist|евхарист|euharist/i.test(normalized)) {
     terms.push("communion", "holy communion", "eucharist", "partaking", "frequent communion", "sacrament");
   }
