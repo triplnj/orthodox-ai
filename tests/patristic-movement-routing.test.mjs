@@ -30,7 +30,7 @@ test("general OpenAI research uses required broad web search rather than a restr
   const research = read("src/lib/patristics/web-patristic-research.ts");
   assert.match(research, /tool_choice: "required"/);
   assert.match(research, /include: \["web_search_call.action.sources"\]/);
-  assert.match(research, /runResearch\(query, undefined, controller.signal\)/);
+  assert.match(research, /runResearch\(query, undefined, controller.signal, mode === "bibliography"\)/);
   assert.doesNotMatch(research, /runResearch\(\s*query,\s*PREFERRED_PATRISTIC_DOMAINS/);
 });
 
