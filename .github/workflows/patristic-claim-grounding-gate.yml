@@ -1,0 +1,34 @@
+name: Universal patristic quotation and claim gate QA
+on:
+  push:
+    branches:
+      - feature/patristic-universal-verbatim-quote-guard-20261113
+  pull_request:
+    paths:
+      - 'src/app/api/chat/route.ts'
+      - 'src/lib/chat/claim-grounding-gate.ts'
+      - 'tests/patristic-claim-grounding-gate.test.mjs'
+      - '.github/workflows/patristic-claim-grounding-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  claims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+      OPENAI_API_KEY: ""
+      RESEND_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: node tests/run-regressions.mjs patristic-claim-grounding-gate patristic-verbatim-quote-guard patristic-source-cards-clarity bibliography-knowledge-graph fast-patristic-research reviewed-gregory-production phase6-api
+      - run: npx tsc --noEmit

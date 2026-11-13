@@ -17,6 +17,7 @@ import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnCon
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
 import { auditPatristicClaims } from "@/lib/chat/claim-audit";
+import { verifyPatristicAnswerClaims } from "@/lib/chat/claim-grounding-gate";
 import { enforceVerbatimPatristicQuotes } from "@/lib/chat/verbatim-patristic-quote-guard";
 import { visibleMessages } from "@/lib/chat/history";
 
@@ -140,10 +141,19 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
         const guarded = enforceVerbatimPatristicQuotes(result.answer, research?.sources ?? []);
         if (guarded.removed) diagnostic("operation_completed", { operation: "verification", count: guarded.removed });
         result = { ...result, answer: guarded.answer };
-        onDelta?.(result.answer);
       }
+      // No unverified patristic assertions escape via SSE or persistence.
+      // Bibliography records also pass through the independent source reviewer;
+      // catalog entries cannot be used as doctrinal evidence.
+      onPhase?.("Checking each claim against its source...");
+      const grounded = evidenceRequired && !evidenceUnavailable && research
+        ? await verifyPatristicAnswerClaims(result.answer, research.sources)
+        : null;
+      if (grounded) result = { ...result, answer: grounded.answer };
+      if (evidenceRequired && !evidenceUnavailable) onDelta?.(result.answer);
       onPhase?.("Reviewing source evidence...");
-      const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
+      const claimAudit = grounded?.audit ??
+        (research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] });
       const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
       const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
         conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,
