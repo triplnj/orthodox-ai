@@ -36,7 +36,7 @@ function evidenceFrom(sources: PatristicResearchSource[]): Evidence[] {
 }
 
 const isHeading=(s:string)=> !s.trim() || /^#{1,6}\s/u.test(s) || /^[-–—]{3,}\s*$/u.test(s) ||
-  /^(?:\*\*|__)[^.!?]{1,95}(?:\*\*|__)\s*:?$/u.test(s.trim()) ||
+  /^(?:\*\*|__)[^.!?]{1,95}:\s*(?:\*\*|__)\s*$/u.test(s.trim()) ||
   /^(?:извори|закључак|sources|conclusion)\s*:?$/iu.test(s.trim());
 
 export function answerUnits(answer:string): {id:number;text:string}[] {
@@ -90,11 +90,10 @@ export function applyClaimVerdicts(answer:string, sources:PatristicResearchSourc
 }
 function failClosed(answer:string,units:ReturnType<typeof answerUnits>):GroundedAnswer{
  const claims=units.map(u=>({claim:u.text,sourceIndex:null,evidenceQuote:null,status:"needs_review" as const}));
- const remainder=answer.split("\n").filter(line=>!units.some(u=>u.text===line.trim())).join("\n").trim();
  const message=/\p{Script=Cyrillic}/u.test(answer)
    ?"Провера наведених тврдњи према изворним одломцима није успела; непотврђене тврдње нису приказане."
    :"Claim verification was unavailable; unsupported attributions were not displayed.";
- return {answer:remainder?remainder+"\n\n"+message:message,
+ return {answer:message,
    audit:{status:"unavailable",claims},checked:units.length,rejected:units.length,status:"unavailable"};
 }
 export async function verifyPatristicAnswerClaims(answer:string,sources:PatristicResearchSource[]):Promise<GroundedAnswer>{

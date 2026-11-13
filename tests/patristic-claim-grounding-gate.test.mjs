@@ -59,3 +59,10 @@ test("more than 24 prose units fail closed, not leave unreviewed tail published"
  assert.equal(r.rejected,30);
  assert.doesNotMatch(r.answer,/важи за сваког човека 29/);
 });
+
+test("an unsupported bold attribution cannot bypass validation by looking like a heading",()=>{
+ const q="**Свети Максим тврди да је душа вечна по себи**";
+ assert.equal(answerUnits(q).length,1);
+ const r=applyClaimVerdicts(q,[],{verdicts:[]});
+ assert.equal(r.rejected,1);assert.doesNotMatch(r.answer,/Максим тврди/);
+});
