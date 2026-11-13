@@ -43,6 +43,8 @@ const aliases:Record<string,string[]>={
  "Lorenzo Scupoli":["лоренцо скуполи","lorenzo scupoli"]
 };
 const authorEntries=Object.entries(aliases);
+const canonicalAuthor=(name:string):string=>authorEntries.find(([canonical,variants])=>
+  [canonical,...variants].some(alias=>norm(alias)===norm(name)))?.[0]??name;
 function findAuthor(question:string):string|null{
  const normalized=norm(question);
  const candidates=authorEntries.filter(([canonical,variants])=>
@@ -77,7 +79,7 @@ export function recognizesBibliographyIntent(question:string):boolean{
 export function bibliographyGraphContext(question:string):PatristicResearchContext|null{
  if(!recognizesBibliographyIntent(question))return null;
  const author=findAuthor(question)!;
- const nodes=all.filter(x=>x.author===author);
+ const nodes=all.filter(x=>canonicalAuthor(x.author)===author);
  if(!nodes.length)return null;
  const titleHits=nodes.filter(x=>[x.work,x.parentWork??""].some(t=>t&&mentions(question,t)));
  const candidates=titleHits.length?titleHits:nodes;
