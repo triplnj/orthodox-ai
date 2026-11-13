@@ -1,0 +1,39 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createLoader } from "./helpers/load-ts.mjs";
+
+const excerpts = [
+ {provider:"CURATED_TEXT", authorName:"St. John Chrysostom", workTitle:"On Vainglory",
+  metadata:{excerpt:"Parents should guide their children with correction and exhortation rather than relying on harsh punishment."}},
+ {provider:"WEB_RESEARCH", authorName:null, workTitle:null, metadata:{}}
+];
+const mockedOpenAI = {
+ chat:{completions:{create:async ({messages})=>{
+  const {units} = JSON.parse(messages.at(-1).content);
+  return {choices:[{message:{content:JSON.stringify({links:units.map(item=>({
+   unit:item.unit, sourceIndex: item.unit===0 ? 0 : 1,
+   evidenceQuote:item.unit===0 ? "Parents should guide their children with correction and exhortation" : "Invented evidence from an unrelated URL"
+  }))})}}]};
+ }}}
+};
+const {auditPatristicClaims,splitAuditableClaims}=createLoader({
+ "server-only":{}, "@/lib/ai/openaiClient":{getOpenAI:()=>mockedOpenAI},
+})("src/lib/chat/claim-audit.ts");
+
+test("every sentence is audited, including claims after the old six-claim limit",async()=>{
+ const answer=Array.from({length:9},(_,i)=>"Test claim number "+i+" deserves independent evidence.").join(" ");
+ const audit=await auditPatristicClaims(answer,excerpts);
+ assert.equal(audit.status,"completed");
+ assert.equal(audit.claims.length,9);
+ assert.equal(audit.claims[0].status,"excerpt_matched");
+ assert.equal(audit.claims[1].status,"needs_review");
+ assert.equal(audit.claims[8].status,"needs_review");
+});
+test("source URLs without actual excerpts cannot verify claims",async()=>{
+ const audit=await auditPatristicClaims("This sentence is an unsupported claim.",[excerpts[1]]);
+ assert.equal(audit.status,"unavailable");
+ assert.equal(audit.claims[0].status,"needs_review");
+});
+test("paragraphs and bullets remain individual units",()=>{
+ assert.equal(splitAuditableClaims("First substantial assertion. Second substantial assertion.\n- Third detailed assertion.").length,3);
+});
