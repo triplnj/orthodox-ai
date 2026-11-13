@@ -11,6 +11,7 @@ on:
       - 'tests/bibliography-*.test.mjs'
       - 'tests/patristic-source-cards-clarity.test.mjs'
       - 'tests/run-regressions.mjs'
+      - 'tests/helpers/load-ts.mjs'
       - 'src/lib/ai/previewQaAccess.ts'
       - 'src/lib/ai/operationLimits.ts'
       - 'tests/preview-qa-chat-access.test.mjs'
