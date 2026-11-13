@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {createLoader} from "./helpers/load-ts.mjs";
 import {readFileSync} from "node:fs";
-const {applyClaimVerdicts,answerUnits}=createLoader({"server-only":{}})("src/lib/chat/claim-grounding-gate.ts");
+const {applyClaimVerdicts,answerUnits,applyIndependentEntailmentReview}=createLoader({"server-only":{}})("src/lib/chat/claim-grounding-gate.ts");
 function src(author,excerpt,metadata={}){return {provider:"CURATED_TEXT",authorName:author,workTitle:"Source work",sourceUrl:"https://example.com/work",verificationStatus:"CURATED_PATRISTIC_TEXT_REPOSITORY",metadata:{excerpt,...metadata}}}
 const support=(id,sourceIndex,quote,kind="PASSAGE")=>({id,verdict:"supported",sourceIndex,evidenceQuote:quote,evidenceKind:kind});
 test("Chrysostom unsupported punitive attribution removed while genuinely sourced scripture reading survives",()=>{
@@ -65,4 +65,33 @@ test("an unsupported bold attribution cannot bypass validation by looking like a
  assert.equal(answerUnits(q).length,1);
  const r=applyClaimVerdicts(q,[],{verdicts:[]});
  assert.equal(r.rejected,1);assert.doesNotMatch(r.answer,/Максим тврди/);
+});
+
+test("wrong beneficiary: independent entailment rejects parent blessing inferred from command addressed to children",()=>{
+ const q="Родитељи добијају обећање дугог живота зато што васпитавају децу.";
+ const excerpt="Children, obey your parents in the Lord, for this is right. Honor your father and mother, that it may be well with you, and you may live long on the earth.";
+ const sources=[src("John Chrysostom",excerpt)];
+ const first=applyClaimVerdicts(q,sources,{verdicts:[support(0,0,excerpt.slice(0,81))]});
+ assert.equal(first.rejected,0);
+ const reviewed=applyIndependentEntailmentReview(first,sources,{verdicts:[{claim:q,entails:false,sourceIndex:0,evidenceQuote:excerpt.slice(0,81)}]});
+ assert.equal(reviewed.rejected,1);assert.doesNotMatch(reviewed.answer,/Родитељи добијају/);
+ assert.equal(reviewed.audit.claims[0].status,"needs_review");
+});
+test("independent reviewer cannot approve with invented or unrelated witness, and fail-closed on timeout",()=>{
+ const q="Макрина је делила Григоријеву жалост.";
+ const excerpt="She allowed Gregory to mourn and comforted him with the promise of hope in resurrection.";
+ const sources=[src("Gregory of Nyssa",excerpt)];
+ const first=applyClaimVerdicts(q,sources,{verdicts:[support(0,0,excerpt.slice(0,52))]});
+ assert.equal(first.rejected,0);
+ assert.equal(applyIndependentEntailmentReview(first,sources,null).rejected,1);
+ assert.equal(applyIndependentEntailmentReview(first,sources,{verdicts:[{claim:q,entails:true,sourceIndex:0,evidenceQuote:"An invented excerpt twenty five characters long."}]}).rejected,1);
+ assert.equal(applyIndependentEntailmentReview(first,sources,{verdicts:[{claim:q,entails:true,sourceIndex:0,evidenceQuote:excerpt.slice(0,52)}]}).rejected,0);
+});
+test("source-to-claim mapping after double review keeps only corroborated text",()=>{
+ const excerpt="The father should not provoke his children to anger, but nurture them in the discipline and admonition of the Lord.";
+ const q="Очеви не треба да раздражују децу, већ да их васпитавају у Господу.";
+ const sources=[src("John Chrysostom",excerpt)];
+ const first=applyClaimVerdicts(q,sources,{verdicts:[support(0,0,excerpt.slice(0,70))]});
+ const second=applyIndependentEntailmentReview(first,sources,{verdicts:[{claim:q,entails:true,sourceIndex:0,evidenceQuote:excerpt.slice(0,70)}]});
+ assert.equal(second.rejected,0);assert.equal(second.audit.claims[0].status,"excerpt_matched");
 });
