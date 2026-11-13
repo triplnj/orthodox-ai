@@ -19,7 +19,6 @@ export type LivePgSource = {
   sourceUrl: string;
 
   pageImageUrl: string;
-  excerpt: string;
 };
 
 
@@ -112,9 +111,6 @@ function uniqueSources(
 
       pageImageUrl:
         match.pageImageUrl,
-      // Preserve OCR passage for independent claim verification, not only
-      // for the answer-generation prompt. OCR remains explicitly unreviewed.
-      excerpt: limitText(match.originalText, 3500),
     });
   }
 

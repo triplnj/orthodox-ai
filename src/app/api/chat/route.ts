@@ -17,8 +17,6 @@ import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnCon
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
 import { auditPatristicClaims } from "@/lib/chat/claim-audit";
-import { verifyPatristicAnswerClaims } from "@/lib/chat/claim-grounding-gate";
-import { enforceVerbatimPatristicQuotes } from "@/lib/chat/verbatim-patristic-quote-guard";
 import { visibleMessages } from "@/lib/chat/history";
 
 async function handleChat(request: Request, onDelta?: (text: string) => void, onPhase?: (phase: string) => void) {
@@ -102,7 +100,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
           extraContext: `${profile}\n\n${sourceChallenge ? `The user is challenging an earlier assertion. Explicitly verify or retract it, admit mistakes clearly, and do not replace it with another unsupported attribution. Previous assistant text is NOT evidence.\n` : followUp ? `This is a follow-up to a previous answer; respond to the implied correction/question in its conversational context, not with a generic definition.\n` : ""}\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
           patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns },
           // Never stream an unreviewed pilot answer before the source safety gate.
-          onDelta: reviewedPilot || evidenceRequired ? undefined : onDelta });
+          onDelta: reviewedPilot ? undefined : onDelta });
       if (reviewedPilot && research) {
         let issues = reviewedGregoryAnswerIssues(result.answer, research.sources, message);
         if (issues.length) {
@@ -134,26 +132,10 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
           result = regenerated;
         }
         // Stream only the answer that passed the pilot's source guard.
+        onDelta?.(result.answer);
       }
-      // Universal post-generation quote gate: never leak an unchecked draft
-      // through the SSE stream, and never save an unchecked quote to history.
-      if (evidenceRequired && !evidenceUnavailable) {
-        const guarded = enforceVerbatimPatristicQuotes(result.answer, research?.sources ?? []);
-        if (guarded.removed) diagnostic("operation_completed", { operation: "verification", count: guarded.removed });
-        result = { ...result, answer: guarded.answer };
-      }
-      // No unverified patristic assertions escape via SSE or persistence.
-      // Bibliography records also pass through the independent source reviewer;
-      // catalog entries cannot be used as doctrinal evidence.
-      onPhase?.("Checking each claim against its source...");
-      const grounded = evidenceRequired && !evidenceUnavailable && research
-        ? await verifyPatristicAnswerClaims(result.answer, research.sources)
-        : null;
-      if (grounded) result = { ...result, answer: grounded.answer };
-      if (evidenceRequired && !evidenceUnavailable) onDelta?.(result.answer);
       onPhase?.("Reviewing source evidence...");
-      const claimAudit = grounded?.audit ??
-        (research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] });
+      const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
       const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
       const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
         conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,

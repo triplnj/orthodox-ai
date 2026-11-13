@@ -30,7 +30,7 @@ test("general OpenAI research uses required broad web search rather than a restr
   const research = read("src/lib/patristics/web-patristic-research.ts");
   assert.match(research, /tool_choice: "required"/);
   assert.match(research, /include: \["web_search_call.action.sources"\]/);
-  assert.match(research, /runResearch\(query, undefined, controller.signal, mode === "bibliography"\)/);
+  assert.match(research, /runResearch\(query, undefined, controller.signal\)/);
   assert.doesNotMatch(research, /runResearch\(\s*query,\s*PREFERRED_PATRISTIC_DOMAINS/);
 });
 
@@ -51,7 +51,7 @@ test("Maximus doctrinal question cannot be replaced by a Justin bibliography", (
   assert.doesNotMatch(route, /verifiedBibliographyAnswer/);
   assert.doesNotMatch(route, /bibliographyUnavailable/);
   assert.match(route, /await generateOrthodoxAnswer\(/);
-  assert.match(route, /conversation: \{ turns \},(?:\s*\/\/[^\n]*\n)*\s*onDelta: reviewedPilot \|\| evidenceRequired \? undefined : onDelta/);
+  assert.match(route, /conversation: \{ turns \},(?:\s*\/\/[^\n]*\n)*\s*onDelta: reviewedPilot \? undefined : onDelta/);
 });
 test("fallback responses also emit streaming deltas", () => {
   const route = read("src/app/api/chat/route.ts");
