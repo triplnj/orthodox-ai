@@ -10,6 +10,29 @@ export type AuditedClaim = {
 };
 export type ClaimAudit = { status: "completed" | "unavailable"; claims: AuditedClaim[] };
 
+
+// Mechanical cross-language veto for specific substantive assertions.
+// This is not a semantic proof: it only blocks common false positives where a
+// source quote has no mention of the mechanism the answer attributes to it.
+// For unrecognized concepts the independent entailment model still decides.
+export function evidenceHasClaimAnchors(claim: string, quote: string): boolean {
+  const c = claim.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const q = quote.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const required: Array<{ claim: RegExp; evidence: RegExp }> = [
+    { claim: /физичк.{0,15}казн|батин|телесн.{0,12}казн|physical punishment|corporal punishment|beatings?/u,
+      evidence: /punish|beating|beat |blows?|strik|rod |corporal|physical|chastis|казн|батин/u },
+    { claim: /поглед|прекор|претњ|threat|reproach|rebuk|look.{0,18}disciplin/u,
+      evidence: /look|glanc|reproach|rebuk|threat|warn|прекор|поглед|претњ/u },
+    { claim: /први и најважнији (?:васпитач|учитељ)|first and (?:most )?important (?:teacher|educator)/u,
+      evidence: /teach|educat|instruct|train|bring up|upbring|васпита|учитељ/u },
+    { claim: /васпитањ.{0,45}темељ|темељ.{0,45}живот.{0,20}детет|foundation.{0,45}(?:education|child)/u,
+      evidence: /educat|upbring|train|teach|васпит|подуч|образова/u },
+    { claim: /уче.{0,30}молитв|уче.{0,30}врлин|teach.{0,30}pray|teach.{0,30}virtue/u,
+      evidence: /pray|prayer|virtue|teach|practis|молитв|врлин/u },
+  ];
+  return required.every(rule => !rule.claim.test(c) || rule.evidence.test(q));
+}
+
 // Audit complete answer units, not an arbitrary six LLM-selected claims. The
 // source card links a unit only when the quote is literally in that source.
 export function isResearchClaim(text: string): boolean {
@@ -79,7 +102,7 @@ export async function auditPatristicClaims(answer: string, sources: PatristicRes
               ],
             }, { signal: AbortSignal.timeout(6500) });
             const verdict = JSON.parse(verification.choices[0]?.message?.content ?? "{}") as { fullySupported?: unknown };
-            semanticallySupported = verdict.fullySupported === true;
+            semanticallySupported = verdict.fullySupported === true && evidenceHasClaimAnchors(batch[unit], matching.evidenceQuote);
           } catch { semanticallySupported = false; }
         }
         claims.push({
