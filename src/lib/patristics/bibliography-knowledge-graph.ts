@@ -59,7 +59,7 @@ const matchesAlias=(normalizedQuestion:string, alias:string):boolean=>{
  return actual.some((_,start)=>words.every((part,i)=>{
    const token=actual[start+i];
    return !!token&&(token===part||
-     (part.length>=6&&token.startsWith(part)&&token.length-part.length<=5)||
+     (part.length>=(words.length>1?4:6)&&token.startsWith(part)&&token.length-part.length<=5)||
      (part.length>=6&&part.startsWith(token)&&part.length-token.length<=2));
  }));
 };
