@@ -49,3 +49,14 @@ test("the index never confuses a nonmatching question or invents an author",()=>
  assert.equal(bibliographyGraphContext("Наведи дела светог Максима Исповедника и Игњатија Богоносца"),null);
  assert.equal(bibliographyGraphContext("What does Saint Ignatius teach about love?"),null);
 });
+
+test("Basil and Athanasius crosschecked names resolve through canonical author identities",()=>{
+ for(const [question,work] of [
+  ["Наведи дела светог Василија Великог","On the Holy Spirit / De Spiritu Sancto"],
+  ["Наведи дела светог Атанасија Великог","On the Incarnation / De Incarnatione Verbi"],
+ ]){
+  const result=bibliographyGraphContext(question);
+  assert.ok(result.sources.some(x=>x.workTitle===work&&x.metadata.roles.includes("AUTHOR")),question);
+  assert.ok(result.sources.some(x=>x.metadata.sourceKind==="CROSSCHECKED"),question);
+ }
+});
