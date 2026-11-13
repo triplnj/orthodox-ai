@@ -4,14 +4,14 @@ import { createLoader } from "./helpers/load-ts.mjs";
 
 const good = {
   VERCEL_ENV: "preview",
-  VERCEL_GIT_COMMIT_REF: "feature/patristic-bibliography-step5-answer-audit-20261111",
+  VERCEL_GIT_COMMIT_REF: "feature/patristic-universal-verbatim-quote-guard-20261113",
   ORTHODOXAI_CHAT_ISOLATED_PREVIEW: "true",
   ORTHODOXAI_CHAT_PREVIEW_DB_BRANCH_ID: "br-fancy-recipe-astk5ot6",
   ORTHODOXAI_PREVIEW_QA_CHAT: "enabled",
 };
 const fn = (env) => createLoader({}, env)("src/lib/ai/previewQaAccess.ts").isIsolatedPreviewQaChatUser;
 
-test("only exact test identity on isolated PR61 Preview gets QA chat allowance", () => {
+test("only exact test identity on isolated quotation guard Preview gets QA chat allowance", () => {
   const allowed = fn(good);
   assert.equal(allowed("pr61_preview_test_20261112"), true);
   for (const id of ["admin", "different-user", "", "pr61_preview_test_20261112x"])
