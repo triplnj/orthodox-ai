@@ -17,6 +17,8 @@ import { beginTurn, dispatchTurn, memoryForTurn, completeTurn, failTurn, TurnCon
 import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
 import { auditPatristicClaims } from "@/lib/chat/claim-audit";
+import { gatePatristicAnswer } from "@/lib/chat/evidence-gate";
+import { isUniversalBibliographyQuestion } from "@/lib/patristics/universal-bibliography-resolver";
 import { visibleMessages } from "@/lib/chat/history";
 
 async function handleChat(request: Request, onDelta?: (text: string) => void, onPhase?: (phase: string) => void) {
@@ -85,6 +87,10 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
       const reviewedPilot = !!research?.sources.length && research.sources.every(source => source.metadata?.reviewedPilot === true);
       const evidenceRequired = shouldRunPatristicResearch(query);
       const evidenceUnavailable = evidenceRequired && !research?.sources.length;
+      // Bibliographies carry work-role evidence rather than doctrinal passages;
+      // preserve the separate bibliography resolver and its existing UI.
+      const doctrinalSourceGate = evidenceRequired && !isUniversalBibliographyQuestion(message) &&
+        !research?.sources.some(source => source.metadata?.bibliographyCatalog === true);
       const noSourceMessage = /\p{Script=Cyrillic}/u.test(message)
         ? "Нисам успео да пронађем проверљив извор за овај одговор. Нећу нагађати о историјским личностима, покретима или учењу светих отаца. Покушајте поново касније."
         : "No verifiable source could be retrieved for this question. I will not guess about Church history, movements, or patristic teachings. Please try again later.";
@@ -100,7 +106,7 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
           extraContext: `${profile}\n\n${sourceChallenge ? `The user is challenging an earlier assertion. Explicitly verify or retract it, admit mistakes clearly, and do not replace it with another unsupported attribution. Previous assistant text is NOT evidence.\n` : followUp ? `This is a follow-up to a previous answer; respond to the implied correction/question in its conversational context, not with a generic definition.\n` : ""}\nPage or feature extra context:\n${body.extraContext ?? "No additional page context provided."}`,
           patristicContext: research?.context ?? null, isPro: isProUser(user), conversation: { turns },
           // Never stream an unreviewed pilot answer before the source safety gate.
-          onDelta: reviewedPilot ? undefined : onDelta });
+          onDelta: reviewedPilot || doctrinalSourceGate ? undefined : onDelta });
       if (reviewedPilot && research) {
         let issues = reviewedGregoryAnswerIssues(result.answer, research.sources, message);
         if (issues.length) {
@@ -132,11 +138,20 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
           result = regenerated;
         }
         // Stream only the answer that passed the pilot's source guard.
-        onDelta?.(result.answer);
+        if (!doctrinalSourceGate) onDelta?.(result.answer);
       }
       onPhase?.("Reviewing source evidence...");
       const claimAudit = research ? await auditPatristicClaims(result.answer, research.sources) : { status: "unavailable" as const, claims: [] };
-      const sources = snapshotSources(research?.sources ?? [], true, claimAudit.claims);
+      if (doctrinalSourceGate && !evidenceUnavailable) {
+        const screened = gatePatristicAnswer(result.answer, claimAudit, /\p{Script=Cyrillic}/u.test(message) || /\b(sveti|svetog|svetom|vaspit|deca)\b/i.test(message) ? "sr" : "en");
+        if (screened !== result.answer) {
+          diagnostic("operation_completed", { operation: "research", count: claimAudit.claims.filter(item => item.status === "excerpt_matched").length });
+        }
+        result = { ...result, answer: screened };
+        onDelta?.(screened);
+      }
+      const sources = snapshotSources(research?.sources ?? [], true,
+        doctrinalSourceGate ? claimAudit.claims.filter(item => result.answer.includes(item.claim)) : claimAudit.claims);
       const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
         conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,
         patristicSources: sources, claimAudit, usedPatristicResearch: sources.length > 0,
