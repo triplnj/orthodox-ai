@@ -37,3 +37,12 @@ test("source URLs without actual excerpts cannot verify claims",async()=>{
 test("paragraphs and bullets remain individual units",()=>{
  assert.equal(splitAuditableClaims("First substantial assertion. Second substantial assertion.\n- Third detailed assertion.").length,3);
 });
+
+test("an offer of additional citations is not misidentified as a patristic claim",()=>{
+ const units=splitAuditableClaims("Ако желите, могу вам понудити и конкретне цитате из његових беседа или упутства за даље читање.");
+ assert.equal(units.length,0);
+});
+test("real theological claim is retained while conversational offer is excluded",()=>{
+ const units=splitAuditableClaims("Родитељи имају важну одговорност у васпитању деце. Ако желите, могу вам понудити и цитате.");
+ assert.equal(units.length,1);
+});
