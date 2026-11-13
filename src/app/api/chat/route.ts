@@ -150,8 +150,11 @@ async function handleChat(request: Request, onDelta?: (text: string) => void, on
         result = { ...result, answer: screened };
         onDelta?.(screened);
       }
-      const sources = snapshotSources(research?.sources ?? [], true,
+      // A source card without a surviving claim mapping is not evidence for
+      // the final answer. Do not flood the answer with discovery-only links.
+      const snapshots = snapshotSources(research?.sources ?? [], true,
         doctrinalSourceGate ? claimAudit.claims.filter(item => result.answer.includes(item.claim)) : claimAudit.claims);
+      const sources = doctrinalSourceGate ? snapshots.filter(source => source.claimMappings.length > 0) : snapshots;
       const response = { answer: result.answer, remaining: reservation.remaining, plan: user.plan,
         conversationId: turn.conversationId, turnId: turn.id, requestId: begun.turn.requestId,
         patristicSources: sources, claimAudit, usedPatristicResearch: sources.length > 0,
