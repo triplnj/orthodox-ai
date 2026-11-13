@@ -52,10 +52,10 @@ export function SourceCards({ sources }: { sources: MappedSource[] }) {
             </li>)}</ul>
         </> : <>
           {(source.claimMappings ?? []).map((mapping, claimIndex) => <div key={claimIndex} className="mt-2 border-l-2 border-gray-300 pl-3 text-xs">
-            <p><strong>Automated text match — interpretation not independently verified:</strong> {mapping.claim}</p>
+            <p><strong>Claim linked to a verbatim excerpt — interpretation not independently verified:</strong> {mapping.claim}</p>
             <p className="mt-1 italic">Source excerpt: “{mapping.evidenceQuote}”</p>
           </div>)}
-          {!(source.claimMappings ?? []).length && <p className="mt-2 text-xs text-gray-500">Additional retrieved passage. No specific claim in this answer was linked to a matching excerpt.</p>}
+          {!(source.claimMappings ?? []).length && <p className="mt-2 text-xs text-gray-500">Background reference only — no answer claim has been matched to a verbatim excerpt from this source. Do not treat this card as proof of a particular claim.</p>}
         </>}
         <p className="mt-2 text-xs text-gray-500">{isBibliography ? (isLiveBibliography ? "Automated source-text match — bibliographic interpretation unreviewed" : isProvisionalGraph ? "External bibliographic metadata — independent review pending" : "Reviewed bibliographic attribution") :
           `${sourceLabels[source.provider] ?? source.provider} · ${sourceLabels[source.verificationStatus] ?? source.verificationStatus}${source.originalLanguage ? ` · ${source.originalLanguage}` : ""}`}</p>
