@@ -60,3 +60,21 @@ test("Basil and Athanasius crosschecked names resolve through canonical author i
   assert.ok(result.sources.some(x=>x.metadata.sourceKind==="CROSSCHECKED"),question);
  }
 });
+
+test("real preview incident: declined Игњатију and Игнатију case forms now resolve to actual corpus",()=>{
+ for(const question of [
+  "Која дела која се приписују светом Игњатију Богоносцу сматрају се аутентичним, а која спурним? Објасни разлику између средње и дуже редакције посланица и наведи научне изворе.",
+  "Која дела која се приписују светом Игнатију Богоносцу сматрају се аутентичним, а која спурним? Објасни разлику између средње и дуже редакције посланица и наведи научне изворе.",
+  "Које су аутентичне посланице Игњатија Антиохијског?",
+ ]){
+  assert.equal(recognizesBibliographyIntent(question),true,question);
+  const result=bibliographyGraphContext(question);
+  assert.ok(result?.sources.length>=2,question);
+  assert.ok(result.context.includes("Ephesians, Magnesians, Trallians"),question);
+  assert.ok(result.context.includes("long recension"),question);
+ }
+});
+test("lexical matching must reject innocent substrings and theological queries",()=>{
+ assert.equal(recognizesBibliographyIntent("Које књиге говоре о свету и игри?"),false);
+ assert.equal(bibliographyGraphContext("Која су учења светог Игњатија о смирењу?"),null);
+});
