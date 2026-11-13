@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "description": "Visible three claims of an actual user-supplied OrthodoxAI preview answer. Structured transcription is manually screened, NOT independently human reviewed.",
+  "samples": [
+    {
+      "id": "john-damascus-preview-20261112",
+      "inputSource": "USER_SUPPLIED_REAL_CHAT_ANSWER",
+      "question": "Наведи најпознатија дела светог Јована Дамаскина",
+      "transcriptionReview": "ASSISTANT_SCREENED",
+      "claims": [
+        {
+          "author": "John of Damascus",
+          "work": "Περὶ εἰκόνων",
+          "role": "AUTHOR",
+          "relation": "WORK",
+          "citedUrls": [
+            "https://www.vlioras.gr/Philologia/History/Byzantine/Texts/Damaskinos_Peri_Eikonon.htm"
+          ],
+          "identityStatus": "UNRESOLVED",
+          "adjudication": "ASSISTANT_SCREENED"
+        },
+        {
+          "author": "John of Damascus",
+          "work": "An Exposition of the Orthodox Faith, Book IV",
+          "role": "UNKNOWN_WITH_SPECULATIVE_EDITOR_COMPILER",
+          "relation": "WORK",
+          "citedUrls": [
+            "https://www.newadvent.org/fathers/33044.htm"
+          ],
+          "identityStatus": "EDITION",
+          "adjudication": "ASSISTANT_SCREENED"
+        },
+        {
+          "author": "John of Damascus",
+          "work": "St John Damascene on Holy Images",
+          "role": "UNKNOWN_WITH_SPECULATIVE_EDITOR_COMPILER",
+          "relation": "WORK",
+          "citedUrls": [
+            "https://www.gutenberg.org/cache/epub/49917/pg49917-images.html"
+          ],
+          "identityStatus": "EDITION",
+          "adjudication": "ASSISTANT_SCREENED"
+        }
+      ]
+    }
+  ]
+}

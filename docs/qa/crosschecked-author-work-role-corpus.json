@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "groundTruthLevel": "MULTI_SOURCE_CROSSCHECK_PENDING_INDEPENDENT_REVIEW",
+  "frozenAt": "2026-11-12",
+  "purpose": "Holdout references for author/work/role and work/edition/part relations, not model training",
+  "sourceRegistry": {
+    "cambridge": {
+      "url": "https://www.cambridge.org/core/books/abs/cambridge-edition-of-early-christian-writings/john-of-damascus-an-exact-exposition-of-the-orthodox-faith-5758/BBABF5CF7F3EC3FCC16F2BD2D80A8B19",
+      "type": "SCHOLARLY_EDITION",
+      "evidence": "Summary names Fount of Knowledge and its three constituent works and CPG identifiers."
+    },
+    "cua": {
+      "url": "https://www.cuapress.org/9780813211374/writings/",
+      "type": "ACADEMIC_PUBLISHER",
+      "evidence": "Publisher identifies John of Damascus, three parts, earlier-source dependence and Frederic H. Chase Jr. as translator."
+    },
+    "bmcr": {
+      "url": "https://bmcr.brynmawr.edu/2016/2016.05.32/",
+      "type": "ACADEMIC_REVIEW",
+      "evidence": "Review reports Kontouma's manuscript-history caution that familiar grouping may be later reconstruction."
+    },
+    "basil": {
+      "url": "https://www.anthologychristianliterature.com/books/pps-42",
+      "type": "EDITION_BIBLIOGRAPHY",
+      "evidence": "Edition lists Basil as author of On the Holy Spirit and Stephen Hildebrand as translator."
+    },
+    "basilAcademic": {
+      "url": "https://cloud.elearning.ubbcluj.ro/index.php/sacrascripta/article/view/10342",
+      "type": "ACADEMIC_PUBLICATION",
+      "evidence": "Academic bibliography identifies Basil, De Spiritu Sancto, PG 32, and editions."
+    },
+    "athanasius": {
+      "url": "https://www.fourthcentury.com/on-the-incarnation/",
+      "type": "SPECIALIST_BIBLIOGRAPHY",
+      "evidence": "Specialist bibliography links Athanasius, On the Incarnation, CPG 2091 and English translators."
+    },
+    "athanasiusEdition": {
+      "url": "https://www.anthologychristianliterature.com/books/pps-44",
+      "type": "EDITION_BIBLIOGRAPHY",
+      "evidence": "Edition lists Athanasius as author and John Behr as translator of 2011 edition."
+    },
+    "nikodemosAcademic": {
+      "url": "https://www.theway.org.uk/back/564Russell.pdf",
+      "type": "SCHOLARLY_ARTICLE",
+      "evidence": "Norman Russell discusses Nicodemos's editing and adaptation of Scupoli and original author's identity."
+    },
+    "nikodemosEdition": {
+      "url": "https://www.wesleyhousepublishing.com/product/unseen-warfare/",
+      "type": "EDITION_LISTING",
+      "evidence": "Edition text credits original Spiritual Combat to Scupoli and translation/editorial adaptation to Nicodemus and Theophan."
+    }
+  },
+  "claims": [
+    {
+      "id": "john-fount",
+      "author": "John of Damascus",
+      "work": "Fount of Knowledge",
+      "role": "AUTHOR",
+      "relation": "COMPOSITE_TRADITION",
+      "sourceIds": [
+        "cambridge",
+        "cua"
+      ],
+      "caution": "Treatment as a single three-part literary unit is scholarly convention; manuscript grouping disputed."
+    },
+    {
+      "id": "john-dialectica",
+      "author": "John of Damascus",
+      "work": "Dialectica / Philosophical Chapters",
+      "role": "AUTHOR",
+      "relation": "PART_OF",
+      "parentWork": "Fount of Knowledge",
+      "sourceIds": [
+        "cambridge",
+        "cua"
+      ],
+      "caution": "Part within traditional Fount grouping, not a separately counted modern book."
+    },
+    {
+      "id": "john-heresies",
+      "author": "John of Damascus",
+      "work": "On Heresies",
+      "role": "AUTHOR",
+      "relation": "PART_OF",
+      "parentWork": "Fount of Knowledge",
+      "sourceIds": [
+        "cambridge",
+        "cua"
+      ],
+      "caution": "Uses Epiphanius and other older sources; authorship not equivalent to entirely original content."
+    },
+    {
+      "id": "john-exposition",
+      "author": "John of Damascus",
+      "work": "An Exact Exposition of the Orthodox Faith",
+      "role": "AUTHOR",
+      "relation": "PART_OF",
+      "parentWork": "Fount of Knowledge",
+      "sourceIds": [
+        "cambridge",
+        "cua"
+      ],
+      "caution": "Different English published edition titles are not separate ancient authored works."
+    },
+    {
+      "id": "basil-spirit",
+      "author": "Basil of Caesarea",
+      "work": "On the Holy Spirit / De Spiritu Sancto",
+      "role": "AUTHOR",
+      "relation": "WORK",
+      "sourceIds": [
+        "basil",
+        "basilAcademic"
+      ]
+    },
+    {
+      "id": "athanasius-incarnation",
+      "author": "Athanasius of Alexandria",
+      "work": "On the Incarnation / De Incarnatione Verbi",
+      "role": "AUTHOR",
+      "relation": "WORK",
+      "sourceIds": [
+        "athanasius",
+        "athanasiusEdition"
+      ],
+      "caution": "Dating debated, no claim of precise date."
+    },
+    {
+      "id": "athanasius-behr",
+      "author": "John Behr",
+      "work": "On the Incarnation (2011 reader's edition)",
+      "role": "TRANSLATOR",
+      "relation": "TRANSLATION_OF",
+      "parentWork": "On the Incarnation / De Incarnatione Verbi",
+      "sourceIds": [
+        "athanasius",
+        "athanasiusEdition"
+      ],
+      "caution": "A modern translation; Behr not the author of Athanasius's ancient work."
+    },
+    {
+      "id": "nicodemos-adapter",
+      "author": "Nicodemus the Hagiorite",
+      "work": "Unseen Warfare / Aoratos polemos",
+      "role": "ADAPTOR",
+      "relation": "ADAPTATION_OF",
+      "parentWork": "Spiritual Combat",
+      "sourceIds": [
+        "nikodemosAcademic",
+        "nikodemosEdition"
+      ],
+      "caution": "Also edited and translated; not author of the Scupoli original."
+    },
+    {
+      "id": "scupoli-original",
+      "author": "Lorenzo Scupoli",
+      "work": "Spiritual Combat",
+      "role": "AUTHOR",
+      "relation": "WORK",
+      "sourceIds": [
+        "nikodemosAcademic",
+        "nikodemosEdition"
+      ],
+      "caution": "Source work of later adaptations."
+    }
+  ],
+  "limitations": [
+    "Two supporting sources may share scholarly traditions; not equivalent to independent peer review per claim.",
+    "John of Damascus Fount grouping has a recorded textual-history caveat (Bryn Mawr review).",
+    "Only 9 selected claims and four ancient author groups; insufficient for the 20-author/100-claim GO requirement.",
+    "No automated real authenticated Chat answers are captured by CI."
+  ]
+}

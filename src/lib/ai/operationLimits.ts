@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { FREE_DAILY_CHAT_LIMIT, FULL_ACCESS_DAILY_CHAT_LIMIT, CHAT_RATE_LIMIT_PER_MINUTE } from "@/lib/features";
 import { isProUser, type AppUser } from "@/lib/subscription";
 import { quotaDay } from "./quotaClock";
+import { isIsolatedPreviewQaChatUser } from "./previewQaAccess";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type AiFeature = "chat" | "prayer-plan" | "fasting-plan" | "scripture-plan" | "journal-summary" | "review" | "research";
@@ -24,7 +25,7 @@ export async function quotaSnapshot(subject: string, feature: AiFeature, user?: 
     return quotaSnapshot(subject, feature, user, locked, new Date());
   });
   const day = quotaDay(now);
-  const limit = feature === "chat" ? (user && isProUser(user) ? FULL_ACCESS_DAILY_CHAT_LIMIT : FREE_DAILY_CHAT_LIMIT) : feature === "review" ? 100 : 30;
+  const limit = feature === "chat" ? (user && (isProUser(user) || isIsolatedPreviewQaChatUser(user.id)) ? FULL_ACCESS_DAILY_CHAT_LIMIT : FREE_DAILY_CHAT_LIMIT) : feature === "review" ? 100 : 30;
   const used = feature === "chat" && user ? await tx.usageLog.count({ where: { userId: user.id, feature: "chat", createdAt: { gte: day.start } } })
     : await tx.aiReservation.count({ where: { subject, createdAt: { gte: day.start }, feature: { in: PERSONAL_FEATURES.includes(feature) ? PERSONAL_FEATURES : [feature] } } });
   return { pool: PERSONAL_FEATURES.includes(feature) ? "personal" : feature, limit, used, remaining: Math.max(0, limit - used), observedAt: now.toISOString(), resetsAt: day.reset.toISOString(), timezone: day.timezone };

@@ -12,3 +12,18 @@ test("source passages without a linked claim have an explanatory label",()=>{
  assert.match(cards,/!\(source\.claimMappings \?\? \[\]\)\.length/);
  assert.match(cards,/No specific claim in this answer was linked to a matching excerpt/);
 });
+
+test("bibliographic evidence has a work-role grouping rather than an unmatched excerpt warning",()=>{
+ assert.match(cards,/bibliographyUrls = new Map/);
+ assert.match(cards,/metadata\?\.bibliographyCatalog === true/);
+ assert.match(cards,/Reviewed bibliographic attribution records/);
+ assert.match(cards,/metadata\?\.supportingStatement/);
+});
+
+test("unreviewed bibliography graph sources cannot be falsely labeled reviewed in the UI",()=>{
+ assert.match(cards,/const isProvisionalGraph = bibliography\.some/);
+ assert.match(cards,/metadata\?\.graphRecord === true/);
+ assert.match(cards,/External bibliography index or source-crosschecked metadata/);
+ assert.match(cards,/External bibliographic metadata — independent review pending/);
+ assert.match(cards,/isProvisionalGraph \?/);
+});

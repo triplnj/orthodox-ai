@@ -323,6 +323,14 @@ Return a BRIEF factual evidence note (maximum 350 words) with titles, key suppor
 facts and source URLs. Distinguish primary texts from biographies and bibliographies.
 Never invent a source, URL, author attribution, or quotation. If sources disagree,
 state the uncertainty. You are retrieving evidence, not composing a pastoral essay.`;
+const BIBLIOGRAPHY_RESEARCH_SYSTEM_PROMPT = `Find a reliable, exact bibliography of the named patristic author. Search across English and the query's language.
+Search academic publications, critical editions, university presses, official Church sites and public domain editions.
+Distinguish the AUTHOR of a whole treatise from COMPILERS, EDITORS, TRANSLATORS and ADAPTORS.
+Crucially, locate documentary evidence whether a named work is an independent work or a PART_OF a larger titled collection.
+For John of Damascus, for instance, parts of a larger work MUST be identified as parts when a source supports that relationship; do not invent titles or structures.
+Return only direct URLs actually found with short supported facts. Do not cite weak discovery-only pages.
+You are collecting candidate sources, not establishing claims; a downstream process will inspect their actual text.`;
+const BIBLIOGRAPHY_SEARCH_DEADLINE_MS = 20000;
 const WEB_RESEARCH_WAIT_NOTICE_MS = 19000;
 const WEB_RESEARCH_DEADLINE_MS = 45000;
 
@@ -330,6 +338,7 @@ async function runResearch(
   query: string,
   allowedDomains: string[] | undefined,
   signal: AbortSignal,
+  bibliography = false,
 ) {
   return getOpenAI().responses.create({
     model: "gpt-4.1-mini",
@@ -352,7 +361,7 @@ async function runResearch(
     input: [
       {
         role: "system",
-        content: FAST_RESEARCH_SYSTEM_PROMPT,
+        content: bibliography ? BIBLIOGRAPHY_RESEARCH_SYSTEM_PROMPT : FAST_RESEARCH_SYSTEM_PROMPT,
       },
       {
         role: "user",
@@ -389,17 +398,19 @@ function buildResult(response: unknown) {
 export async function researchPatristicQuestionOnWeb(
   query: string,
   onWaitingForSource?: () => void,
+  mode: "general" | "bibliography" = "general",
 ): Promise<WebPatristicResearchResult | null> {
   // Mandatory, unfiltered OpenAI API web search. Source quality is
   // enforced after discovery rather than preventing broad discovery.
   const startedAt = Date.now();
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), WEB_RESEARCH_DEADLINE_MS);
+  const deadline = mode === "bibliography" ? BIBLIOGRAPHY_SEARCH_DEADLINE_MS : WEB_RESEARCH_DEADLINE_MS;
+  const timeout = setTimeout(() => controller.abort(), deadline);
   const waitingNotice = setTimeout(() => {
     if (!controller.signal.aborted) onWaitingForSource?.();
   }, WEB_RESEARCH_WAIT_NOTICE_MS);
   try {
-    const response = await runResearch(query, undefined, controller.signal);
+    const response = await runResearch(query, undefined, controller.signal, mode === "bibliography");
     const result = buildResult(response);
     diagnostic("operation_completed", { operation: "discovery", count: result?.sources.length ?? 0, durationMs: Date.now() - startedAt });
 

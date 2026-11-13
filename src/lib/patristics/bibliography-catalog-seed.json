@@ -1,0 +1,751 @@
+{
+  "schemaVersion": 1,
+  "authors": [
+    {
+      "id": "nicodemus-hagiorite",
+      "canonicalName": "St. Nicodemus the Hagiorite",
+      "nameVariants": [
+        "Свети Никодим Светогорац",
+        "Никодим Агиорит",
+        "Никодим Светогорац",
+        "Никодима Светогорца",
+        "Никодима Агиорита",
+        "Saint Nicodemos of the Holy Mountain",
+        "Nicodemus the Hagiorite",
+        "Nikodimos Agioritis",
+        "Νικόδημος ὁ Ἁγιορείτης",
+        "Nikodima Agiorita"
+      ],
+      "completeness": "SELECTED"
+    },
+    {
+      "id": "macarius-corinth",
+      "canonicalName": "St. Macarius of Corinth",
+      "nameVariants": [
+        "Макарије Коринтски",
+        "Macarius Notaras"
+      ],
+      "completeness": "UNKNOWN"
+    },
+    {
+      "id": "agapios-leonardos",
+      "canonicalName": "Agapios Leonardos",
+      "nameVariants": [
+        "Агапије Леонардос",
+        "Agapius the Monk",
+        "Агапије монах",
+        "Агапија Леонардоса"
+      ],
+      "completeness": "UNKNOWN"
+    },
+    {
+      "id": "lorenzo-scupoli",
+      "canonicalName": "Lorenzo Scupoli",
+      "nameVariants": [
+        "Лоренцо Скуполи",
+        "Lorenzo Scupoli of Venice"
+      ],
+      "completeness": "UNKNOWN"
+    },
+    {
+      "id": "giovanni-pietro-pinamonti",
+      "canonicalName": "Giovanni Pietro Pinamonti",
+      "nameVariants": [
+        "Giampietro Pinamonti",
+        "Giovanni Pinamonti",
+        "Ђовани Пјетро Пинамонти"
+      ],
+      "completeness": "UNKNOWN"
+    }
+  ],
+  "works": [
+    {
+      "id": "philokalia",
+      "canonicalTitle": "Philokalia",
+      "originalTitle": "Φιλοκαλία",
+      "titleVariants": [
+        "Филокалија",
+        "Добротољубље",
+        "Добротољубља"
+      ],
+      "originalLanguage": "Greek",
+      "workKind": "ANTHOLOGY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "unseen-warfare",
+      "canonicalTitle": "Unseen Warfare",
+      "originalTitle": null,
+      "titleVariants": [
+        "Невидљива борба",
+        "Аоратос полемос",
+        "Невидљиве борбе"
+      ],
+      "originalLanguage": null,
+      "workKind": "ADAPTATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "manual-confession",
+      "canonicalTitle": "Manual of Confession",
+      "originalTitle": null,
+      "titleVariants": [
+        "Ексомологитарион",
+        "Exomologetarion"
+      ],
+      "originalLanguage": null,
+      "workKind": "UNCERTAIN",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "christian-morality",
+      "canonicalTitle": "Christian Morality",
+      "originalTitle": null,
+      "titleVariants": [
+        "Хришћанско благонравије",
+        "Chrestoethia of Christians"
+      ],
+      "originalLanguage": null,
+      "workKind": "ORIGINAL",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-theotokarion",
+      "canonicalTitle": "New Theotokarion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нови Богородичник",
+        "Theotokarion"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "pedalion",
+      "canonicalTitle": "Pedalion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Пидалион",
+        "Кормчило",
+        "The Rudder"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-synaxarion",
+      "canonicalTitle": "The New Synaxarion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нови Синаксар",
+        "Synaxaristes"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "seven-catholic-epistles",
+      "canonicalTitle": "Interpretation of the Seven Catholic Epistles",
+      "originalTitle": null,
+      "titleVariants": [
+        "Тумачење седам саборних посланица"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMMENTARY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "heortodromion",
+      "canonicalTitle": "Heortodromion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Еортодромион",
+        "Eortodromion"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMMENTARY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-ladder",
+      "canonicalTitle": "The New Ladder",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нова лествица",
+        "New Klimax"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMMENTARY",
+      "completenessNote": "Selected titles only; not a complete critical bibliography of all editions."
+    },
+    {
+      "id": "new-eklogion",
+      "canonicalTitle": "New Eklogion",
+      "originalTitle": null,
+      "titleVariants": [
+        "Нови Еклогион",
+        "Neo Eklogion"
+      ],
+      "originalLanguage": null,
+      "workKind": "COMPILATION",
+      "completenessNote": "Selected bibliographic entry; full edition and Greek title are not yet reviewed."
+    },
+    {
+      "id": "paul-fourteen-epistles",
+      "canonicalTitle": "Paul's Fourteen Epistles (Modern Greek version of Theophylact)",
+      "originalTitle": null,
+      "titleVariants": [
+        "Тумачење четрнаест посланица апостола Павла"
+      ],
+      "originalLanguage": null,
+      "workKind": "TRANSLATION",
+      "completenessNote": "Selected bibliographic entry; full edition and Greek title are not yet reviewed."
+    },
+    {
+      "id": "spiritual-exercises",
+      "canonicalTitle": "Spiritual Exercises (Gymnasmata Pneumatika)",
+      "originalTitle": "Γυμνάσματα πνευματικά",
+      "titleVariants": [
+        "Spiritual Exercises",
+        "Духовне вежбе",
+        "Духовних вежби",
+        "Духовне вјежбе",
+        "Gymnasmata Pneumatika",
+        "Духовни упражнения"
+      ],
+      "originalLanguage": "Greek",
+      "workKind": "ADAPTATION",
+      "completenessNote": "Venice 1800; Nikodemos adapted Pinamonti's works into an Orthodox ascetical setting; not an original Ignatius of Loyola text. Translation and compositional history require distinction."
+    }
+  ],
+  "contributions": [
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "philokalia",
+      "roles": [
+        "EDITOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-philokalia"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "unseen-warfare",
+      "roles": [
+        "ADAPTOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-unseen-warfare",
+        "publisher-nicodemus-warfare"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "manual-confession",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "REVIEW_REQUIRED",
+      "evidenceIds": [
+        "antioch-manual-confession",
+        "metallinos-exomologetarion"
+      ],
+      "editorialNote": "Official account lists his Manual of Confession; provenance of its sources and exact authorial role need further editorial review."
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "christian-morality",
+      "roles": [
+        "AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-christian-morality"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-theotokarion",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-new-theotokarion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "pedalion",
+      "roles": [
+        "EDITOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-pedalion",
+        "academy-pedalion-nicodemus"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-synaxarion",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "REVIEW_REQUIRED",
+      "evidenceIds": [
+        "antioch-new-synaxarion"
+      ],
+      "editorialNote": "Official account lists the posthumously published three-volume New Synaxarion; scope of authorial versus editorial contribution still requires review."
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "seven-catholic-epistles",
+      "roles": [
+        "AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-seven-catholic-epistles"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "heortodromion",
+      "roles": [
+        "COMMENTATOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-heortodromion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-ladder",
+      "roles": [
+        "COMMENTATOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-new-ladder"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "macarius-corinth",
+      "workId": "philokalia",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "azbyka-macarius-philokalia"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "agapios-leonardos",
+      "workId": "pedalion",
+      "roles": [
+        "CO_AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "lund-agapios-pedalion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "lorenzo-scupoli",
+      "workId": "unseen-warfare",
+      "roles": [
+        "SOURCE_AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "publisher-scupoli-warfare"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-eklogion",
+      "roles": [
+        "COMPILER"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-new-eklogion"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "paul-fourteen-epistles",
+      "roles": [
+        "TRANSLATOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "antioch-paul-fourteen-epistles"
+      ],
+      "editorialNote": null
+    },
+    {
+      "authorId": "nicodemus-hagiorite",
+      "workId": "spiritual-exercises",
+      "roles": [
+        "ADAPTOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "russell-nicodemus-spiritual-exercises",
+        "pravenc-nicodemus-spiritual-exercises"
+      ],
+      "editorialNote": "Pinamonti supplied underlying works; Nikodemos reshaped them with Orthodox commentary and additions. Do not claim sole original authorship or direct derivation from Loyola."
+    },
+    {
+      "authorId": "giovanni-pietro-pinamonti",
+      "workId": "spiritual-exercises",
+      "roles": [
+        "SOURCE_AUTHOR"
+      ],
+      "attribution": "SOURCE_ATTESTED",
+      "evidenceIds": [
+        "russell-pinamonti-spiritual-exercises"
+      ],
+      "editorialNote": "Author of the underlying Esercitii spirituali, not sole author of Nikodemos's Greek adaptation."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "antioch-philokalia",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Edited the Philokalia manuscript at the assignment of St Macarius of Corinth; he also wrote its preface (official patriarchal account).",
+      "workId": "philokalia",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "EDITOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-unseen-warfare",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Edited and adapted Lorenzo Scupoli's Spiritual Combat as Unseen Warfare; not an independently original work.",
+      "workId": "unseen-warfare",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-manual-confession",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account lists his Manual of Confession; provenance of its sources and exact authorial role need further editorial review.",
+      "workId": "manual-confession",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "reviewStatus": "PENDING_REVIEW",
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "antioch-christian-morality",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account identifies Christian Morality (Venice, 1803) among his works.",
+      "workId": "christian-morality",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "AUTHOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-new-theotokarion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Published sixty-two canons to the Theotokos from Mount Athos manuscript collections, under New Theotokarion.",
+      "workId": "new-theotokarion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-pedalion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Prepared a new edition of the Pedalion, collecting and explaining ecclesiastical canons.",
+      "workId": "pedalion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "EDITOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-new-synaxarion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account lists the posthumously published three-volume New Synaxarion; scope of authorial versus editorial contribution still requires review.",
+      "workId": "new-synaxarion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "reviewStatus": "PENDING_REVIEW",
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "antioch-seven-catholic-epistles",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official account identifies his Interpretation of the Seven Catholic Epistles, Venice 1806/1819.",
+      "workId": "seven-catholic-epistles",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "AUTHOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-heortodromion",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Interpretation of canons sung on feasts of Christ and the Theotokos; published posthumously.",
+      "workId": "heortodromion",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMMENTATOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "antioch-new-ladder",
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Interpretation of 75 Hymns of Degrees in the Octoechos; published posthumously.",
+      "workId": "new-ladder",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "COMMENTATOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-text-inspection-2026-11-11",
+      "reviewedAt": "2026-11-11T00:00:00.000Z"
+    },
+    {
+      "id": "azbyka-macarius-philokalia",
+      "authorId": "macarius-corinth",
+      "workId": "philokalia",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "url": "https://azbyka.org/otechnik/Nikodim_Svjatogorets/the-philokalia/",
+      "title": "Azbyka — Philokalia Volume Two title page",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "The English Philokalia edition title explicitly attributes compilation to St Nikodimos and St Makarios of Corinth.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "lund-agapios-pedalion",
+      "authorId": "agapios-leonardos",
+      "workId": "pedalion",
+      "rolesSupported": [
+        "CO_AUTHOR"
+      ],
+      "url": "https://www.lunduniversity.lu.se/publication/c82583a6-94af-4670-87d9-a4f1fc2da81d",
+      "title": "Lund University — The Rudder of the Church (doctoral thesis)",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Published Lund doctoral thesis identifies St Nikodemos Hagioreites and Agapios Leonardos as the two authors of the Pedalion.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "publisher-scupoli-warfare",
+      "authorId": "lorenzo-scupoli",
+      "workId": "unseen-warfare",
+      "rolesSupported": [
+        "SOURCE_AUTHOR"
+      ],
+      "url": "https://books.google.com/books/about/Unseen_Warfare.html?id=7ed4DF8tmS8C",
+      "title": "St Vladimir's Seminary Press — Unseen Warfare catalog metadata, 1987",
+      "kind": "PUBLISHER_CATALOG",
+      "supportingStatement": "Bibliographic record identifies Lorenzo Scupoli's Spiritual Combat as the underlying text and Nicodemus as the edition's editor, not its original creator.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "publisher-nicodemus-warfare",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "unseen-warfare",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "url": "https://books.google.com/books/about/Unseen_Warfare.html?id=7ed4DF8tmS8C",
+      "title": "St Vladimir's Seminary Press — Unseen Warfare catalog metadata, 1987",
+      "kind": "PUBLISHER_CATALOG",
+      "supportingStatement": "Publisher edition credits Nicodemus as editor of a revised Scupoli-derived work; adaptation already corroborated by official Antiochian biography.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "academy-pedalion-nicodemus",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "pedalion",
+      "rolesSupported": [
+        "EDITOR"
+      ],
+      "url": "https://publishing.mpda.ru/index.php/theological-herald/article/view/902",
+      "title": "Moscow Theological Academy — Study of St Nicodemus's introduction to Pedalion",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Academic study identifies the collaboration of Nicodemus and Agapios in preparation of the canonical collection and Nicodemus's introductory scholarly contribution.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "metallinos-exomologetarion",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "manual-confession",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "url": "https://orthodoxinfo.com/praxis/manualofconfession",
+      "title": "Protopresbyter George Metallinos — The Exomologetarion of St Nicodemos",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Scholarly introduction discusses Nicodemus's Exomologetarion and the complicated origins and textual composition; exact degree of original versus redacted material remains under review.",
+      "reviewStatus": "PENDING_REVIEW",
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "antioch-new-eklogion",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "new-eklogion",
+      "rolesSupported": [
+        "COMPILER"
+      ],
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official patriarchal life credits Nicodemus's hagiographic New Eklogion, published in Venice in 1803.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "antioch-paul-fourteen-epistles",
+      "authorId": "nicodemus-hagiorite",
+      "workId": "paul-fourteen-epistles",
+      "rolesSupported": [
+        "TRANSLATOR"
+      ],
+      "url": "https://antiochpatriarchate.org/en/page/saint-nicodemus-the-righteous-of-mount-athos/650/",
+      "title": "Antiochian Patriarchate — Saint Nicodemus the Righteous of Mount Athos",
+      "kind": "OFFICIAL_CHURCH",
+      "supportingStatement": "Official patriarchal life says Nicodemus completed the Modern Greek translation of Theophylact of Bulgaria's work on Paul's fourteen epistles.",
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-crosscheck-2026-11-11",
+      "reviewedAt": "2026-11-11T11:00:00.000Z"
+    },
+    {
+      "id": "russell-nicodemus-spiritual-exercises",
+      "url": "https://www.theway.org.uk/back/564Russell.pdf",
+      "title": "Norman Russell — St Nikodemos the Hagiorite (The Way)",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Russell identifies Nikodemos's Gymnasmata pneumatika (Venice, 1800) as an adaptation of Giampietro Pinamonti's two works, not an independently authored original.",
+      "workId": "spiritual-exercises",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-inspection-2026-11-12",
+      "reviewedAt": "2026-11-12T00:00:00.000Z"
+    },
+    {
+      "id": "pravenc-nicodemus-spiritual-exercises",
+      "url": "https://www.pravenc.ru/text/Никодим%20Святогорец.html",
+      "title": "Православная энциклопедия — Никодим Святогорец: Духовные упражнения",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "The encyclopedia identifies the Venice 1800 edition, Pinamonti's book as the main source, and Nikodemos's prefatory and patristic additions.",
+      "workId": "spiritual-exercises",
+      "authorId": "nicodemus-hagiorite",
+      "rolesSupported": [
+        "ADAPTOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-inspection-2026-11-12",
+      "reviewedAt": "2026-11-12T00:00:00.000Z"
+    },
+    {
+      "id": "russell-pinamonti-spiritual-exercises",
+      "url": "https://www.theway.org.uk/back/564Russell.pdf",
+      "title": "Norman Russell — St Nikodemos the Hagiorite (The Way)",
+      "kind": "SCHOLARLY_BIBLIOGRAPHY",
+      "supportingStatement": "Russell names the Jesuit Giampietro Pinamonti and his Esercitii spirituali and La religiosa in solitudine as the underlying source works for Nikodemos's Greek adaptation.",
+      "workId": "spiritual-exercises",
+      "authorId": "giovanni-pietro-pinamonti",
+      "rolesSupported": [
+        "SOURCE_AUTHOR"
+      ],
+      "reviewStatus": "REVIEWED",
+      "reviewedBy": "source-inspection-2026-11-12",
+      "reviewedAt": "2026-11-12T00:00:00.000Z"
+    }
+  ]
+}

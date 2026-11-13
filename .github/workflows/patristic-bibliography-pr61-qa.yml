@@ -1,0 +1,77 @@
+name: Bibliography PR61 regression QA
+
+on:
+  push:
+    branches:
+      - feature/patristic-bibliography-step5-answer-audit-20261111
+    paths:
+      - 'src/lib/patristics/bibliography-*'
+      - 'src/lib/patristics/source-backed-bibliography.ts'
+      - 'src/components/chat/SourceCards.tsx'
+      - 'tests/bibliography-*.test.mjs'
+      - 'tests/patristic-source-cards-clarity.test.mjs'
+      - 'tests/run-regressions.mjs'
+      - 'tests/helpers/load-ts.mjs'
+      - 'src/lib/ai/previewQaAccess.ts'
+      - 'src/lib/ai/operationLimits.ts'
+      - 'tests/preview-qa-chat-access.test.mjs'
+      - 'tests/universal-bibliography-resolver.test.mjs'
+      - 'tests/bibliography-step5-matrix.test.mjs'
+      - 'docs/qa/bibliography-step5-matrix.md'
+      - 'docs/qa/bibliography-step6-release-decision.md'
+      - 'tests/bibliography-step6-release-gate.test.mjs'
+      - 'tests/bibliography-independent-benchmark.test.mjs'
+      - 'docs/qa/external-fathers-index-benchmark.json'
+      - 'docs/qa/external-bibliography-benchmark.md'
+      - 'docs/qa/crosschecked-author-work-role-corpus.json'
+      - 'docs/qa/crosschecked-bibliography-sample.md'
+      - 'tests/bibliography-crosschecked-score.test.mjs'
+      - 'src/lib/patristics/bibliography-crosscheck-score.ts'
+      - 'src/lib/patristics/bibliography-real-answer-grade.ts'
+      - 'src/lib/patristics/bibliography-knowledge-graph.ts'
+      - 'tests/bibliography-knowledge-graph.test.mjs'
+      - 'docs/qa/real-chat-bibliography-structured-claims.json'
+      - 'tests/bibliography-real-answer-grade.test.mjs'
+      - 'docs/qa/observed-chat-bibliography-audit.json'
+      - 'tests/bibliography-observed-answer-audit.test.mjs'
+      - 'src/lib/patristics/bibliography-benchmark.ts'
+      - 'src/lib/patristics/universal-bibliography-resolver.ts'
+      - 'src/lib/patristics/live-bibliography-role-evidence.ts'
+      - 'tests/live-bibliography-role-evidence.test.mjs'
+      - 'src/lib/patristics/build-patristic-research-context.ts'
+      - 'src/lib/patristics/web-patristic-research.ts'
+      - 'src/lib/patristics/fetch-source.ts'
+      - 'src/lib/security/source-policy.ts'
+      - '.github/workflows/patristic-bibliography-pr61-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bibliography-pr61-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bibliography:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: ""
+      DIRECT_URL: ""
+      OPENAI_API_KEY: ""
+      RESEND_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run bibliography and source-card regression suites
+        run: node tests/run-regressions.mjs bibliography-catalog-model bibliography-chat-context bibliography-answer-audit-step5 patristic-source-cards-clarity preview-qa-chat-access universal-bibliography-resolver live-bibliography-role-evidence bibliography-step5-matrix bibliography-step6-release-gate bibliography-independent-benchmark bibliography-observed-answer-audit bibliography-crosschecked-score bibliography-real-answer-grade bibliography-knowledge-graph fast-patristic-research phase4-ssrf
+      - name: Typecheck
+        run: npx tsc --noEmit

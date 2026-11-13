@@ -1,5 +1,8 @@
 import { diagnostic, failureCategory } from "@/lib/diagnostics";
 import {reviewedGregoryOpeningEvidence} from "./reviewed-gregory-evidence";
+import { sourceBackedBibliographyContext } from "./source-backed-bibliography";
+import { bibliographyGraphContext } from "./bibliography-knowledge-graph";
+import { isUniversalBibliographyQuestion, resolveUniversalBibliography } from "./universal-bibliography-resolver";
 import {
   buildVerifiedPatristicContext,
   type PatristicLanguage,
@@ -191,6 +194,44 @@ export async function buildPatristicResearchContext(
   onWaitingForSource?: () => void,
   currentQuestion: string = query,
 ): Promise<PatristicResearchContext | null> {
+  // Narrow current-turn bibliographic questions use reviewed catalog evidence;
+  // even non-saint contributors (e.g. an underlying source author) are eligible.
+  // Unresolved authors and non-bibliographic topics keep existing retrieval.
+  const bibliography = sourceBackedBibliographyContext(currentQuestion);
+  if (bibliography) return bibliography;
+  // Identity-first external bibliography graph: source-tagged records before
+  // uncertain live search. Reviewed internal catalogue continues to win.
+  const graph = bibliographyGraphContext(currentQuestion);
+  if (graph) return graph;
+  // General bibliographies require a work-role evidence ledger. Do not feed
+  // unsorted biography and theology snippets to the answer model as proof.
+  if (isUniversalBibliographyQuestion(currentQuestion)) {
+    let discovered = null;
+    try { discovered = await researchPatristicQuestionOnWeb(query, onWaitingForSource, "bibliography"); }
+    catch (error) { diagnostic("operation_failed", { operation: "research", failure: failureCategory(error) }); }
+    // Reuse existing author-matched curated editions as additional candidates
+    // across all authors; do not rely only on changing web-search rankings.
+    const curatedBibliographyCandidates = findCuratedPatristicDocuments(currentQuestion)
+      .filter(doc => doc.documentType === "PRIMARY_TEXT" || doc.documentType === "TRANSLATION" || doc.documentType === "BIBLIOGRAPHIC")
+      .map(doc => ({ sourceUrl: doc.sourceUrl, title: doc.sourceName }));
+    // Bibliography retrieval should use author-matched curated witnesses first;
+    // an unpredictable six-link web result must not crowd out actual editions.
+    const candidates = [
+      ...curatedBibliographyCandidates,
+      ...(discovered?.sources ?? []),
+    ];
+    return resolveUniversalBibliography(currentQuestion, candidates.length
+      ? { context: discovered?.context ?? "Curated author-specific source candidates", sources: candidates }
+      : null, {}, findCuratedPatristicDocuments(currentQuestion)
+        .filter(doc => doc.documentType === "PRIMARY_TEXT" || doc.documentType === "TRANSLATION" || doc.documentType === "BIBLIOGRAPHIC")
+        .map(doc => ({
+          authorName: doc.authorName,
+          workTitle: doc.workTitle,
+          sourceUrl: doc.sourceUrl,
+          sourceName: doc.sourceName,
+          verificationStatus: doc.verificationStatus,
+        })));
+  }
   if (!shouldRunPatristicResearch(query)) return null;
   // Guard on the CURRENT turn only; previous approved questions never authorize
   // unrelated new theological claims. No production schema or staging dependency.
