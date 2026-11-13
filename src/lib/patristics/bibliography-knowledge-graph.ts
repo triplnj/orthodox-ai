@@ -26,7 +26,7 @@ const aliases:Record<string,string[]>={
  "Gregory of Nyssa":["григорије ниск","григорија ниск","gregory of nyssa"],
  "Gregory Thaumaturgus":["григорије чудотворац","gregory thaumaturgus"],
  "Hilary of Poitiers":["иларије поатијск","hilary of poitiers"],
- "Ignatius of Antioch":["игњатије богонос","игњатија богонос","игњатије антиохијск","ignatius of antioch"],
+ "Ignatius of Antioch":["игњатије богонос","игњатија богонос","игњатије антиохијск","игњатиј","игнатиј","ignatius of antioch"],
  "Irenaeus of Lyons":["иринеј лионск","irenaeus"],
  "Jerome":["јероним","jerome"],
  "John Cassian":["јован касијан","john cassian"],
@@ -43,12 +43,32 @@ const aliases:Record<string,string[]>={
  "Lorenzo Scupoli":["лоренцо скуполи","lorenzo scupoli"]
 };
 const authorEntries=Object.entries(aliases);
+/**
+ * Serbian Cyrillic surnames/titles and saints' names are inflected in requests:
+ * Игњатије -> Игњатија/Игњатију; Григорије -> Григорија. Match only an
+ * explicitly catalogued lexical stem at a word boundary, never arbitrary
+ * substrings in unrelated terms. Conflicting author hits remain ambiguous.
+ */
+const matchesAlias=(normalizedQuestion:string, alias:string):boolean=>{
+ const name=norm(alias);
+ if(name.length<5)return false;
+ if((" "+normalizedQuestion+" ").includes(" "+name+" "))return true;
+ if(!/^[а-яђћљњџј ]+$/u.test(name))return false;
+ const words=name.split(" ").filter(Boolean);
+ const actual=normalizedQuestion.split(" ");
+ return actual.some((_,start)=>words.every((part,i)=>{
+   const token=actual[start+i];
+   return !!token&&(token===part||
+     (part.length>=6&&token.startsWith(part)&&token.length-part.length<=5)||
+     (part.length>=6&&part.startsWith(token)&&part.length-token.length<=2));
+ }));
+};
 const canonicalAuthor=(name:string):string=>authorEntries.find(([canonical,variants])=>
   [canonical,...variants].some(alias=>norm(alias)===norm(name)))?.[0]??name;
 function findAuthor(question:string):string|null{
  const normalized=norm(question);
  const candidates=authorEntries.filter(([canonical,variants])=>
-    [canonical,...variants].some(v=>norm(v).length>=5&&normalized.includes(norm(v))));
+    [canonical,...variants].some(v=>matchesAlias(normalized,v)));
  // No guessing when two different authors are named. Cross-author queries
  // must go to the existing reviewed catalogue or live evidence resolver.
  return candidates.length===1?candidates[0][0]:null;
@@ -57,7 +77,7 @@ const extra:Node[]=[
  {author:"Maximus the Confessor",work:"Ambigua",role:"AUTHOR",relation:"WORK",parentWork:null,grade:"EXTERNAL_DOCUMENT",urls:["https://guides.library.yale.edu/ancientchristianity/maximus","https://mountthabor.com/en-au/pages/the-professors-suggested-reading-lists"],notes:"Identified in Yale bibliographic guidance and critical-edition bibliography; translation/edition must be identified separately."},
  {author:"Maximus the Confessor",work:"Mystagogia",role:"AUTHOR",relation:"WORK",parentWork:null,grade:"EXTERNAL_DOCUMENT",urls:["https://guides.library.yale.edu/ancientchristianity/maximus","https://mountthabor.com/en-au/pages/the-professors-suggested-reading-lists"],notes:"Critical edition CCSG 69 identified; no invented quotations or publication dates."},
  {author:"Maximus the Confessor",work:"Questions to Thalassius",role:"AUTHOR",relation:"WORK",parentWork:null,grade:"EXTERNAL_DOCUMENT",urls:["https://guides.library.yale.edu/ancientchristianity/maximus","https://mountthabor.com/en-au/pages/the-professors-suggested-reading-lists"],notes:"Bibliography identifies Quaestiones ad Thalassium and CCSG 7, 22."},
- {author:"Ignatius of Antioch",work:"Seven letters (middle recension)",role:"AUTHOR",relation:"COLLECTION",parentWork:null,grade:"EXTERNAL_DOCUMENT",urls:["https://www.cambridge.org/core/journals/church-history/article/abs/expanding-the-narrative-the-reception-of-ignatius-of-antioch-in-britain-ca-12001700/9D64E73855A47D66CD4EB0DBD1D223D6","https://www.peeters-leuven.be/download_OA.php?id=9789042943902&name=Texts+in+Context"],notes:"Seven letters of the middle recension are generally regarded as genuine; long recension and additional letters are disputed/spurious."},
+ {author:"Ignatius of Antioch",work:"Seven letters (middle recension)",role:"AUTHOR",relation:"COLLECTION",parentWork:null,grade:"EXTERNAL_DOCUMENT",urls:["https://www.cambridge.org/core/journals/church-history/article/abs/expanding-the-narrative-the-reception-of-ignatius-of-antioch-in-britain-ca-12001700/9D64E73855A47D66CD4EB0DBD1D223D6","https://www.peeters-leuven.be/download_OA.php?id=9789042943902&name=Texts+in+Context"],notes:"The middle recension contains seven epistles: Ephesians, Magnesians, Trallians, Romans, Philadelphians, Smyrnaeans, and Polycarp. Their authenticity is the dominant scholarly view, not unanimous. The long recension expands the seven and includes additional pseudepigraphical letters; see scholarly source for textual nuance."},
  {author:"Polycarp",work:"Martyrdom of Polycarp",role:"SUBJECT_NOT_AUTHOR",relation:"ABOUT",parentWork:null,grade:"EXTERNAL_DOCUMENT",urls:["https://www.newadvent.org/fathers/0102.htm","https://www.newadvent.org/fathers/250104.htm"],notes:"The text presents itself as a letter from the Church of Smyrna to the Church of Philomelium about Polycarp, not a work authored by Polycarp."},
  {author:"Clement of Rome",work:"Second Epistle of Clement",role:"DISPUTED_NOT_ESTABLISHED",relation:"PSEUDEPIGRAPHICAL_ATTRIBUTION",parentWork:null,grade:"INDEX_LISTED",urls:["https://www.newadvent.org/fathers/"],notes:"Traditional attribution in the catalog title does not establish Clement of Rome as author. Authorship must not be asserted."}
 ];
