@@ -12,7 +12,14 @@ export type ClaimAudit = { status: "completed" | "unavailable"; claims: AuditedC
 
 // Audit complete answer units, not an arbitrary six LLM-selected claims. The
 // source card links a unit only when the quote is literally in that source.
-export function isResearchClaim(text: string): boolean {\n  const clean = text.replace(/[*_#•]/g, "").trim();\n  if (/^(?:ако желите|уколико желите|могу вам|желите ли|if you (?:wish|want|would like)|would you like|i can (?:also|provide|offer)|let me know|ако хоћете)/iu.test(clean)) return false;\n  if (/^(?:на основу доступних извора|у наставку|укратко,? следи|based on (?:the )?(?:available )?sources)/iu.test(clean) && clean.length < 140) return false;\n  return true;\n}\n\nexport function splitAuditableClaims(answer: string): string[] {
+export function isResearchClaim(text: string): boolean {
+  const clean = text.replace(/[*_#•]/g, "").trim();
+  if (/^(?:ако желите|уколико желите|могу вам|желите ли|if you (?:wish|want|would like)|would you like|i can (?:also|provide|offer)|let me know|ако хоћете)/iu.test(clean)) return false;
+  if (/^(?:на основу доступних извора|у наставку|укратко,? следи|based on (?:the )?(?:available )?sources)/iu.test(clean) && clean.length < 140) return false;
+  return true;
+}
+
+export function splitAuditableClaims(answer: string): string[] {
   return answer.split(/\n\s*\n|\n(?=\s*[-•*]|\s*\d+[.)])/u)
     .flatMap(paragraph => paragraph.split(/(?<=[.!?])\s+(?=[\p{Lu}\p{N}])/u))
     .map(text => text.trim()).filter(text => text.length >= 12 && isResearchClaim(text));
