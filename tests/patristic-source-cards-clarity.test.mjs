@@ -3,27 +3,31 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 
 const cards=readFileSync("src/components/chat/SourceCards.tsx","utf8");
-test("automated source matches are clearly text matches, never doctrinal certifications",()=>{
- assert.match(cards,/Claim linked to a verbatim excerpt — interpretation not independently verified/);
- assert.match(cards,/do not assert that the theological meaning, dialogue speaker, or permission for direct quotation/);
- assert.doesNotMatch(cards,/Claim linked to a matching excerpt \(automated review\)/);
-});
-test("source passages without a linked claim have an explanatory label",()=>{
- assert.match(cards,/!\(source\.claimMappings \?\? \[\]\)\.length/);
- assert.match(cards,/Background reference only — no answer claim has been matched to a verbatim excerpt/);
-});
+const chat=readFileSync("src/components/chat/ChatBox.tsx","utf8");
+const route=readFileSync("src/app/api/chat/route.ts","utf8");
 
-test("bibliographic evidence has a work-role grouping rather than an unmatched excerpt warning",()=>{
- assert.match(cards,/bibliographyUrls = new Map/);
+test("patristic sources are a numbered list rather than ungrounded claim certifications",()=>{
+ assert.match(cards,/<ol className="mt-2 list-decimal/);
+ assert.match(cards,/groups\.map/);
+ assert.match(cards,/safeLink\(source\.scanUrl/);
+ assert.doesNotMatch(cards,/Claim linked to a verbatim excerpt/);
+ assert.match(cards,/does not independently verify every assertion/);
+});
+test("bibliographic work and role records survive numbered reference presentation",()=>{
  assert.match(cards,/metadata\?\.bibliographyCatalog === true/);
- assert.match(cards,/Reviewed bibliographic attribution records/);
- assert.match(cards,/metadata\?\.supportingStatement/);
+ assert.match(cards,/metadata\?\.evidenceId/);
+ assert.match(cards,/item\.metadata\?\.roles/);
 });
-
-test("unreviewed bibliography graph sources cannot be falsely labeled reviewed in the UI",()=>{
- assert.match(cards,/const isProvisionalGraph = bibliography\.some/);
- assert.match(cards,/metadata\?\.graphRecord === true/);
- assert.match(cards,/External bibliography index or source-crosschecked metadata/);
- assert.match(cards,/External bibliographic metadata — independent review pending/);
- assert.match(cards,/isProvisionalGraph \?/);
+test("the exact required disclaimer is shown at the end of every rendered assistant message",()=>{
+ assert.match(chat,/message\.role === "assistant" && <>/);
+ const references=chat.indexOf("<SourceCards sources={message.sources ?? []} />");
+ const warning=chat.indexOf("OrthodoxAI may make a mistake. Check relevant sources");
+ assert.ok(references >= 0 && warning > references);
+ assert.match(chat,/message\.role === "assistant" \? renderAnswerEmphasis\(message\.content\)/);
+});
+test("source-checker failure cannot discard the generated answer",()=>{
+ assert.doesNotMatch(route,/gatePatristicAnswer/);
+ assert.doesNotMatch(route,/doctrinalSourceGate/);
+ assert.match(route,/onDelta: reviewedPilot \? undefined : onDelta/);
+ assert.match(route,/const sources = snapshotSources\(research\?\.sources \?\? \[\], true\)/);
 });
