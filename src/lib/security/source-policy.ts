@@ -5,7 +5,7 @@ import { VERIFIED_SOURCE_HOSTS } from "@/lib/patristics/verified-source-catalog"
 
 const baseHosts = ["azbyka.ru", "pravoslavie.ru", "doxologia.ro", "svetigora.com", "svetosavlje.org",
   "churchofcyprus.org.cy", "agiooros.org", "newadvent.org", "orthodoxchurchfathers.com", "matia.gr",
-  "catholiclibrary.org", "remacle.org", "syri.ac", "gorgiaspress.com", "vlioras.gr", "gutenberg.org",
+  "catholiclibrary.org", "catholicapologetics.info", "remacle.org", "syri.ac", "gorgiaspress.com", "vlioras.gr", "gutenberg.org",
   "archive.org", "patrologiagraeca.org", "biblegateway.com", "philokalia.com",
   "oca.org", "goarch.org", "ccel.org", "tertullian.org", "myriobiblos.gr", "antiochpatriarchate.org",
   "cambridge.org", "oup.com", "academic.oup.com", "brill.com", "degruyter.com",
