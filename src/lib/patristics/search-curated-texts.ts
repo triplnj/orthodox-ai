@@ -449,9 +449,19 @@ export async function searchCuratedPatristicTexts(
     }
   }
 
-  return evidence
-    .slice(
-      0,
-      limit,
-    );
+  // Each source must have a chance to contribute evidence before repeated
+  // windows from an earlier text exhaust the limited context budget.
+  // Preserve curator ranking within each document and existing source order.
+  const firstByUrl: CuratedTextEvidence[] = [];
+  const additionalWindows: CuratedTextEvidence[] = [];
+  const seenUrls = new Set<string>();
+  for (const item of evidence) {
+    if (!seenUrls.has(item.sourceUrl)) {
+      seenUrls.add(item.sourceUrl);
+      firstByUrl.push(item);
+    } else {
+      additionalWindows.push(item);
+    }
+  }
+  return [...firstByUrl, ...additionalWindows].slice(0, limit);
 }
