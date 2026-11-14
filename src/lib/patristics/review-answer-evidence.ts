@@ -80,8 +80,13 @@ export async function reviewPatristicAnswerEvidence(
         evidenceQuote: hasExactQuote ? record.evidenceQuote as string : null,
       });
     }
-    // A partial model response is never marked as a complete evidence review.
-    // This is a research diagnostic; comprehensive coverage must be independently tested.
+    // Never accept an audit that silently drops a substantive sentence.
+    // The reviewer is still fallible; this only checks completeness of coverage.
+    const sentences = answer.split(/(?<=[.!?])\\s+(?=[\\p{Lu}\\p{N}])/u)
+      .map(s => s.trim()).filter(s => s.length >= 20);
+    if (sentences.some(sentence => !assertions.some(a => a.assertion.includes(sentence)))) {
+      return { status: "unavailable", assertions: [] };
+    }
     return { status: "reviewed", assertions };
   } catch {
     return { status: "unavailable", assertions: [] };
