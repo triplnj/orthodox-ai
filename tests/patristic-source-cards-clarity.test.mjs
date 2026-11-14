@@ -31,3 +31,9 @@ test("source-checker failure cannot discard the generated answer",()=>{
  assert.match(route,/onDelta: reviewedPilot \? undefined : onDelta/);
  assert.match(route,/const sources = snapshotSources\(research\?\.sources \?\? \[\], true\)/);
 });
+
+test("an untitled discovery link shows its real URL host rather than an invented generic title",()=>{
+ assert.match(cards,/Untitled reference/);
+ assert.match(cards,/new URL\(url\)\.hostname/);
+ assert.doesNotMatch(cards,/"Research source"/);
+});
