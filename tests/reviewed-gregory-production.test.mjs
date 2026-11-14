@@ -53,6 +53,6 @@ test("source gate applies only to current question before streaming, no legacy c
  assert.match(search,/reviewedGregoryOpeningEvidence\(currentQuestion\)/);
  assert.match(route,/onDelta: reviewedPilot \? undefined : onDelta/);
  assert.match(route,/issues = reviewedGregoryAnswerIssues\(regenerated.answer, research.sources, message\)/);
- assert.ok(route.indexOf("if (reviewedPilot && research)") < route.indexOf('onPhase?.("Reviewing source evidence...")'));
+ assert.ok(route.indexOf("if (reviewedPilot && research)") < route.indexOf("const sources = snapshotSources("));
  assert.match(route,/onDelta\?\.\(result.answer\)/);
 });
