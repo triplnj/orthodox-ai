@@ -1,6 +1,7 @@
 import { apiJson } from "@/lib/api/response";
 import { requireLibraryAdmin, libraryAdminAction, LibraryAdminError } from "@/lib/library/admin";
 import { prisma } from "@/lib/prisma";
+import { authLimit } from "@/lib/security/auth-limits";
 export const runtime="nodejs";
 export async function GET(){
  try {
@@ -19,6 +20,12 @@ export async function GET(){
 export async function POST(req:Request){
  try {
   const actorId=await requireLibraryAdmin();
+  const origin=req.headers.get("origin");
+  if(!origin || new URL(origin).host !== req.headers.get("host"))
+    return apiJson({error:"Cross-origin editorial request rejected."},{status:403});
+  if(!req.headers.get("content-type")?.toLowerCase().startsWith("application/json"))
+    return apiJson({error:"JSON required."},{status:415});
+  await authLimit(req,"patristic-library-admin",actorId);
   if(Number(req.headers.get("content-length")??0)>16384)return apiJson({error:"Payload too large."},{status:413});
   const body=await req.json() as unknown;
   if(!body||typeof body!=="object"||Array.isArray(body))throw new LibraryAdminError("Invalid request.");
