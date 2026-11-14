@@ -1,6 +1,6 @@
 "use client";
 import { useEffect,useState } from "react";
-type Item={id:string;name?:string;title?:string;status?:string;evidence?:{id:string;sourceTitle:string;reviewed:boolean}[]};
+type Item={id:string;name?:string;title?:string;status?:string;evidence?:{id:string;sourceTitle:string;reviewed:boolean}[];attributions?:{id:string;role:string;authenticity:string;author:{name:string}}[];editions?:{id:string;title:string;textStatus:string}[]};
 type Option={key:string;label:string;type?:"select"|"number"|"url"|"textarea";values?:string[]};
 const ops:Record<string,Option[]>={
  IMPORT_CHRYSOSTOM_PILOT:[],
@@ -9,6 +9,8 @@ const ops:Record<string,Option[]>={
  ATTRIBUTION_CREATE:[{key:"authorId",label:"Author",type:"select"},{key:"workId",label:"Work",type:"select"},{key:"role",label:"Role",type:"select",values:["AUTHOR","EDITOR","COMPILER","TRANSLATOR","ADAPTOR","COMMENTATOR","SOURCE_AUTHOR","UNKNOWN"]},{key:"authenticity",label:"Authenticity",type:"select",values:["UNDETERMINED","AUTHENTIC","PROBABLY_AUTHENTIC","DISPUTED","PSEUDEPIGRAPHIC","MISATTRIBUTED"]},{key:"note",label:"Explanation",type:"textarea"}],
  EDITION_CREATE:[{key:"workId",label:"Work",type:"select"},{key:"title",label:"Edition title"},{key:"editor",label:"Editor"},{key:"publisher",label:"Publisher"},{key:"year",label:"Year",type:"number"},{key:"language",label:"Language"},{key:"url",label:"Edition HTTPS URL",type:"url"},{key:"citation",label:"Citation"},{key:"textStatus",label:"Text extent",type:"select",values:["METADATA_ONLY","FULL_TEXT","PARTIAL_TEXT","FRAGMENTS","LOST_WORK"]},{key:"rightsStatus",label:"Rights",type:"select",values:["UNKNOWN","PUBLIC_DOMAIN","LICENSED","LINK_ONLY"]},{key:"expectedUnits",label:"Expected units",type:"number"},{key:"availableUnits",label:"Available units",type:"number"}],
  EVIDENCE_CREATE:[{key:"workId",label:"Work",type:"select"},{key:"attributionId",label:"Attribution ID (optional)"},{key:"editionId",label:"Edition ID (optional)"},{key:"sourceTitle",label:"Source title"},{key:"sourceUrl",label:"Source HTTPS URL",type:"url"},{key:"reference",label:"Page/column/catalogue reference"},{key:"note",label:"Description",type:"textarea"}],
+ ATTRIBUTION_UPDATE:[{key:"attributionId",label:"Attribution ID"},{key:"authenticity",label:"Authorship judgement",type:"select",values:["UNDETERMINED","AUTHENTIC","PROBABLY_AUTHENTIC","DISPUTED","PSEUDEPIGRAPHIC","MISATTRIBUTED"]},{key:"note",label:"Review justification",type:"textarea"}],
+ EDITION_UPDATE:[{key:"editionId",label:"Edition ID"},{key:"textStatus",label:"Text completeness",type:"select",values:["METADATA_ONLY","FULL_TEXT","PARTIAL_TEXT","FRAGMENTS","LOST_WORK"]},{key:"rightsStatus",label:"Rights",type:"select",values:["UNKNOWN","PUBLIC_DOMAIN","LICENSED","LINK_ONLY"]},{key:"expectedUnits",label:"Expected units",type:"number"},{key:"availableUnits",label:"Available units",type:"number"},{key:"note",label:"Review justification",type:"textarea"}],
  EVIDENCE_REVIEW:[{key:"workId",label:"Work",type:"select"},{key:"evidenceId",label:"Evidence ID"},{key:"note",label:"Reason for review",type:"textarea"}],
  PUBLISH_WORK:[{key:"workId",label:"Work",type:"select"},{key:"note",label:"Publication justification",type:"textarea"}],
  PUBLISH_AUTHOR:[{key:"authorId",label:"Author",type:"select"}],
@@ -66,6 +68,8 @@ export function LibraryEditor(){
   <section><h2 className="text-xl font-semibold">Authors</h2><ul className="mt-2 space-y-2">{authors.map(a=><li key={a.id} className="rounded border p-2 text-sm">{a.name} · {a.status} · <code>{a.id}</code></li>)}</ul></section>
   <section><h2 className="text-xl font-semibold">Works and evidence</h2><ul className="mt-2 space-y-3">{works.map(w=><li key={w.id} className="rounded border p-3 text-sm">
    <strong>{w.title}</strong> · {w.status}<p className="text-xs text-gray-600">{w.id}</p>
+   {(w.attributions??[]).map(a=><p key={a.id} className="mt-1 text-xs">Attribution: {a.author.name} / {a.role} / {a.authenticity} — <code>{a.id}</code></p>)}
+   {(w.editions??[]).map(e=><p key={e.id} className="mt-1 text-xs">Edition: {e.title} / {e.textStatus} — <code>{e.id}</code></p>)}
    {(w.evidence??[]).map(e=><p key={e.id} className="mt-1 text-xs">{e.reviewed?"Reviewed":"Pending"}: {e.sourceTitle} — <code>{e.id}</code></p>)}
   </li>)}</ul></section>
  </section>;
