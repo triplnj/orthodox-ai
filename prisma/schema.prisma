@@ -398,3 +398,107 @@ enum PatristicDiscoveryJobStatus {
   COMPLETED
   FAILED
 }
+
+ 
+// Patristic Library is a separate, opt-in bibliographic catalogue.
+// These tables are never read by chat retrieval or billing.
+model LibraryAuthor {
+  id           String @id @default(cuid())
+  slug         String @unique
+  name         String
+  originalName String?
+  aliases      String[] @default([])
+  period       String?
+  language     String?
+  status       String @default("DRAFT")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  attributions LibraryAttribution[]
+  @@index([name])
+}
+
+model LibraryWork {
+  id             String @id @default(cuid())
+  slug           String @unique
+  title          String
+  originalTitle  String?
+  aliases        String[] @default([])
+  language       String?
+  genre          String?
+  externalIds    Json?
+  survivalStatus String @default("UNKNOWN")
+  status         String @default("DRAFT")
+  parentWorkId   String?
+  parentWork     LibraryWork? @relation("LibraryWorkParts", fields: [parentWorkId], references: [id], onDelete: SetNull)
+  parts          LibraryWork[] @relation("LibraryWorkParts")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  attributions   LibraryAttribution[]
+  editions       LibraryEdition[]
+  evidence       LibraryEvidence[]
+  reviews        LibraryReview[]
+  @@index([title])
+  @@index([status])
+  @@index([parentWorkId])
+}
+
+model LibraryAttribution {
+  id           String @id @default(cuid())
+  authorId     String
+  workId       String
+  role         String @default("AUTHOR")
+  authenticity String @default("UNDETERMINED")
+  note         String?
+  author       LibraryAuthor @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  work         LibraryWork @relation(fields: [workId], references: [id], onDelete: Cascade)
+  evidence     LibraryEvidence[]
+  @@unique([authorId, workId, role])
+  @@index([workId])
+}
+
+model LibraryEdition {
+  id            String @id @default(cuid())
+  workId        String
+  title         String
+  editor        String?
+  publisher     String?
+  year          Int?
+  language      String?
+  url           String?
+  citation      String?
+  textStatus    String @default("METADATA_ONLY")
+  rightsStatus  String @default("UNKNOWN")
+  expectedUnits Int?
+  availableUnits Int?
+  work          LibraryWork @relation(fields: [workId], references: [id], onDelete: Cascade)
+  evidence      LibraryEvidence[]
+  @@index([workId])
+}
+
+model LibraryEvidence {
+  id            String @id @default(cuid())
+  workId        String
+  attributionId String?
+  editionId     String?
+  sourceTitle   String
+  sourceUrl     String?
+  reference     String?
+  note          String?
+  reviewed      Boolean @default(false)
+  work          LibraryWork @relation(fields: [workId], references: [id], onDelete: Cascade)
+  attribution   LibraryAttribution? @relation(fields: [attributionId], references: [id], onDelete: SetNull)
+  edition       LibraryEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+  @@index([workId, reviewed])
+}
+
+model LibraryReview {
+  id         String @id @default(cuid())
+  workId     String
+  actorId    String
+  action     String
+  note       String
+  createdAt  DateTime @default(now())
+  work       LibraryWork @relation(fields: [workId], references: [id], onDelete: Cascade)
+  @@index([workId, createdAt])
+}
