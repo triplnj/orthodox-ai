@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import { createLoader } from "./helpers/load-ts.mjs";
 const {findCuratedPatristicDocuments}=createLoader({})("src/lib/patristics/curated-text-sources.ts");
 const key="chrysostom-vainglory-how-to-bring-up-children";
@@ -40,7 +41,7 @@ test("parenting primary text contributes extractable excerpts and remains first 
  assert.ok(hits.length>0,"source text produced evidence");
  assert.equal(hits[0].workTitle,"Address on Vainglory and How to Bring Up Children");
  assert.ok(hits[0].excerpt.includes("father and mother"));
- assert.ok(hits.some(item=>item.workTitle==="Homily 9 on Colossians"),"other approved homilies stay available");
+ assert.ok(hits.some(item=>item.workTitle==="Homily 21 on Ephesians"),"directly relevant Ephesians homily stays available");
 });
 
 test("parenting source list excludes same-author homilies unrelated to parenting",()=>{
@@ -56,11 +57,10 @@ test("unknown subject retains author-only fallback rather than blocking answers"
  assert.ok(hits.some(x=>x.key==="chrysostom-colossians-homily-9"));
 });
 test("relevant primary works suppress generic web-source cards, not the normal chat response",()=>{
- const fs=await import("node:fs");
- const context=fs.readFileSync("src/lib/patristics/build-patristic-research-context.ts","utf8");
+ const context=readFileSync("src/lib/patristics/build-patristic-research-context.ts","utf8");
  assert.match(context,/directPrimaryCoverage/);
  assert.match(context,/webResearch\?\.context && !directPrimaryCoverage/);
- const chat=fs.readFileSync("src/app/api/chat/route.ts","utf8");
+ const chat=readFileSync("src/app/api/chat/route.ts","utf8");
  assert.doesNotMatch(chat,/gatePatristicAnswer/);
  assert.match(chat,/onDelta: reviewedPilot \? undefined : onDelta/);
 });
