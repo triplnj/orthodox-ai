@@ -14,6 +14,7 @@ export async function requireLibraryAdmin() {
 type Input=Record<string,unknown>;
 function id(b:Input,key:string){return libraryString(b[key],128);}
 export async function libraryAdminAction(action:string,b:Input,actorId:string) {
+ if(action==="IMPORT_CHRYSOSTOM_PILOT"){const {importChrysostomPilot}=await import("./pilot");return importChrysostomPilot();}
  switch(action){
   case "AUTHOR_CREATE": return prisma.libraryAuthor.create({data:{
    slug:librarySlug(libraryString(b.slug,90)), name:libraryString(b.name), originalName:libraryOptional(b.originalName),
