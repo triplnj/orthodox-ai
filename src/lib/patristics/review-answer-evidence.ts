@@ -82,7 +82,7 @@ export async function reviewPatristicAnswerEvidence(
     }
     // Never accept an audit that silently drops a substantive sentence.
     // The reviewer is still fallible; this only checks completeness of coverage.
-    const sentences = answer.split(/(?<=[.!?])\\s+(?=[\\p{Lu}\\p{N}])/u)
+    const sentences = answer.split(/(?<=[.!?])\s+(?=[\p{Lu}\p{N}])/u)
       .map(s => s.trim()).filter(s => s.length >= 20);
     if (sentences.some(sentence => !assertions.some(a => a.assertion.includes(sentence)))) {
       return { status: "unavailable", assertions: [] };
