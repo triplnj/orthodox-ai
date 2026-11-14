@@ -49,6 +49,18 @@ for (const address of ["8.8.8.8", "1.1.1.1", "93.184.216.34", "2606:4700:4700::1
 for (const url of ["http://newadvent.org/fathers", "https://127.0.0.1", "https://2130706433", "https://[::1]", "https://user:pass@newadvent.org", "https://newadvent.org:8443", "https://newadvent.org./fathers", "https://newadvent.org\\@evil.test", "https://evil.test", "https://newadvent.org.evil.test"]) {
   test(`unsafe or unapproved URL denied before connecting: ${url}`, async () => { const h = transportHarness(); await assert.rejects(h.transport.safeSourceFetch(url)); assert.equal(h.requests.length, 0); });
 }
+test("curated Chrysostom parenting PDF passes source allowlist without weakening HTTPS and DNS checks", async () => {
+  const h = transportHarness();
+  const pdfUrl = "https://www.catholicapologetics.info/morality/family/Rightway.pdf";
+  h.replies.push({ status: 200, headers: { "content-type": "application/pdf" }, body: "%PDF-1.7 test transport only" });
+  const reply = await h.transport.safeSourceFetch(pdfUrl);
+  assert.equal(reply.status, 200);
+  assert.match(await reply.text(), /^%PDF-1.7/);
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].init.servername, "www.catholicapologetics.info");
+  assert.equal(h.requests[0].init.rejectUnauthorized, true);
+  assert.equal(h.requests[0].init.headers.Authorization, undefined);
+});
 test("source request pins DNS while retaining TLS hostname and strips credentials", async () => {
   const h = transportHarness(); const response = await h.transport.safeSourceFetch("https://newadvent.org/fathers", { headers: { Authorization: "must-not-forward", Cookie: "must-not-forward" } });
   assert.equal(response.status, 200); assert.equal(await response.text(), "<p>Patristic source</p>");
@@ -97,7 +109,7 @@ test("connection hangs obey caller deadline and release request resources", asyn
 });
 test("default source hosts include all current curated and authoritative destinations", async () => {
   const h = transportHarness();
-  for (const host of ["en.wikisource.org", "el.wikisource.org", "la.wikisource.org", "archive.org", "onlinebooks.library.upenn.edu", "remacle.org", "syri.ac", "www.gorgiaspress.com", "www.vlioras.gr", "www.gutenberg.org", "www.newadvent.org", "patrologiagraeca.org", "philokalia.com", "biblegateway.com"]) assert.equal(await h.policy.allowedSource(host), true, host);
+  for (const host of ["en.wikisource.org", "el.wikisource.org", "la.wikisource.org", "archive.org", "onlinebooks.library.upenn.edu", "remacle.org", "syri.ac", "www.gorgiaspress.com", "www.vlioras.gr", "www.gutenberg.org", "www.newadvent.org", "catholicapologetics.info", "www.catholicapologetics.info", "patrologiagraeca.org", "philokalia.com", "biblegateway.com"]) assert.equal(await h.policy.allowedSource(host), true, host);
 });
 async function adminSignIn(h, overrides = {}) {
   h.addUser({ id: "admin", email: "admin@example.test", emailVerified: new Date(), ...overrides });
