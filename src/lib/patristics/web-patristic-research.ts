@@ -315,14 +315,6 @@ If evidence is weak or contradictory, state that explicitly.`;
 
 // A deliberately short source discovery task runs before full answer synthesis.
 // Long-form theological analysis happens only after verified links are found.
-const FAST_RESEARCH_SYSTEM_PROMPT = `Find real primary, official Orthodox, or scholarly web sources for the user's question.
-You MUST use web search. Search Serbian, Russian, and English spellings of a named saint when useful.
-For questions about a saint's life and published writings, locate at least one biography
-and one reliable bibliography if available. Do not guess authors or titles.
-Return a BRIEF factual evidence note (maximum 350 words) with titles, key supported
-facts and source URLs. Distinguish primary texts from biographies and bibliographies.
-Never invent a source, URL, author attribution, or quotation. If sources disagree,
-state the uncertainty. You are retrieving evidence, not composing a pastoral essay.`;
 const BIBLIOGRAPHY_RESEARCH_SYSTEM_PROMPT = `Find a reliable, exact bibliography of the named patristic author. Search across English and the query's language.
 Search academic publications, critical editions, university presses, official Church sites and public domain editions.
 Distinguish the AUTHOR of a whole treatise from COMPILERS, EDITORS, TRANSLATORS and ADAPTORS.
