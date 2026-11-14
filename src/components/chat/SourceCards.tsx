@@ -34,11 +34,14 @@ export function SourceCards({ sources }: { sources: MappedSource[] }) {
     <p className="font-semibold">Sources</p>
     {groups.length ? <ol className="mt-2 list-decimal space-y-2 pl-6">
       {groups.map(({ source, bibliography }, index) => {
-        const label = bibliography.length
-          ? (source.webpageTitle ?? source.workTitle ?? "Bibliographic reference")
-          : [source.authorName, source.workTitle ?? source.webpageTitle, source.reference]
-            .filter(Boolean).join(" — ") || source.webpageTitle || "Research source";
         const url = safeLink(source.scanUrl ?? source.originalSourceUrl ?? source.sourceUrl);
+        // Never invent a source title. An untitled discovery URL must be
+        // visibly identified as such rather than masquerading as a citation.
+        const fallbackLabel = url ? `Untitled reference — ${new URL(url).hostname}${new URL(url).pathname}` : "Untitled reference";
+        const label = bibliography.length
+          ? (source.webpageTitle ?? source.workTitle ?? fallbackLabel)
+          : [source.authorName, source.workTitle ?? source.webpageTitle, source.reference]
+            .filter(Boolean).join(" — ") || fallbackLabel;
         return <li key={url ?? `source-${index}`} className="pl-1">
           {url ? <a href={url} target="_blank" rel="noopener noreferrer" className="underline">{label}<span className="sr-only"> (opens in a new tab)</span></a> : <span>{label}</span>}
           {bibliography.length > 0 && <ul className="mt-1 list-disc pl-5 text-xs text-gray-600">
