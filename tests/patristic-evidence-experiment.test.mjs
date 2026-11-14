@@ -11,6 +11,7 @@ const source = { provider:"CURATED_TEXT", authorName:"St Maximus", workTitle:"A 
 function reviewer(reply) {
  const calls=[];
  const load=createLoader({
+  "server-only": {},
   "@/lib/ai/openaiClient":{getOpenAI:()=>({chat:{completions:{create:async params=>{
     calls.push(params);return {choices:[{message:{content:JSON.stringify(reply)}}]};
   }}}})},
