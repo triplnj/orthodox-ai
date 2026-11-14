@@ -330,9 +330,9 @@ Crucially, locate documentary evidence whether a named work is an independent wo
 For John of Damascus, for instance, parts of a larger work MUST be identified as parts when a source supports that relationship; do not invent titles or structures.
 Return only direct URLs actually found with short supported facts. Do not cite weak discovery-only pages.
 You are collecting candidate sources, not establishing claims; a downstream process will inspect their actual text.`;
-const BIBLIOGRAPHY_SEARCH_DEADLINE_MS = 20000;
+const BIBLIOGRAPHY_SEARCH_DEADLINE_MS = 75000;
 const WEB_RESEARCH_WAIT_NOTICE_MS = 19000;
-const WEB_RESEARCH_DEADLINE_MS = 45000;
+const WEB_RESEARCH_DEADLINE_MS = 110000;
 
 async function runResearch(
   query: string,
@@ -368,7 +368,7 @@ async function runResearch(
         content: query,
       },
     ],
-  }, { signal, maxRetries: 0, timeout: WEB_RESEARCH_DEADLINE_MS });
+  }, { signal, maxRetries: 0, timeout: bibliography ? BIBLIOGRAPHY_SEARCH_DEADLINE_MS : WEB_RESEARCH_DEADLINE_MS });
 }
 
 function buildResult(response: unknown) {

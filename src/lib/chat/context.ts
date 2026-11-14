@@ -15,7 +15,7 @@ export function conversationLimits() {
     historyTokens: read("CHAT_HISTORY_MAX_TOKENS", 4000, 12000),
     questionTokens: read("CHAT_QUESTION_MAX_TOKENS", 2000, 4000, 1),
     inputTokens: read("CHAT_INPUT_MAX_TOKENS", 16000, 32000, 4000),
-    outputTokens: read("CHAT_OUTPUT_MAX_TOKENS", 2048, 4096, 128),
+    outputTokens: read("CHAT_OUTPUT_MAX_TOKENS", 3072, 6144, 128),
   };
 }
 let encoding: ReturnType<typeof getEncoding> | undefined;

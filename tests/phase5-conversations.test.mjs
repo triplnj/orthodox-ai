@@ -200,7 +200,7 @@ for (const value of ["-1", "NaN", "1.5", "Infinity", "9007199254740992"]) test(`
 });
 test("all configuration values have strict hard maxima", () => {
   const h = harness({ env: Object.fromEntries(["HISTORY_MAX_TURNS", "HISTORY_MAX_TOKENS", "QUESTION_MAX_TOKENS", "INPUT_MAX_TOKENS", "OUTPUT_MAX_TOKENS"].map(name => [`CHAT_${name}`, "999999"])) });
-  assert.deepEqual(h.load("src/lib/chat/context.ts").conversationLimits(), { turns: 20, historyTokens: 12000, questionTokens: 4000, inputTokens: 32000, outputTokens: 4096 });
+  assert.deepEqual(h.load("src/lib/chat/context.ts").conversationLimits(), { turns: 20, historyTokens: 12000, questionTokens: 4000, inputTokens: 32000, outputTokens: 6144 });
 });
 test("oversized current question rejects before any quota reservation", async () => {
   const h = harness({ env: { CHAT_QUESTION_MAX_TOKENS: "10" } }); assert.equal((await h.send(input("oversized", undefined, "hello ".repeat(100)))).status, 413); assert.equal(h.state.logs.length, 0);
@@ -210,7 +210,7 @@ test("oversized evidence rejects without an AI call or truncated grounding", asy
   assert.equal((await h.send(input("evidence"))).status, 413); assert.equal(h.state.calls.length, 0); assert.equal(h.state.logs.length, 1);
 });
 test("output cap is applied to conversation chat and model/temperature are preserved", async () => {
-  const h = harness(); await first(h); assert.equal(h.state.calls[0].max_completion_tokens, 2048); assert.equal(h.state.calls[0].model, "gpt-4.1-mini"); assert.equal(h.state.calls[0].temperature, 0.4);
+  const h = harness(); await first(h); assert.equal(h.state.calls[0].max_completion_tokens, 3072); assert.equal(h.state.calls[0].model, "gpt-4.1-mini"); assert.equal(h.state.calls[0].temperature, 0.4);
 });
 test("Free history window is global rather than per-conversation", async () => {
   const h = harness(); const initial = await first(h);
