@@ -246,7 +246,10 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
       {!messages.length && !busy && <p className="text-sm text-gray-600">Start a conversation with a question, or choose a saved conversation above.</p>}
       {messages.map((message, index) => <article key={index} className={`rounded-xl p-4 text-sm ${message.role === "user" ? "sm:ml-8 bg-gray-950 text-white" : "sm:mr-8 bg-white text-gray-900"}`}>
         <p className="mb-2 text-xs font-semibold">{message.role === "user" ? "You" : "OrthodoxAI"}</p><div className="break-words">{message.role === "assistant" ? renderAnswerEmphasis(message.content) : <p className="whitespace-pre-wrap">{message.content}</p>}</div>
-        {message.role === "assistant" && <SourceCards sources={message.sources ?? []} />}
+        {message.role === "assistant" && <>
+          <SourceCards sources={message.sources ?? []} />
+          <p className="mt-3 border-t border-gray-100 pt-2 text-xs text-gray-600">OrthodoxAI may make a mistake. Check relevant sources</p>
+        </>}
       </article>)}
       {busy && <p>{loadingConversation ? "Loading saved conversation..." : "OrthodoxAI is working..."}</p>}
     </div>
