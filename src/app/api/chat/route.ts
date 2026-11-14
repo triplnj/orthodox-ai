@@ -18,6 +18,10 @@ import { checkQuestion, selectHistory } from "@/lib/chat/context";
 import { snapshotSources } from "@/lib/chat/provenance";
 import { visibleMessages } from "@/lib/chat/history";
 
+// With Fluid Compute, allow retrieval and answer generation within the Hobby 300s ceiling.
+// This route remains bounded by Vercel even if an external provider stalls.
+export const maxDuration = 300;
+
 async function handleChat(request: Request, onDelta?: (text: string) => void, onPhase?: (phase: string) => void) {
   let attempt: TurnAttempt | undefined;
   try {
