@@ -108,7 +108,7 @@ export const CURATED_PATRISTIC_DOCUMENTS:
       authorAliases: ["john chrysostom", "jovan zlatousti", "sveti jovan zlatousti", "јован златоусти", "свети јован златоусти"],
       workTitle: "Homily 21 on Ephesians",
       workAliases: ["homily 21 on ephesians"],
-      subjects: ["scripture", "scriptures", "bible", "reading scripture", "reading the bible", "свето писмо", "светог писма", "читање светог писма", "читају свето писмо", "лаици", "мирјани", "читање писма", "citanje svetog pisma", "laici", "mirjani"],
+      subjects: ["scripture", "scriptures", "bible", "reading scripture", "reading the bible", "свето писмо", "светог писма", "читање светог писма", "читају свето писмо", "лаици", "мирјани", "читање писма", "citanje svetog pisma", "laici", "mirjani", "parents", "children", "child upbringing", "raising children", "parenting", "васпитање", "васпитању", "васпитања", "деце", "деца", "дете", "родитеља", "родитељи", "послушност"],
       sourceUrl: "https://www.newadvent.org/fathers/230121.htm",
       sourceName: "New Advent — John Chrysostom",
       sourceLanguage: "English",
@@ -674,6 +674,7 @@ export function findCuratedPatristicDocuments(
       return {
         document,
         authorMatch,
+        topicalMatch: workMatch || subjectMatches > 0,
         score:
           (authorMatch ? 100 : 0) +
           (workMatch ? 50 : 0) +
@@ -703,11 +704,18 @@ export function findCuratedPatristicDocuments(
     return [];
   }
 
+  // An author match alone is not proof that every work by that author
+  // addresses the question. Once there are topic-matched works, exclude
+  // same-author works found only because of the author's name. For a
+  // biography/overview without topical matches, preserve the older fallback.
+  const hasTopicalAuthorWork = scored.some(
+    item => item.authorMatch && item.topicalMatch,
+  );
+
   return scored
     .filter(
-      (item) =>
-        !hasAuthorMatch ||
-        item.authorMatch,
+      item => (!hasAuthorMatch || item.authorMatch) &&
+        (!hasTopicalAuthorWork || item.topicalMatch),
     )
     .sort(
       (a, b) =>

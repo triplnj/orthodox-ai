@@ -76,9 +76,11 @@ test("PG, PL and Philokalia supplement modern Orthodox Fathers, rather than repl
   const research = read("src/lib/patristics/build-patristic-research-context.ts");
   assert.match(research, /Additive federation/);
   assert.match(research, /keep all existing verified and curated writings/);
-  for (const provider of ["curated?.length", "verified", "livePg?.context", "webResearch?.context"]) {
+  for (const provider of ["curated?.length", "verified", "livePg?.context"]) {
     assert.ok(research.includes("if (" + provider + ") {"), "missing provider: " + provider);
   }
+  assert.match(research, /if \(webResearch\?\.context && !directPrimaryCoverage\)/,
+    "live web fallback must remain available without sufficient primary coverage");
   const service = read("src/lib/ai/chatService.ts");
   assert.match(service, /expand, NEVER replace/);
   assert.match(service, /John of Kronstadt/);

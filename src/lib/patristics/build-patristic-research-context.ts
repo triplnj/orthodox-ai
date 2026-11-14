@@ -342,7 +342,15 @@ export async function buildPatristicResearchContext(
     contextParts.push(livePg.context);
     sources.push(...mapPgSources(livePg.sources));
   }
-  if (webResearch?.context) {
+  // When two or more direct, topic-ranked writings by the same named
+  // author are already available, don't dilute their evidence dossier with
+  // lower-ranked general web discovery. This avoids citing secondary pages
+  // and unrelated hits for a question those primary writings directly cover.
+  // If curated coverage is absent or limited, preserve web discovery.
+  const directPrimaryCoverage = !!curated && curated.length >= 2 &&
+    curated.every(item => item.authorName === curated[0].authorName &&
+      item.documentType !== "BIBLIOGRAPHIC");
+  if (webResearch?.context && !directPrimaryCoverage) {
     providersSucceeded.push("WEB_RESEARCH");
     contextParts.push(webResearch.context);
     sources.push(...webResearch.sources.map(source => ({
