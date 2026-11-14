@@ -67,6 +67,32 @@ export async function libraryAdminAction(action:string,b:Input,actorId:string) {
     note:libraryOptional(b.note,2000),reviewed:false
    }});
   }
+  case "ATTRIBUTION_UPDATE": {
+   const attributionId=id(b,"attributionId");
+   const authenticity=libraryChoice(b.authenticity,LIBRARY_AUTHENTICITY,"UNDETERMINED");
+   const note=libraryString(b.note,2000);
+   return prisma.$transaction(async tx=>{
+    const attribution=await tx.libraryAttribution.findUnique({where:{id:attributionId}});
+    if(!attribution)throw new LibraryAdminError("Attribution not found.",404);
+    await tx.libraryAttribution.update({where:{id:attributionId},data:{authenticity,note}});
+    return tx.libraryReview.create({data:{workId:attribution.workId,actorId,action:"ATTRIBUTION_UPDATE",note}});
+   });
+  }
+  case "EDITION_UPDATE": {
+   const editionId=id(b,"editionId");
+   const textStatus=libraryChoice(b.textStatus,LIBRARY_TEXT_STATUS,"METADATA_ONLY");
+   const rightsStatus=libraryChoice(b.rightsStatus,LIBRARY_RIGHTS,"UNKNOWN");
+   const expectedUnits=libraryInt(b.expectedUnits),availableUnits=libraryInt(b.availableUnits);
+   if(expectedUnits!==null&&availableUnits!==null&&availableUnits>expectedUnits)throw new LibraryAdminError("Available units exceed expected units.");
+   if(textStatus==="FULL_TEXT"&&expectedUnits!==null&&availableUnits!==expectedUnits)throw new LibraryAdminError("Full text must cover every expected unit.");
+   const note=libraryString(b.note,2000);
+   return prisma.$transaction(async tx=>{
+    const edition=await tx.libraryEdition.findUnique({where:{id:editionId}});
+    if(!edition)throw new LibraryAdminError("Edition not found.",404);
+    await tx.libraryEdition.update({where:{id:editionId},data:{textStatus,rightsStatus,expectedUnits,availableUnits}});
+    return tx.libraryReview.create({data:{workId:edition.workId,actorId,action:"EDITION_UPDATE",note}});
+   });
+  }
   case "EVIDENCE_REVIEW": {
    const workId=id(b,"workId");const evidenceId=id(b,"evidenceId");
    return prisma.$transaction(async tx=>{
@@ -84,6 +110,8 @@ export async function libraryAdminAction(action:string,b:Input,actorId:string) {
     if(!work)throw new LibraryAdminError("Work not found.",404);
     if(!work.evidence.length || !work.attributions.length)
       throw new LibraryAdminError("Published works require an attribution and reviewed evidence.");
+    if(!work.attributions.some(a=>work.evidence.some(e=>e.attributionId===a.id)))
+      throw new LibraryAdminError("A reviewed source linked to an attribution is required.");
     for(const a of work.attributions) {
      if(a.authenticity==="UNDETERMINED" && !work.evidence.some(e=>e.attributionId===a.id))
       throw new LibraryAdminError("Uncertain attribution requires dedicated evidence.");
