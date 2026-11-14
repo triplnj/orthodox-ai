@@ -29,7 +29,14 @@ export function LibraryEditor(){
   if(!res.ok)throw new Error(data.error??"Unable to load catalogue");
   setAuthors(data.authors??[]);setWorks(data.works??[]);
  }
- useEffect(()=>{void reload().catch(e=>setError(String(e)))},[]);
+ useEffect(()=>{
+  let active=true;
+  fetch("/api/library/admin",{cache:"no-store"})
+   .then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error??"Unable to load catalogue");return data;})
+   .then(data=>{if(active){setAuthors(data.authors??[]);setWorks(data.works??[]);}})
+   .catch(error=>{if(active)setError(String(error));});
+  return ()=>{active=false;};
+ },[]);
  async function submit(event:React.FormEvent<HTMLFormElement>){
   event.preventDefault();setBusy(true);setError("");setResult("");
   try{
