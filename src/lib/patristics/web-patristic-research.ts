@@ -342,7 +342,7 @@ async function runResearch(
 ) {
   return getOpenAI().responses.create({
     model: "gpt-4.1-mini",
-    max_output_tokens: 1000,
+    max_output_tokens: 1800,
     tool_choice: "required",
     include: ["web_search_call.action.sources"],
     tools: [
@@ -361,7 +361,7 @@ async function runResearch(
     input: [
       {
         role: "system",
-        content: bibliography ? BIBLIOGRAPHY_RESEARCH_SYSTEM_PROMPT : FAST_RESEARCH_SYSTEM_PROMPT,
+        content: bibliography ? BIBLIOGRAPHY_RESEARCH_SYSTEM_PROMPT : RESEARCH_SYSTEM_PROMPT,
       },
       {
         role: "user",
