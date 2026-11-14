@@ -3,6 +3,7 @@ import { useEffect,useState } from "react";
 type Item={id:string;name?:string;title?:string;status?:string;evidence?:{id:string;sourceTitle:string;reviewed:boolean}[]};
 type Option={key:string;label:string;type?:"select"|"number"|"url"|"textarea";values?:string[]};
 const ops:Record<string,Option[]>={
+ IMPORT_CHRYSOSTOM_PILOT:[],
  AUTHOR_CREATE:[{key:"slug",label:"Unique Latin slug"},{key:"name",label:"Name"},{key:"originalName",label:"Original name"},{key:"period",label:"Period"},{key:"language",label:"Language"}],
  WORK_CREATE:[{key:"slug",label:"Unique Latin slug"},{key:"title",label:"Title"},{key:"originalTitle",label:"Original title"},{key:"language",label:"Original language"},{key:"genre",label:"Genre"},{key:"survivalStatus",label:"Survival",type:"select",values:["UNKNOWN","COMPLETE","PARTIAL","FRAGMENTS","LOST"]},{key:"parentWorkId",label:"Parent work ID"}],
  ATTRIBUTION_CREATE:[{key:"authorId",label:"Author",type:"select"},{key:"workId",label:"Work",type:"select"},{key:"role",label:"Role",type:"select",values:["AUTHOR","EDITOR","COMPILER","TRANSLATOR","ADAPTOR","COMMENTATOR","SOURCE_AUTHOR","UNKNOWN"]},{key:"authenticity",label:"Authenticity",type:"select",values:["UNDETERMINED","AUTHENTIC","PROBABLY_AUTHENTIC","DISPUTED","PSEUDEPIGRAPHIC","MISATTRIBUTED"]},{key:"note",label:"Explanation",type:"textarea"}],
