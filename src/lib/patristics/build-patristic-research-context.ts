@@ -255,7 +255,7 @@ export async function buildPatristicResearchContext(
   const curatedDocuments = findCuratedPatristicDocuments(query);
   const genericQuery = isGenericPatristicResearchQuery(query);
 
-  // Independent retrieval providers run together. Web search is bounded by a\n  // nine-second abort budget; the other providers retain their results.\n  // Each provider handles its own
+  // Independent retrieval providers run together. Web search is bounded by a\n  // a bounded extended research budget; the other providers retain their results.\n  // Each provider handles its own
   // failure, preserving partial grounded evidence if another provider is unavailable.
   // Keep the final assembly in evidence-priority order, not completion order.
   const [curated, verified, livePg, webResearch, officialSaintLife, orthodoxWiki] = await Promise.all([
