@@ -10,9 +10,9 @@ export async function importChrysostomPilot() {
    update:{}
   });
   const items=[
-   {slug:"chrysostom-on-vainglory-and-children",title:"Address on Vainglory and How to Bring Up Children",url:"https://www.catholicapologetics.info/morality/family/Rightway.pdf",textStatus:"FULL_TEXT"},
-   {slug:"chrysostom-homily-21-on-ephesians",title:"Homily 21 on Ephesians",url:"https://www.newadvent.org/fathers/230121.htm",textStatus:"FULL_TEXT"},
-   {slug:"chrysostom-homily-9-on-colossians",title:"Homily 9 on Colossians",url:"https://www.newadvent.org/fathers/230309.htm",textStatus:"FULL_TEXT"}
+   {slug:"chrysostom-on-vainglory-and-children",title:"Address on Vainglory and How to Bring Up Children",url:"https://www.catholicapologetics.info/morality/family/Rightway.pdf",textStatus:"METADATA_ONLY"},
+   {slug:"chrysostom-homily-21-on-ephesians",title:"Homily 21 on Ephesians",url:"https://www.newadvent.org/fathers/230121.htm",textStatus:"METADATA_ONLY"},
+   {slug:"chrysostom-homily-9-on-colossians",title:"Homily 9 on Colossians",url:"https://www.newadvent.org/fathers/230309.htm",textStatus:"METADATA_ONLY"}
   ] as const;
   for(const item of items){
    const work=await tx.libraryWork.upsert({
