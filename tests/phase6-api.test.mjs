@@ -46,8 +46,10 @@ for (const [user, limit] of [[free, 3], [pro, 100]]) test(`${user.plan}: final a
   for (let i = 0; i < limit - 1; i++) h.state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120000) });
   const response = await h.send("chat", { message: "Final question", requestId: "final" }); assert.equal(response.status, 200);
   const answer = await response.json(); assert.equal(answer.answer, "Answer"); assert.equal(answer.remaining, 0);
-  const rejected = await h.send("chat", { message: "One too many", requestId: "extra" }); assert.equal(rejected.status, 429);
-  const error = await rejected.json(); assert.equal(error.code, "DAILY_QUOTA_EXHAUSTED"); assert.equal(error.remaining, 0); assert.ok(error.retryAfterSeconds > 60);
+  const rejected = await h.send("chat", { message: "One too many", requestId: "extra" }); assert.equal(rejected.status, user.plan === "FREE" ? 403 : 429);
+  const error = await rejected.json(); assert.equal(error.code, user.plan === "FREE" ? "FREE_TRIAL_EXHAUSTED" : "DAILY_QUOTA_EXHAUSTED"); assert.equal(error.remaining, 0);
+  if (user.plan === "FREE") assert.equal(error.retryAfterSeconds, undefined);
+  else assert.ok(error.retryAfterSeconds > 60);
   assert.equal(h.state.logs.length, limit); assert.equal(h.state.modelCalls, 1);
 });
 test("chat replay reports fresh allowance without changing its saved answer snapshot", async () => {
