@@ -26,9 +26,10 @@ export async function quotaSnapshot(subject: string, feature: AiFeature, user?: 
   });
   const day = quotaDay(now);
   const limit = feature === "chat" ? (user && (isProUser(user) || isIsolatedPreviewQaChatUser(user.id)) ? FULL_ACCESS_DAILY_CHAT_LIMIT : FREE_DAILY_CHAT_LIMIT) : feature === "review" ? 100 : 30;
-  const used = feature === "chat" && user ? await tx.usageLog.count({ where: { userId: user.id, feature: "chat", createdAt: { gte: day.start } } })
+  const lifetimeFreeChat = feature === "chat" && Boolean(user && !isProUser(user) && !isIsolatedPreviewQaChatUser(user.id));
+  const used = feature === "chat" && user ? await tx.usageLog.count({ where: { userId: user.id, feature: "chat", ...(lifetimeFreeChat ? {} : { createdAt: { gte: day.start } }) } })
     : await tx.aiReservation.count({ where: { subject, createdAt: { gte: day.start }, feature: { in: PERSONAL_FEATURES.includes(feature) ? PERSONAL_FEATURES : [feature] } } });
-  return { pool: PERSONAL_FEATURES.includes(feature) ? "personal" : feature, limit, used, remaining: Math.max(0, limit - used), observedAt: now.toISOString(), resetsAt: day.reset.toISOString(), timezone: day.timezone };
+  return { pool: PERSONAL_FEATURES.includes(feature) ? "personal" : feature, limit, used, remaining: Math.max(0, limit - used), observedAt: now.toISOString(), resetsAt: lifetimeFreeChat ? "9999-12-31T23:59:59.999Z" : day.reset.toISOString(), timezone: lifetimeFreeChat ? "lifetime" : day.timezone };
 }
 
 export async function reserveAiOperation(subject: string, feature: AiFeature, user?: AppUser,
@@ -63,8 +64,11 @@ export async function reserveAiOperation(subject: string, feature: AiFeature, us
     const dailyLimit = quota.limit;
     const used = quota.used;
     if (used >= dailyLimit) {
+      const lifetimeFreeChat = feature === "chat" && Boolean(user && !isProUser(user) && !isIsolatedPreviewQaChatUser(user.id));
+      if (lifetimeFreeChat) throw new AiLimitError(403, "lifetime",
+        "You've used all 3 free questions. Upgrade to OrthodoxAI Pro to continue.", true, quota);
       throw new AiLimitError(429, "daily", "You have reached today's AI usage limit. Please try again tomorrow.",
-        feature === "chat" && Boolean(user && !isProUser(user)), quota, Math.max(1, Math.ceil((new Date(quota.resetsAt).getTime() - now.getTime()) / 1000)));
+        false, quota, Math.max(1, Math.ceil((new Date(quota.resetsAt).getTime() - now.getTime()) / 1000)));
     }
     const reservation = await tx.aiReservation.create({
       data: { subject, feature, expiresAt: new Date(now.getTime() + LEASE_MS), ...(identity ? { ...identity, userId: user!.id } : {}) },
