@@ -22,7 +22,7 @@ export function validateAiStrings(body: Record<string, unknown>) {
 export function aiSecurityResponse(error: unknown) {
   if (error instanceof AiLimitError) {
     return NextResponse.json({ error: error.message, limitType: error.limitType,
-      code: error.limitType === "daily" ? "DAILY_QUOTA_EXHAUSTED" : error.limitType === "concurrency" ? "AI_OPERATION_IN_PROGRESS" : error.limitType === "rate" ? "RATE_LIMITED" : "FORBIDDEN",
+      code: error.limitType === "lifetime" ? "FREE_TRIAL_EXHAUSTED" : error.limitType === "daily" ? "DAILY_QUOTA_EXHAUSTED" : error.limitType === "concurrency" ? "AI_OPERATION_IN_PROGRESS" : error.limitType === "rate" ? "RATE_LIMITED" : "FORBIDDEN",
       upgradeRequired: error.upgradeRequired, quota: error.quota, remaining: error.quota?.remaining, retryAfterSeconds: error.retryAfterSeconds }, { status: error.status,
       headers: error.retryAfterSeconds ? { "Retry-After": String(error.retryAfterSeconds) } : undefined });
   }
