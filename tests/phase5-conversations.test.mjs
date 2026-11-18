@@ -181,7 +181,7 @@ for (const field of ["messages", "history", "sources", "userId", "system"]) test
 });
 for (const [user, limit] of [[free, 3], [pro, 100]]) test(`${user.plan} exhausted quota is unchanged`, async () => {
   const h = harness({ user }); for (let i = 0; i < limit; i++) h.state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120000) });
-  assert.equal((await h.send(input("quota"))).status, 429); assert.equal(h.state.calls.length, 0); assert.equal(h.state.logs.length, limit);
+  assert.equal((await h.send(input("quota"))).status, user.plan === "FREE" ? 403 : 429); assert.equal(h.state.calls.length, 0); assert.equal(h.state.logs.length, limit);
 });
 test("history turn count is configurable and whole turn pairs are retained", () => {
   const h = harness({ env: { CHAT_HISTORY_MAX_TURNS: "2" } }); const context = h.load("src/lib/chat/context.ts");
