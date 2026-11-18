@@ -14,9 +14,9 @@ export const productCopy = {
   freePlan: {
     name: "Free",
     price: "$0",
-    description: "For basic Orthodox guidance and occasional use.",
+    description: "Try OrthodoxAI with 3 free questions after registration and email verification. No daily reset.",
     features: [
-      "3 AI questions per day",
+      "3 free AI questions total after registration",
       "Basic Orthodox Q&A",
       "Daily prayer card",
       "Basic fasting guidance",
@@ -42,5 +42,5 @@ export const productCopy = {
   },
 
   upgradeMessage:
-    `You have reached your daily Free limit. Upgrade to OrthodoxAI Pro for ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, personal prayer plans, Scripture reading plans, and a spiritual journal.`,
+    `You've used your 3 free questions. Upgrade to OrthodoxAI Pro for ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, personal prayer plans, Scripture reading plans, and a spiritual journal.`,
 };
