@@ -283,7 +283,7 @@ function DashboardContent() {
                 ? `Administrator access is active. You have ${stats.remainingQuestions} chat questions remaining today and access to all tools.`
                 : isPro
                 ? `Your Pro access is active. You have ${stats.remainingQuestions} chat questions remaining today and access to Pro tools.`
-                : `You have ${stats.remainingFreeQuestions} Free questions remaining today.`}
+                : `You have ${stats.remainingFreeQuestions} of your 3 total free questions remaining. They do not reset daily.`}
             </p>
 
             {!isPro && (
@@ -324,7 +324,7 @@ function DashboardContent() {
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 text-gray-950 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-              Chat usage today
+              {isPro ? "Chat usage today" : "Free questions used (total)"}
             </p>
 
             <p className="mt-3 text-3xl font-bold">
