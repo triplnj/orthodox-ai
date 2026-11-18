@@ -11,7 +11,7 @@ const faqs = [
   {
     question: "What do I get with the Free plan?",
     answer:
-      "The Free plan gives you basic Orthodox Q&A, daily prayer content, basic fasting guidance, and 3 AI questions per day.",
+      "After registration and email verification, the Free plan includes 3 AI questions total. These questions do not renew daily. Other available free content remains accessible.",
   },
   {
     question: "What does Pro unlock?",

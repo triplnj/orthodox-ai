@@ -255,7 +255,7 @@ export function ChatBox({ contextKey = "general", title = "Ask OrthodoxAI",
       {busy && <p>{loadingConversation ? "Loading saved conversation..." : "OrthodoxAI is working..."}</p>}
     </div>
     {awayFromLatest && <button type="button" className="mt-3 rounded-lg border px-4 py-3 text-sm" onClick={() => { if (transcript.current) transcript.current.scrollTop = transcript.current.scrollHeight; nearBottom.current = true; setAwayFromLatest(false); }}>Jump to latest message</button>}
-    {remaining !== null && <p className="mt-3 text-xs">Questions remaining today: {remaining}</p>}
+    {remaining !== null && <p className="mt-3 text-xs">{quotaRef.current?.timezone === "lifetime" ? "Free trial questions remaining (total)" : "Questions remaining today"}: {remaining}</p>}
     {error && <div role="alert" className="mt-4 rounded border border-red-200 p-3 text-sm text-red-700">{error}<button type="button" disabled={busy} onClick={() => void readSaved(conversationId)} className="ml-2 rounded border px-3 py-2 underline">Check saved status</button>{upgrade && <a className="ml-2 underline" href="/pricing">Upgrade to Pro</a>}</div>}
     {notice && <p role="status" className="mt-3 text-sm">{notice}</p>}
     {uncertain && <div className="mt-3 flex flex-wrap gap-3 text-sm">

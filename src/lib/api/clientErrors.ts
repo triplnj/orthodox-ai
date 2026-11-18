@@ -4,6 +4,7 @@ export function newerQuota(current: ClientQuota | null, next: ClientQuota | unde
 }
 export function errorMessage(data: { error?: string; code?: string; limitType?: string; quota?: ClientQuota; retryAfterSeconds?: number }) {
   const message = data.error ?? "The request could not be completed.";
+  if (data.code === "FREE_TRIAL_EXHAUSTED" || data.limitType === "lifetime") return message;
   if (data.code === "DAILY_QUOTA_EXHAUSTED" || data.limitType === "daily") return `${message}${data.quota ? ` Resets at ${new Date(data.quota.resetsAt).toLocaleString()} (${data.quota.timezone ?? "server time"}).` : ""}`;
   if (data.code === "RATE_LIMITED" || data.limitType === "rate") return `${message} This is a temporary rate limit.${data.retryAfterSeconds ? ` Try again in ${data.retryAfterSeconds} seconds.` : ""}`;
   return message;
