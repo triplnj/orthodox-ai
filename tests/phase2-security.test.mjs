@@ -112,7 +112,7 @@ function request(body = { message: "Question" }, headers = {}) {
   return new Request("https://example.com/api/test", { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
 }
 
-test("simultaneous Free chat reservations cannot overspend the final daily credit", async () => {
+test("simultaneous Free chat reservations cannot overspend the final lifetime credit", async () => {
   const { load, state } = harness({ user: free });
   for (let i = 0; i < 2; i++) state.logs.push({ userId: free.id, feature: "chat", createdAt: new Date() });
   const { reserveAiOperation } = load("src/lib/ai/operationLimits.ts");
@@ -123,14 +123,48 @@ test("simultaneous Free chat reservations cannot overspend the final daily credi
   assert.equal(results.find((result) => result.status === "fulfilled").value.remaining, 0);
 });
 
-test("Free and Pro chat preserve their daily allowances", async () => {
-  for (const [user, limit] of [[free, 3], [pro, 100]]) {
+test("Free users get three lifetime questions; Pro retains 100 daily", async () => {
+  for (const [user, limit, expected] of [[free, 3, "lifetime"], [pro, 100, "daily"]]) {
     const { load, state } = harness({ user });
     for (let i = 0; i < limit; i++) state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120_000) });
     await assert.rejects(load("src/lib/ai/operationLimits.ts").reserveAiOperation(user.id, "chat", user),
-      { status: 429, limitType: "daily", upgradeRequired: user.plan === "FREE" });
+      { status: user.plan === "FREE" ? 403 : 429, limitType: expected, upgradeRequired: user.plan === "FREE" });
     assert.equal(state.reservations.length, 0);
   }
+});
+
+test("Free lifetime quota counts old questions and does not reset the next day", async () => {
+  const { load, state } = harness({ user: free });
+  state.logs.push(
+    { userId: free.id, feature: "chat", createdAt: new Date(Date.now() - 7 * 86400000) },
+    { userId: free.id, feature: "chat", createdAt: new Date(Date.now() - 2 * 86400000) },
+  );
+  const { quotaSnapshot, reserveAiOperation } = load("src/lib/ai/operationLimits.ts");
+  const before = await quotaSnapshot(free.id, "chat", free);
+  assert.equal(before.remaining, 1);
+  assert.equal(before.timezone, "lifetime");
+  const reservation = await reserveAiOperation(free.id, "chat", free);
+  assert.equal(reservation.remaining, 0);
+  await assert.rejects(reserveAiOperation(free.id, "chat", free),
+    { status: 403, limitType: "lifetime", upgradeRequired: true });
+  assert.equal(state.logs.length, 3);
+});
+
+test("Pro daily credits do not count last week's questions", async () => {
+  const { load, state } = harness({ user: pro });
+  for (let i = 0; i < 100; i++) state.logs.push({ userId: pro.id, feature: "chat", createdAt: new Date(Date.now() - 7 * 86400000) });
+  const { quotaSnapshot } = load("src/lib/ai/operationLimits.ts");
+  assert.equal((await quotaSnapshot(pro.id, "chat", pro)).remaining, 100);
+});
+
+test("administrator keeps full daily chat access after using three questions", async () => {
+  const admin = { ...free, adminAccess: true };
+  const { load, state } = harness({ user: admin });
+  for (let i = 0; i < 3; i++) state.logs.push({ userId: admin.id, feature: "chat", createdAt: new Date() });
+  const { quotaSnapshot } = load("src/lib/ai/operationLimits.ts");
+  const quota = await quotaSnapshot(admin.id, "chat", admin);
+  assert.equal(quota.limit, 100);
+  assert.equal(quota.remaining, 97);
 });
 
 test("inactive Pro subscriptions keep the existing Free quota and cannot access paid AI", async () => {
@@ -140,7 +174,7 @@ test("inactive Pro subscriptions keep the existing Free quota and cannot access 
     const { reserveAiOperation } = load("src/lib/ai/operationLimits.ts");
     await assert.rejects(reserveAiOperation(user.id, "prayer-plan", user), { status: 403 });
     for (let i = 0; i < 3; i++) state.logs.push({ userId: user.id, feature: "chat", createdAt: new Date(Date.now() - 120_000) });
-    await assert.rejects(reserveAiOperation(user.id, "chat", user), { limitType: "daily" });
+    await assert.rejects(reserveAiOperation(user.id, "chat", user), { limitType: "lifetime" });
   }
 });
 
