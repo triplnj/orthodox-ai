@@ -145,6 +145,7 @@ test("Free lifetime quota counts old questions and does not reset the next day",
   assert.equal(before.timezone, "lifetime");
   const reservation = await reserveAiOperation(free.id, "chat", free);
   assert.equal(reservation.remaining, 0);
+  state.reservations[0].status = "COMPLETED"; // finish request before checking lifetime exhaustion
   await assert.rejects(reserveAiOperation(free.id, "chat", free),
     { status: 403, limitType: "lifetime", upgradeRequired: true });
   assert.equal(state.logs.length, 3);
