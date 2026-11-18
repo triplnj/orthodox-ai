@@ -105,7 +105,7 @@ const dailyRhythm = buildDailyRhythm({
         freeDailyChatLimit: FREE_DAILY_CHAT_LIMIT,
         remainingFreeQuestions: isPro
           ? null
-          : Math.max(FREE_DAILY_CHAT_LIMIT - todayChatUsage, 0),
+          : quota.remaining,
       },
       dailyRhythm,
       recentMessages,
