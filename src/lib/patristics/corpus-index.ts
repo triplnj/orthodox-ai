@@ -681,6 +681,19 @@ function normalize(
 }
 
 
+function serbianScriptFold(
+  value: string,
+) {
+  const map: Record<string, string> = {
+    "а":"a","б":"b","в":"v","г":"g","д":"d","ђ":"dj","е":"e","ж":"z","з":"z","и":"i","ј":"j","к":"k","л":"l","љ":"lj","м":"m","н":"n","њ":"nj","о":"o","п":"p","р":"r","с":"s","т":"t","ћ":"c","у":"u","ф":"f","х":"h","ц":"c","ч":"c","џ":"dz","ш":"s",
+  };
+
+  return Array.from(value)
+    .map((char) => map[char] ?? char)
+    .join("");
+}
+
+
 function tokenMatches(
   queryToken: string,
   aliasToken: string,
@@ -688,6 +701,19 @@ function tokenMatches(
   if (
     queryToken ===
     aliasToken
+  ) {
+    return true;
+  }
+
+  /*
+   * Match Serbian author names across Cyrillic and Latin.
+   * The corpus intentionally keeps canonical Serbian names
+   * in Cyrillic, while users may ask in either script.
+   * Example: "Maksim Ispovednik" <-> "максим исповедник".
+   */
+  if (
+    serbianScriptFold(queryToken) ===
+    serbianScriptFold(aliasToken)
   ) {
     return true;
   }
