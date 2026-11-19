@@ -6,7 +6,7 @@
  * present it must match, and when absent the branch-scoped env markers
  * plus Preview-only guard and exact user/DB identity are required.
  */
-const QA_BRANCH = "feature/patristic-bibliography-step5-answer-audit-20261111";
+const QA_BRANCH = "feature/patristic-universal-verbatim-quote-guard-20261113";
 const QA_DB_BRANCH = "br-fancy-recipe-astk5ot6";
 const QA_USER_ID = "pr61_preview_test_20261112";
 
