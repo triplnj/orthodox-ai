@@ -291,12 +291,12 @@ function DashboardContent() {
               </p>
             )}
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-5 flex min-w-0 flex-wrap items-start gap-3">
               {user.adminAccess ? null : isPro ? <CustomerPortalButton /> : <CheckoutButton />}
 
               <Link
                 href="/pricing"
-                className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-center text-sm font-semibold text-gray-800 hover:border-gray-950"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-gray-300 bg-white px-6 py-3 text-center text-sm font-semibold text-gray-800 hover:border-gray-950"
               >
                 Pricing
               </Link>

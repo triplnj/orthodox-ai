@@ -55,18 +55,18 @@ export function CheckoutButton({
   }
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <button
         type="button"
         onClick={handleCheckout}
         disabled={isLoading}
-        className="rounded-lg bg-gray-950 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="max-w-full whitespace-nowrap rounded-lg bg-gray-950 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isLoading ? "Opening Checkout..." : children}
       </button>
 
       {error && (
-        <div role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="mt-3 max-w-full break-words rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <p>{error}</p>
 
           {emailVerificationRequired && (
