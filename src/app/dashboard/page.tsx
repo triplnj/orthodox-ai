@@ -7,7 +7,6 @@ import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { CustomerPortalButton } from "@/components/billing/CustomerPortalButton";
 import { productCopy } from "@/lib/productCopy";
-import { ActivationSurvey } from "@/components/dashboard/ActivationSurvey";
 
 type DashboardData = {
   user: {
@@ -484,8 +483,6 @@ function DashboardContent() {
             </div>
           </div>
         </section>
-
-        <ActivationSurvey />
 
         <section className="mt-12">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
