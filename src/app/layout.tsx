@@ -3,6 +3,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { productCopy } from "@/lib/productCopy";
 import { Footer } from "@/components/layout/Footer";
+import { ActivationSurvey } from "@/components/dashboard/ActivationSurvey";
 
 export const metadata: Metadata = {
   title: "OrthodoxAI",
@@ -20,6 +21,7 @@ export default function RootLayout({
   <div className="flex min-h-screen flex-col">
     <a href="#main-content" className="skip-link">Skip to content</a>
     <Navbar />
+    <ActivationSurvey />
 
     <div id="main-content" tabIndex={-1} className="flex-1">{children}</div>
 
