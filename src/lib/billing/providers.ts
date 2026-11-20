@@ -1,5 +1,6 @@
 import "server-only";
 import { getStripe } from "@/lib/stripe";
+import { diagnostic } from "@/lib/diagnostics";
 
 export type Provider = "STRIPE" | "LEMONSQUEEZY";
 export class BillingError extends Error {
@@ -43,7 +44,19 @@ export async function lemon(path: string, method = "GET", body?: unknown): Promi
       Authorization: `Bearer ${required("LEMONSQUEEZY_API_KEY")}` },
     ...(body ? { body: JSON.stringify(body) } : {}),
   }));
-  if (!response.ok) throw new BillingError("Billing provider request failed; billing state remains protected.", 503);
+  if (!response.ok) {
+    // Only an HTTP status is logged; do not log remote bodies, URLs, credentials,
+    // user information or the checkout payload.
+    diagnostic("billing_provider_unavailable", {
+      operation: "billing",
+      outcome: "unavailable",
+      failure: response.status === 401 ? "authentication" :
+        response.status === 403 ? "permission" :
+        response.status === 429 ? "rate_limit" : "provider",
+      status: response.status,
+    });
+    throw new BillingError("Billing provider request failed; billing state remains protected.", 503);
+  }
   return providerRequest(() => response.json());
 }
 function fromLemon(data: LemonData): Subscription {
