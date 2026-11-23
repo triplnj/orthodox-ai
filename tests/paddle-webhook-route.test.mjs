@@ -6,7 +6,7 @@ import { createLoader } from "./helpers/load-ts.mjs";
 const secret = "pdl_ntfset_test_route_example";
 const preview = "feature/paddle-transition-phase1-20261120";
 const event = JSON.stringify({
-  event_id: "evt_01jabcdefghijklmnopqrstuvwx",
+  event_id: "evt_01jaaaaaaaaaaaaaaaaaaaaaaa",
   event_type: "subscription.activated",
   data: { id: "sub_01", customer_id: "ctm_demo" },
 });
@@ -63,4 +63,12 @@ test("Paddle webhook verifier returns verify-only success without data mutation"
 test("Paddle webhook verifier rejects a signed malformed envelope", async () => {
   const res = await route().POST(request(JSON.stringify({ event_type: "subscription.activated" })));
   assert.equal(res.status, 400);
+});
+
+
+test("Paddle simulated webhook event IDs are accepted when HMAC is valid", async () => {
+  const sample = JSON.stringify({ event_id: "ntfsimevt_01jaaaaaaaaaaaaaaaaaaaaaaa", event_type: "subscription.activated", data: { id: "sub_test" } });
+  const res = await route().POST(request(sample));
+  assert.equal(res.status, 200);
+  assert.equal(res.body.mode, "SANDBOX_VERIFY_ONLY");
 });
