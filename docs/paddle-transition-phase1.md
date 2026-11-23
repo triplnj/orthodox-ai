@@ -97,3 +97,9 @@ A 503 response with `Sandbox webhook verification is not configured.` comes from
 ## Preview rebuild after notification Signing Secret configuration (23 November 2026)
 
 This documentation-only commit triggers a fresh Vercel Preview deployment on the Paddle feature branch after the owner entered the destination Signing Secret as `PADDLE_WEBHOOK_SECRET`. Production and `main` remain untouched. Check that the new deployment is READY, use its exact URL for webhook simulations, and keep the Vercel bypass token private and rotated if exposed.
+
+## Separate Paddle QA database branch (23 Nov 2026)
+
+Created Neon branch `orthodoxai-paddle-sandbox-2026-11-23` (`br-red-waterfall-asdlxovu`) in project `winter-mountain-30736951`, cloned from existing non-production branch `br-empty-breeze-asd2dqrq`, **not** the production branch. Creation returned `init`, so confirm it becomes ready. This is a dedicated branch intended for Paddle sandbox integration tests, and is **not yet connected to the Vercel Preview deployment**. Do not run billing mutations before verifying the correct `DATABASE_URL`/direct URL/Prisma settings are selected in the actual Vercel project `orthodox-ai` and branch-restricted to `feature/paddle-transition-phase1-20261120`. The Vercel connector is only authorized for a differently named project and cannot establish these settings. Never paste connection strings into chat or commits.
+
+Next work in the feature PR: add server-side Paddle Sandbox checkout with authenticated user binding, explicit sandbox-only controls, no entitlements on redirect, and event persistence/reconciliation with idempotent handling and strict ownership checks. Do not switch the production Upgrade button or enable live events until full billing lifecycle is tested.
