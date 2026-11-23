@@ -34,3 +34,14 @@ test("missing, malformed, repeated, or stale signatures fail closed", () => {
 test("max body size guard", () => {
   assert.equal(verifyPaddleSignature("x".repeat(256001), sign(body), secret, ts), false);
 });
+
+test("the supplied sandbox catalog IDs are valid and isolated from production", () => {
+  const { PADDLE_SANDBOX_CATALOG, assertPaddleSandboxCatalog } =
+    createLoader()("src/lib/billing/paddle-sandbox-catalog.ts");
+  assert.match(PADDLE_SANDBOX_CATALOG.productId, /^pro_[a-z0-9]{26}$/);
+  assert.match(PADDLE_SANDBOX_CATALOG.monthlyPriceId, /^pri_[a-z0-9]{26}$/);
+  assert.doesNotThrow(() => assertPaddleSandboxCatalog(
+    PADDLE_SANDBOX_CATALOG.productId, PADDLE_SANDBOX_CATALOG.monthlyPriceId, "sandbox"));
+  assert.throws(() => assertPaddleSandboxCatalog(
+    PADDLE_SANDBOX_CATALOG.productId, PADDLE_SANDBOX_CATALOG.monthlyPriceId, "production"));
+});
