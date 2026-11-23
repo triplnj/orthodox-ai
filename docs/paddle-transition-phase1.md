@@ -58,3 +58,7 @@
 - https://developer.paddle.com/get-started/quickstart/
 - https://developer.paddle.com/webhooks/about/signature-verification/
 - https://developer.paddle.com/build/go-live-checklist/
+
+## Preview verification after adding API key
+
+After the account owner configures `PADDLE_API_KEY` on the Vercel project that actually deploys this branch (Preview target, branch-specific), deploy this revision and visit `/api/admin/paddle/catalog-check` on the **preview URL** while signed in as an authorized billing-test account. Expect `verified: true` with `amountMinorUnits: "799"` and `billingInterval: "month"`. If `403`, check authorized user access; if `503`, check the sandbox API key and its Products/Prices read permissions; if `404`, verify branch deployment and project scope. This is a read-only check and must never be run as proof of successful payment.
