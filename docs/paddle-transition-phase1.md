@@ -72,3 +72,16 @@ The account owner opened the branch-only read-only diagnostic endpoint and repor
 The one-time public catalog diagnostic route was subsequently deleted from this PR. A future deployment of this PR will not expose it. Existing preview deployment URLs may temporarily retain its compiled route and should not be treated as permanent diagnostics.
 
 Next prerequisites: a separate `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` for Sandbox client integration, a Paddle Sandbox webhook signing secret, and a proven isolated test database + authenticated QA user before implementing payment-state writes. Do not use production Neon to simulate webhook deliveries.
+
+## Phase 1 webhook receiver — 23 Nov 2026
+
+`POST /api/paddle/webhook` is now present in the **Paddle feature branch only**, under all of these restrictions:
+- Requires Vercel `preview` and exact `feature/paddle-transition-phase1-20261120` branch; production requests return 404.
+- Requires separate Paddle Sandbox destination secret stored as `PADDLE_WEBHOOK_SECRET`, configured **only** for this Preview branch. It is distinct from the API key, and must never be committed to Git or shared in chat.
+- Rejects invalid HMAC signatures, stale timestamps (30 seconds), large bodies and malformed event envelopes.
+- Returns `{ received: true, verified: true, mode: "SANDBOX_VERIFY_ONLY" }` only after verification. **Does not save webhooks, subscriptions, transactions, or entitlement data and DOES NOT deliver Pro.** Never treat the response as transaction fulfillment.
+- An acknowledged notification is discarded; use this receiver only for initial connection/signature testing, not for checkout or full payment lifecycle testing. Implement idempotent persistent sandbox event processing using a separate DB before creating any test checkout.
+
+Paddle Sandbox Notifications → New destination: Webhook, URL `https://<actual-preview-host>/api/paddle/webhook`, usage type Platform (or Both if testing Paddle simulations), API version 1, Description `OrthodoxAI Sandbox – Subscription and Payment Events`. Select `transaction.completed`, `transaction.payment_failed`, `transaction.past_due`, `transaction.canceled`, `subscription.created`, `subscription.activated`, `subscription.updated`, `subscription.canceled`, `subscription.past_due`, `subscription.paused`, `subscription.resumed`. **Do not save destination until the Preview URL and signing secret setup are ready.** Paddle needs to reach the Preview without a Vercel login wall. A webhook endpoint secret is generated **after** creating a destination, so temporary setup may require creating the destination first with events disabled or a placeholder, then setting the secret and enabling delivery; validate exact workflow in UI before doing so.
+
+The Vercel account's old-email security challenge currently prevents the owner from changing project settings. This blocks setting `PADDLE_WEBHOOK_SECRET` on the correct Preview project. Do not bypass account verification or use shared Production env vars to work around this.
