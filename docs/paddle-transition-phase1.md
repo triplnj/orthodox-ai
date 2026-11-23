@@ -2,6 +2,19 @@
 
 **Status: NOT LIVE. No Paddle checkout route is exposed, no subscriptions are provisioned, and no existing billing records are changed.** Preserve the existing Lemon Squeezy and Stripe legacy integrations until verified Paddle onboarding and sandbox end-to-end testing.
 
+## Sandbox catalog created by account owner
+- Product: `OrthodoxAI Pro`; ID `pro_01m84hpaffkkag5zftcz3nk9qz`
+- Monthly price: `pri_01m84j47gzd7tw449trss5wsh4` (user-configured USD 7.99/month; still confirm directly via the sandbox API before relying on it)
+- These IDs are **Sandbox only** and are recorded in `src/lib/billing/paddle-sandbox-catalog.ts`.
+- Do not put them in live environment variables, enable checkout or grant subscriptions based solely on supplied IDs.
+
+## Next Paddle Sandbox settings
+1. In **My account → Settings → Authentication → Client-side tokens**, create a token for OrthodoxAI QA, beginning `test_` (safe for front-end but place in a preview-specific environment variable).
+2. In **Authentication → API keys**, create a Sandbox API key with the minimum permissions needed, for example catalog read and later sandbox checkout/transaction operations. **Do not share the API key in GitHub or a chat.**
+3. Set the Sandbox API base URL `https://sandbox-api.paddle.com`; never send sandbox credentials to `https://api.paddle.com`.
+4. In Checkout configuration set and approve a testing payment link/domain as required by Paddle, using a safe preview test host; do not point live users to this integration.
+5. Add secrets only to a dedicated preview/staging environment after verifying that it cannot reuse the live app's database for payment state changes.
+
 ## External account gate
 1. Create a Paddle seller account at https://login.paddle.com/ and a **separate** sandbox at https://sandbox-login.paddle.com/.
 2. Confirm that Paddle can onboard the *actual* Serbian legal entity / sole proprietor, and verify payout currency, payout method, minimum payout and banking documents. Availability by country is not approval.
