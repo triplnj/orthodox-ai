@@ -93,3 +93,7 @@ After configuring `PADDLE_WEBHOOK_SECRET` only in the Paddle Preview branch, a n
 ## Sandbox signing secret 503 troubleshooting
 
 A 503 response with `Sandbox webhook verification is not configured.` comes from `src/app/api/paddle/webhook/route.ts` and means that `PADDLE_WEBHOOK_SECRET` is absent in this deployment or does not start with the official Paddle notification destination signing secret prefix `pdl_ntfset_`. The Paddle API secret key and client-side token must **not** be used here. Verify the Preview target, exact branch restriction, and that the notification destination signing secret is used. Create a new Preview deployment after changing the variable, and update the Paddle destination URL to that new deployment's hostname while retaining the bypass query parameter if needed. Do not paste secret values into chat or commits.
+
+## Preview rebuild after notification Signing Secret configuration (23 November 2026)
+
+This documentation-only commit triggers a fresh Vercel Preview deployment on the Paddle feature branch after the owner entered the destination Signing Secret as `PADDLE_WEBHOOK_SECRET`. Production and `main` remain untouched. Check that the new deployment is READY, use its exact URL for webhook simulations, and keep the Vercel bypass token private and rotated if exposed.
