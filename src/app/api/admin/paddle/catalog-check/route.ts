@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
 import { PADDLE_SANDBOX_CATALOG, assertPaddleSandboxCatalog } from "@/lib/billing/paddle-sandbox-catalog";
 
 export const dynamic = "force-dynamic";
@@ -11,12 +10,6 @@ type PaddlePrice = { data?: {
   unit_price?: { amount?: string; currency_code?: string };
 } };
 
-function isAllowedAdmin(userId: string): boolean {
-  return [process.env.BLOG_ADMIN_USER_IDS, process.env.BILLING_TEST_USER_IDS]
-    .flatMap(value => (value ?? "").split(",").map(id => id.trim()).filter(Boolean))
-    .includes(userId);
-}
-
 async function fetchCatalog<T>(path: string, key: string): Promise<{ status: number; data?: T }> {
   const response = await fetch(`https://sandbox-api.paddle.com/${path}`, {
     headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
@@ -27,19 +20,18 @@ async function fetchCatalog<T>(path: string, key: string): Promise<{ status: num
   return { status: response.status, data: await response.json() as T };
 }
 
-/** Read-only authenticated verification. Never grants access, creates a transaction or writes to Neon. */
+/** Public Sandbox catalog metadata (Preview only); no secrets or private data returned. Never writes to Neon. */
 export async function GET() {
   if (process.env.VERCEL_ENV !== "preview" ||
       process.env.VERCEL_GIT_COMMIT_REF !== "feature/paddle-transition-phase1-20261120") {
-    return NextResponse.json({ error: "Paddle catalog check is Preview-branch only." }, { status: 404 });
+    return NextResponse.json({ error: "Not found." }, { status: 404, headers: { "Cache-Control": "no-store" } });
   }
-  const user = await getSessionUser();
-  if (!user?.emailVerified || !isAllowedAdmin(user.id)) {
-    return NextResponse.json({ error: "Admin billing verification is restricted." }, { status: 403 });
-  }
+  // Read-only and Preview-branch-only: the response contains only public
+  // catalog identifiers, status and price, never credentials or customer data.
+  // No auth/session/Neon dependency is permitted in this diagnostic endpoint.
   const key = process.env.PADDLE_API_KEY?.trim();
   if (!key || !key.startsWith("pdl_sdbx_apikey_")) {
-    return NextResponse.json({ error: "Sandbox API key is missing or not a sandbox key." }, { status: 503 });
+    return NextResponse.json({ verified: false, error: "Sandbox integration not configured." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   assertPaddleSandboxCatalog(PADDLE_SANDBOX_CATALOG.productId, PADDLE_SANDBOX_CATALOG.monthlyPriceId, "sandbox");
   try {
@@ -50,10 +42,8 @@ export async function GET() {
     if (product.status !== 200 || price.status !== 200) {
       return NextResponse.json({
         verified: false,
-        productHttpStatus: product.status,
-        priceHttpStatus: price.status,
         error: "Paddle Sandbox catalog could not be verified. Check key permissions and IDs.",
-      }, { status: 503 });
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
     const p = product.data?.data;
     const c = price.data?.data;
@@ -75,8 +65,8 @@ export async function GET() {
       billingInterval: c?.billing_cycle?.interval ?? null,
       billingFrequency: c?.billing_cycle?.frequency ?? null,
       mode: "SANDBOX_READ_ONLY",
-    }, { status: verified ? 200 : 409 });
+    }, { status: verified ? 200 : 409, headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ verified: false, error: "Paddle Sandbox request failed." }, { status: 503 });
+    return NextResponse.json({ verified: false, error: "Paddle Sandbox request failed." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 }
