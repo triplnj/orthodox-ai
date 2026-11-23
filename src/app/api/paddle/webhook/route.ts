@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   if (typeof event.event_type !== "string" ||
       !/^[a-z_]+\.[a-z_]+$/.test(event.event_type) ||
       typeof event.event_id !== "string" ||
-      !/^evt_[a-zA-Z0-9]+$/.test(event.event_id) ||
+      !/^(?:evt_|ntfsimevt_)[a-z0-9]{26}$/.test(event.event_id) ||
       !event.data || typeof event.data !== "object" || Array.isArray(event.data)) {
     return NextResponse.json({ error: "Invalid event envelope." }, { status: 400 });
   }
