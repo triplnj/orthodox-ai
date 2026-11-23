@@ -64,3 +64,11 @@
 The dedicated `GET /api/admin/paddle/catalog-check` is an **intentionally public but read-only diagnostic** on the exact Vercel Preview branch `feature/paddle-transition-phase1-20261120`. It needs no OrthodoxAI login, session cookie, AUTH_RATE_LIMIT_SECRET or database, and performs only two fixed, server-side Paddle Sandbox catalog GETs using a secret server-side token. The response exposes public product and price metadata only, never the API key, raw upstream responses, customers, or subscription data. It returns 404 everywhere except the named Vercel Preview branch. Set `PADDLE_API_KEY` on that branch, redeploy, then open `https://<preview-host>/api/admin/paddle/catalog-check` directly. A 200 response with `verified: true` and `amountMinorUnits: "799"` confirms the USD 7.99 monthly catalog. A 503 means API key, permissions or network need checking; a 409 means the catalog's settings do not match. Do not enable live checkout based on this read-only check.
 
 The verification endpoint is **not an administrator dashboard or an access-controlled management API**. Remove or disable it after checking, or protect the entire Preview deployment with Vercel Deployment Protection. Do not extend this unauthenticated endpoint with any account, checkout, subscription, write or privileged operations.
+
+## Catalog verification outcome — 23 Nov 2026
+
+The account owner opened the branch-only read-only diagnostic endpoint and reported `verified: true`: product `pro_01m84hpaffkkag5zftcz3nk9qz` active, price `pri_01m84j47gzd7tw449trss5wsh4` active, USD 799 minor units, month interval with frequency 1, Sandbox mode. This confirms *catalog reads only*, not checkout, payment, webhook delivery or plan provisioning.
+
+The one-time public catalog diagnostic route was subsequently deleted from this PR. A future deployment of this PR will not expose it. Existing preview deployment URLs may temporarily retain its compiled route and should not be treated as permanent diagnostics.
+
+Next prerequisites: a separate `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` for Sandbox client integration, a Paddle Sandbox webhook signing secret, and a proven isolated test database + authenticated QA user before implementing payment-state writes. Do not use production Neon to simulate webhook deliveries.
