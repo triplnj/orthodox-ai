@@ -129,3 +129,9 @@ New isolated tests cover initial insertion, same-event deduplication, altered-bo
 ## Preview refresh after setting PADDLE_SANDBOX_STORE_EVENTS (24 November 2026)
 
 A Preview-only documentation commit was made to load newly saved branch-restricted environment variables. If webhook simulation continues returning `SANDBOX_VERIFY_ONLY`, ensure `PADDLE_SANDBOX_STORE_EVENTS` is set **exactly** to `enabled` in the correct Vercel project and Git branch; the running preview will not report `SANDBOX_EVENT_STORED` otherwise. Update the Paddle destination to the newest deployment hostname (retain a valid, confidential Vercel bypass parameter when required). Do not enable production billing or change customer entitlements.
+
+## Fix for `Sandbox event persistence unavailable` (24 November 2026)
+
+Root cause confirmed in isolated Neon QA schema: the existing `BillingWebhookEvent_provider_check` constraint permits only `STRIPE` and `LEMONSQUEEZY`. Inserting `PADDLE` into that legacy table therefore fails, even when webhook signatures and QA connection are valid. The legacy table and its constraint are intentionally **unchanged**.
+
+Created a new `PaddleSandboxWebhookEvent` table in QA branch `br-red-waterfall-asdlxovu` only. The event store now checks `PaddleSandboxBranchGuard` and writes to this dedicated table through parameterized SQL using `INSERT ... ON CONFLICT DO NOTHING RETURNING`. Replays compare event type and SHA-256 digest. Regression tests were updated; a fresh Preview deployment was triggered. The feature flag remains Preview-only. No Pro entitlements or existing billing tables were touched. Verify the new deployment with a new Paddle simulation and then read the new Neon QA table to confirm persistence.
