@@ -74,6 +74,25 @@ export async function POST(request: Request) {
         event_id: string; event_type: string; occurred_at?: unknown;
         data: Record<string, unknown>;
       });
+      // Paddle simulator IDs must NEVER trigger access grants. A real provider
+      // event is only a hint to re-fetch current paid evidence from Paddle API.
+      if (process.env.PADDLE_SANDBOX_GRANT_ACCESS === "enabled" &&
+          /^evt_[a-z0-9]{26}$/.test(event.event_id) &&
+          ["subscription.activated", "subscription.updated", "transaction.completed"].includes(event.event_type)) {
+        const details = event.data as Record<string, unknown>;
+        const subscriptionId = event.event_type.startsWith("subscription.")
+          ? details.id : details.subscription_id;
+        if (typeof subscriptionId === "string" && /^sub_[a-z0-9]{26}$/.test(subscriptionId)) {
+          const { retrieveVerifiedPaddleSandboxAccess } =
+            await import("@/lib/billing/paddle-provider-evidence");
+          const evidence = await retrieveVerifiedPaddleSandboxAccess(subscriptionId);
+          if (evidence) {
+            const { saveVerifiedPaddleSandboxAccess } =
+              await import("@/lib/billing/paddle-sandbox-access");
+            await saveVerifiedPaddleSandboxAccess(evidence);
+          }
+        }
+      }
       return NextResponse.json({
         received: true, verified: true, mode: "SANDBOX_EVENT_STORED",
         duplicate: result === "duplicate",
