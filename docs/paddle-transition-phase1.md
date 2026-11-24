@@ -125,3 +125,7 @@ The endpoint `POST /api/paddle/webhook` remains **verify-only by default**. Pers
 Events remain in `RECEIVED` state, with **no entitlement, user-plan, subscription-state, or checkout mutation**. Automatic Pro grants still require independent verified transaction/customer ownership, paid amount and recurring period checks and an idempotent reconciler, which are future steps.
 
 New isolated tests cover initial insertion, same-event deduplication, altered-body collision, and missing QA guard. Do not run Sandbox checkout as if it grants Pro.
+
+## Preview refresh after setting PADDLE_SANDBOX_STORE_EVENTS (24 November 2026)
+
+A Preview-only documentation commit was made to load newly saved branch-restricted environment variables. If webhook simulation continues returning `SANDBOX_VERIFY_ONLY`, ensure `PADDLE_SANDBOX_STORE_EVENTS` is set **exactly** to `enabled` in the correct Vercel project and Git branch; the running preview will not report `SANDBOX_EVENT_STORED` otherwise. Update the Paddle destination to the newest deployment hostname (retain a valid, confidential Vercel bypass parameter when required). Do not enable production billing or change customer entitlements.
