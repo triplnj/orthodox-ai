@@ -67,7 +67,12 @@ export function verifyPaddleSandboxPaidAccess(
     // Verify that subscription and originating completed transaction agree on
     // immutable ownership metadata. They must not be forged independently.
     const subData = obj(sub.custom_data);
-    if (!subData || JSON.stringify(subData) !== JSON.stringify(signedData)) continue;
+    // Paddle may serialize object keys in a different order.
+    const bindingFields = [
+      "orthodoxai_binding_version", "orthodoxai_user_id",
+      "orthodoxai_issued_at", "orthodoxai_nonce", "orthodoxai_signature",
+    ] as const;
+    if (!subData || !bindingFields.every(key => subData[key] === signedData[key])) continue;
     return {
       userId: signed.userId,
       subscriptionId: sub.id,
