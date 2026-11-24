@@ -28,13 +28,41 @@ export async function retrieveVerifiedPaddleSandboxAccess(
   const secret = process.env.PADDLE_WEBHOOK_SECRET;
   if (!secret?.startsWith("pdl_ntfset_")) return null;
 
-  const [subResponse, transactionResponse] = await Promise.all([
-    paddleGet(`/subscriptions/${subscriptionId}`),
-    paddleGet(`/transactions?subscription_id=${subscriptionId}&per_page=50`),
-  ]);
+  const subResponse = await paddleGet(`/subscriptions/${subscriptionId}`);
   const sub = subResponse && typeof subResponse === "object" && "data" in subResponse
     ? (subResponse as { data: unknown }).data : null;
-  const txns = transactionResponse && typeof transactionResponse === "object" &&
-    "data" in transactionResponse ? (transactionResponse as { data: unknown }).data : null;
-  return verifyPaddleSandboxPaidAccess(sub, txns, secret);
+
+  // Cursor pagination is mandatory: a subscription may have many renewals.
+  // Never follow a provider-supplied URL; use only validated opaque ID cursors
+  // with a locally constructed, fixed Sandbox API endpoint.
+  const transactions: unknown[] = [];
+  let after: string | null = null;
+  let complete = false;
+  for (let page = 0; page < 10; page++) {
+    const qs = `subscription_id=${subscriptionId}&per_page=50` +
+      (after ? `&after=${encodeURIComponent(after)}` : "");
+    const response = await paddleGet(`/transactions?${qs}`);
+    if (!response || typeof response !== "object" || !("data" in response) ||
+        !Array.isArray((response as { data: unknown }).data)) return null;
+    const batch = (response as { data: unknown[] }).data;
+    transactions.push(...batch);
+    const meta = "meta" in response ? (response as { meta: unknown }).meta : null;
+    const pagination = meta && typeof meta === "object" && "pagination" in meta
+      ? (meta as { pagination: unknown }).pagination : null;
+    if (!pagination || typeof pagination !== "object" ||
+        !("has_more" in pagination) ||
+        typeof (pagination as { has_more: unknown }).has_more !== "boolean") return null;
+    if (!(pagination as { has_more: boolean }).has_more) {
+      complete = true;
+      break;
+    }
+    const last = batch.at(-1);
+    const nextCursor = last && typeof last === "object" && "id" in last
+      ? (last as { id: unknown }).id : null;
+    if (typeof nextCursor !== "string" || !/^txn_[a-z0-9]{26}$/.test(nextCursor) ||
+        nextCursor === after) return null;
+    after = nextCursor;
+  }
+  if (!complete) return null;
+  return verifyPaddleSandboxPaidAccess(sub, transactions, secret);
 }
