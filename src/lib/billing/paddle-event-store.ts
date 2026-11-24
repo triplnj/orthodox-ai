@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
 const QA_BRANCH_ID = "br-red-waterfall-asdlxovu";
-const PROVIDER = "PADDLE";
 
 type PaddleEnvelope = {
   event_id: string;
@@ -33,23 +32,21 @@ export async function persistPaddleSandboxEvent(raw: string, event: PaddleEnvelo
       WHERE "id" = ${QA_BRANCH_ID} LIMIT 1`;
     if (branch.length !== 1) throw new Error("Paddle QA database guard mismatch");
 
-    const result = await tx.billingWebhookEvent.createMany({
-      data: [{
-        provider: PROVIDER, eventId: id, eventType,
-        providerSubscriptionId: subscriptionId,
-        payloadDigest: digest, occurredAt,
-        status: "RECEIVED",
-      }],
-      skipDuplicates: true,
-    });
+    // Dedicated QA table: existing BillingWebhookEvent has an intentional
+    // STRIPE/LEMONSQUEEZY-only check constraint; never alter it in production.
+    const inserted = await tx.$queryRaw<Array<{ eventId: string }>>`
+      INSERT INTO "PaddleSandboxWebhookEvent"
+        ("eventId", "eventType", "providerSubscriptionId", "payloadDigest", "occurredAt")
+      VALUES (${id}, ${eventType}, ${subscriptionId}, ${digest}, ${occurredAt})
+      ON CONFLICT ("eventId") DO NOTHING
+      RETURNING "eventId"`;
 
-    if (result.count === 1) return "inserted" as const;
-    const existing = await tx.billingWebhookEvent.findUnique({
-      where: { provider_eventId: { provider: PROVIDER, eventId: id } },
-      select: { eventType: true, payloadDigest: true },
-    });
-    if (!existing || existing.eventType !== eventType ||
-        existing.payloadDigest !== digest) {
+    if (inserted.length === 1) return "inserted" as const;
+    const existing = await tx.$queryRaw<Array<{ eventType: string; payloadDigest: string }>>`
+      SELECT "eventType", "payloadDigest"
+      FROM "PaddleSandboxWebhookEvent" WHERE "eventId" = ${id} LIMIT 1`;
+    if (existing.length !== 1 || existing[0].eventType !== eventType ||
+        existing[0].payloadDigest !== digest) {
       throw new Error("Paddle event id collision");
     }
     return "duplicate" as const;
