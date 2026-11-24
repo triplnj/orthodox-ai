@@ -135,3 +135,18 @@ A Preview-only documentation commit was made to load newly saved branch-restrict
 Root cause confirmed in isolated Neon QA schema: the existing `BillingWebhookEvent_provider_check` constraint permits only `STRIPE` and `LEMONSQUEEZY`. Inserting `PADDLE` into that legacy table therefore fails, even when webhook signatures and QA connection are valid. The legacy table and its constraint are intentionally **unchanged**.
 
 Created a new `PaddleSandboxWebhookEvent` table in QA branch `br-red-waterfall-asdlxovu` only. The event store now checks `PaddleSandboxBranchGuard` and writes to this dedicated table through parameterized SQL using `INSERT ... ON CONFLICT DO NOTHING RETURNING`. Replays compare event type and SHA-256 digest. Regression tests were updated; a fresh Preview deployment was triggered. The feature flag remains Preview-only. No Pro entitlements or existing billing tables were touched. Verify the new deployment with a new Paddle simulation and then read the new Neon QA table to confirm persistence.
+
+## Stage 3 — guarded Paddle Sandbox paid-access integration (24 November 2026)
+
+**Code prepared, not activated or end-to-end tested.** New modules:
+- `paddle-paid-evidence.ts`: strictly validates live-fetched active monthly Pro subscription and completed nonzero USD transaction, immutable catalog and customer ID, current paid period, and signed checkout-user binding. Simulator payloads are never themselves payment proof.
+- `paddle-provider-evidence.ts`: fetches subscription and transactions directly from Paddle **Sandbox** API with server-side credentials only; refuses production and unrecognized IDs.
+- `paddle-sandbox-access.ts`: stores verified entitlement in dedicated Neon QA table, guarded by the Neon QA-only marker and ownership checks; never alters old Stripe/Lemon records or persistent User.plan.
+- `paddle-preview-entitlement.ts`: read-through Paddle verification of QA access before returning Pro; provider failures fail closed.
+- Preview-only `getCurrentUser` overlay and webhook reconciliation are gated by **`PADDLE_SANDBOX_GRANT_ACCESS=enabled`** (not set by this change).
+
+Dedicated `PaddleSandboxAccess` table was created only in Neon QA branch `br-red-waterfall-asdlxovu`. No production migrations were run. Newly added tests `tests/paddle-paid-evidence.test.mjs` cover positive evidence and failed ownership/price/period/payment checks. Tests and live paid checkout **still require execution and validation** before enabling the flag. In particular, webhook simulator IDs beginning `ntfsimevt_` never invoke granting logic.
+
+**Do not set the grant flag yet.** Remaining blockers: checkout is intentionally not open (`paymentEnabled:false`); test with a real Paddle Sandbox checkout/transaction and verify Paddle API response shapes, completeness of transaction pagination, and cancellation/refund paths before granting Pro, plus the existing billing service's Stripe/Lemon checkout safety checks must remain intact.
+
+Docs: https://developer.paddle.com/build/subscriptions/provision-access-webhooks/ and https://developer.paddle.com/api-reference/subscriptions/get-subscription/ .
