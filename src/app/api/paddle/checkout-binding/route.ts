@@ -6,7 +6,7 @@ import { makePaddleCheckoutBinding } from "@/lib/billing/paddle-checkout-binding
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Stage 1: authenticate and bind an intended purchase; NO checkout is opened. */
+/** Preview-only authorization for a real Paddle Sandbox checkout. */
 export async function POST(request: Request) {
   if (process.env.VERCEL_ENV !== "preview" ||
       process.env.VERCEL_GIT_COMMIT_REF !== "feature/paddle-transition-phase1-20261120") {
@@ -22,6 +22,11 @@ export async function POST(request: Request) {
   if (!matchesOrigin) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
+  if (process.env.PADDLE_SANDBOX_CHECKOUT_ENABLED !== "enabled" ||
+      process.env.PADDLE_SANDBOX_STORE_EVENTS !== "enabled") {
+    return NextResponse.json({ error: "Sandbox checkout has not been enabled for this Preview." },
+      { status: 503 });
+  }
   const secret = process.env.PADDLE_WEBHOOK_SECRET;
   if (!secret?.startsWith("pdl_ntfset_") ||
       !process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN?.startsWith("test_")) {
@@ -34,9 +39,9 @@ export async function POST(request: Request) {
   }
   const customData = makePaddleCheckoutBinding(user.id, secret);
   return NextResponse.json({
-    mode: "SANDBOX_BINDING_ONLY",
+    mode: "SANDBOX_CHECKOUT_READY",
     priceId: PADDLE_SANDBOX_CATALOG.monthlyPriceId,
     customData,
-    paymentEnabled: false,
+    paymentEnabled: true,
   }, { headers: { "Cache-Control": "no-store" } });
 }
