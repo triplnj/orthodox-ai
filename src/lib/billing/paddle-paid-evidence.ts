@@ -63,7 +63,7 @@ export function verifyPaddleSandboxPaidAccess(
     const signedData = obj(tx.custom_data);
     const signed = verifyPaddleCheckoutBinding(signedData, bindingSecret,
       Math.floor(issuedAt.getTime() / 1000));
-    if (!signed) continue;
+    if (!signedData || !signed) continue;
     // Verify that subscription and originating completed transaction agree on
     // immutable ownership metadata. They must not be forged independently.
     const subData = obj(sub.custom_data);
