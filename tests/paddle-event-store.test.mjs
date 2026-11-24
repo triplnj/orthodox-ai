@@ -5,19 +5,22 @@ import { createLoader } from "./helpers/load-ts.mjs";
 function harness({ guard = true } = {}) {
   const rows = new Map();
   const db = {
-    $queryRaw: async () => guard ? [{ id: "br-red-waterfall-asdlxovu" }] : [],
-    billingWebhookEvent: {
-      createMany: async ({ data }) => {
-        const d = data[0];
-        const key = `${d.provider}:${d.eventId}`;
-        if (rows.has(key)) return { count: 0 };
-        rows.set(key, d);
-        return { count: 1 };
-      },
-      findUnique: async ({ where }) => {
-        const { provider, eventId } = where.provider_eventId;
-        return rows.get(`${provider}:${eventId}`) ?? null;
-      },
+    $queryRaw: async (strings, ...params) => {
+      const sql = strings.join(" ");
+      if (sql.includes('FROM "PaddleSandboxBranchGuard"')) {
+        return guard ? [{ id: "br-red-waterfall-asdlxovu" }] : [];
+      }
+      if (sql.includes('INSERT INTO "PaddleSandboxWebhookEvent"')) {
+        const [eventId, eventType, providerSubscriptionId, payloadDigest, occurredAt] = params;
+        if (rows.has(eventId)) return [];
+        rows.set(eventId, { eventId, eventType, providerSubscriptionId, payloadDigest, occurredAt, status: "RECEIVED" });
+        return [{ eventId }];
+      }
+      if (sql.includes('FROM "PaddleSandboxWebhookEvent"')) {
+        const row = rows.get(params[0]);
+        return row ? [row] : [];
+      }
+      throw new Error("Unexpected query");
     },
   };
   const prisma = { $transaction: async callback => callback(db) };
@@ -43,7 +46,6 @@ test("Paddle audit event persists metadata only and deduplicates signed event re
   assert.equal(await persist(raw, event), "duplicate");
   assert.equal(rows.size, 1);
   const row = [...rows.values()][0];
-  assert.equal(row.provider, "PADDLE");
   assert.equal(row.status, "RECEIVED");
   assert.equal(row.eventType, "subscription.activated");
   assert.equal(row.providerSubscriptionId, event.data.id);
