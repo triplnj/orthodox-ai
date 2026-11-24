@@ -113,3 +113,15 @@ Owner reports adding `DATABASE_URL` scoped to `feature/paddle-transition-phase1-
 Added `POST /api/paddle/checkout-binding` (Preview feature branch only, same-origin POST required, session and verified email required), and `src/lib/billing/paddle-checkout-binding.ts`. The endpoint returns the fixed Sandbox price plus short-lived, HMAC-signed `customData` bound to the authenticated user, valid for 30 minutes. Tests cover tampering, expiry, invalid secrets and incorrect user IDs. The server-generated `customData` is intended to accompany the future Paddle Checkout.open call and be checked again in a signed webhook *before* reconciling subscription ownership. Paddle documents that checkout custom data is propagated to transaction and subscription events: https://developer.paddle.com/build/transactions/custom-data/ .
 
 **Stage 1 is preparation only:** `paymentEnabled:false`, `mode:SANDBOX_BINDING_ONLY`; no Paddle Checkout.open call, payment, database writes or entitlement grants. Do not accept a browser-reported checkout success as verified ownership. Stage 2 needs persistent idempotency/ownership event storage and a verified QA database connection before payments can be enabled. Rotate any exposed Vercel protection bypass token.
+
+## Stage 2 — QA-only idempotent event receipt (24 November 2026)
+
+The dedicated Neon QA branch `br-red-waterfall-asdlxovu` contains the `PaddleSandboxBranchGuard` table with matching branch ID. This table and marker were created **only** in QA, not in production. The existing `BillingWebhookEvent` schema is reused, avoiding a global migration at this stage.
+
+`src/lib/billing/paddle-event-store.ts` persists signed webhook event **metadata only** (Paddle event ID/type, SHA-256 body digest, optional subscription ID and occurrence time). The uniqueness key `(provider, eventId)` makes replay idempotent. A conflicting duplicate ID with different content fails closed. All writes are inside a transaction that first checks the QA-only database guard. No customer/payment JSON or credentials are stored.
+
+The endpoint `POST /api/paddle/webhook` remains **verify-only by default**. Persistence requires explicit, branch-scoped Preview variable `PADDLE_SANDBOX_STORE_EVENTS=enabled`. Do **not** set it until the running Preview's `DATABASE_URL` is confirmed to point at `br-red-waterfall-asdlxovu`. If DB guard is missing or database is unavailable, the endpoint returns HTTP 503 and doesn't acknowledge unpersisted events. If enabled with correct QA DB, response is `mode:SANDBOX_EVENT_STORED` and `duplicate:true|false`.
+
+Events remain in `RECEIVED` state, with **no entitlement, user-plan, subscription-state, or checkout mutation**. Automatic Pro grants still require independent verified transaction/customer ownership, paid amount and recurring period checks and an idempotent reconciler, which are future steps.
+
+New isolated tests cover initial insertion, same-event deduplication, altered-body collision, and missing QA guard. Do not run Sandbox checkout as if it grants Pro.
