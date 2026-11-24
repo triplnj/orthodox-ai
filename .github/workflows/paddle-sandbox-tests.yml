@@ -1,0 +1,31 @@
+name: Paddle Sandbox integration tests
+
+on:
+  pull_request:
+    paths:
+      - "src/lib/billing/paddle-*.ts"
+      - "src/app/api/paddle/**"
+      - "src/lib/auth.ts"
+      - "tests/paddle-*.test.mjs"
+      - ".github/workflows/paddle-sandbox-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sandbox-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies without scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run Paddle authentication, ownership and payment tests
+        run: node --test tests/paddle-*.test.mjs
