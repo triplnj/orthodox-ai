@@ -150,3 +150,15 @@ Dedicated `PaddleSandboxAccess` table was created only in Neon QA branch `br-red
 **Do not set the grant flag yet.** Remaining blockers: checkout is intentionally not open (`paymentEnabled:false`); test with a real Paddle Sandbox checkout/transaction and verify Paddle API response shapes, completeness of transaction pagination, and cancellation/refund paths before granting Pro, plus the existing billing service's Stripe/Lemon checkout safety checks must remain intact.
 
 Docs: https://developer.paddle.com/build/subscriptions/provision-access-webhooks/ and https://developer.paddle.com/api-reference/subscriptions/get-subscription/ .
+
+## Stage 4 — isolated Sandbox checkout (24 November 2026)
+
+New Preview-only test page: `/paddle-sandbox/checkout`, with `src/components/billing/PaddleSandboxCheckout.tsx`. Uses official Paddle.js from `https://cdn.paddle.com/paddle/v2/paddle.js`, sets environment `sandbox`, initializes with `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, and calls `Paddle.Checkout.open({ items:[{priceId,quantity:1}],customData })`. Server-generated customData contains the authenticated account binding; no user IDs, amounts or price IDs are accepted from client input. API: `POST /api/paddle/checkout-binding`.
+
+Checkout requires **explicit branch-restricted Vercel Preview Config** `PADDLE_SANDBOX_CHECKOUT_ENABLED=enabled` plus existing `PADDLE_SANDBOX_STORE_EVENTS=enabled`. Do NOT set `PADDLE_SANDBOX_GRANT_ACCESS` yet. Newly added route tests verify anonymous, unverified, bad-origin, production and wrong-branch requests are rejected. Existing Lemon Squeezy / Pro production buttons stay unchanged.
+
+Test only with registered and email-verified QA users in isolated Neon branch `br-red-waterfall-asdlxovu`. The checkout is for a Sandbox recurring monthly $7.99 plan. After Vercel build passes, use Paddle sandbox test card `4242 4242 4242 4242`, any future expiry and any CVC, per official Sandbox docs. No real card/payment. Paddle may require a Sandbox default payment link configured and accessible from the same domain.
+
+**Before enabling Pro**: verify real Paddle API subscription/transaction schema and customData after a completed test card checkout, webhook delivery and QA database rows; then test cancellation, failed renewal, partial/full refunds, stale events, and provider API outage. Current access flag is still OFF. The independent paid evidence verifier now follows transaction pagination and fails closed on incomplete pages. Simulator notifications are not substitute for a paid transaction. Never deploy these Sandbox-only modules to live production as payment provider integration.
+
+See https://developer.paddle.com/paddle-js/methods/paddle-checkout-open/ and https://developer.paddle.com/sdks/sandbox/ .
