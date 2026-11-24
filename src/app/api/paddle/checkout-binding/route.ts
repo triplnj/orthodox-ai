@@ -13,8 +13,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   const origin = request.headers.get("origin");
-  if (!origin || new URL(origin).host !== new URL(request.url).host ||
-      new URL(origin).protocol !== "https:") {
+  let matchesOrigin = false;
+  try {
+    const source = new URL(origin ?? "");
+    const target = new URL(request.url);
+    matchesOrigin = source.origin === target.origin && source.protocol === "https:";
+  } catch { /* Reject invalid origin headers. */ }
+  if (!matchesOrigin) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
   const secret = process.env.PADDLE_WEBHOOK_SECRET;
