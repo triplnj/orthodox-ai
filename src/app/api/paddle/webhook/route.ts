@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPaddleSignature } from "@/lib/billing/paddle-webhook";
+import { persistPaddleSandboxEvent } from "@/lib/billing/paddle-event-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -65,7 +66,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid event envelope." }, { status: 400 });
   }
 
-  // Do not log signed request bodies, customer data or secrets.
-  // Event is acknowledged for integration testing only; no subscription updates.
+  // Event persistence is explicitly opt-in. The QA database is checked again
+  // inside the transaction before any write. Pro access is NEVER changed here.
+  if (process.env.PADDLE_SANDBOX_STORE_EVENTS === "enabled") {
+    try {
+      const result = await persistPaddleSandboxEvent(raw, event as {
+        event_id: string; event_type: string; occurred_at?: unknown;
+        data: Record<string, unknown>;
+      });
+      return NextResponse.json({
+        received: true, verified: true, mode: "SANDBOX_EVENT_STORED",
+        duplicate: result === "duplicate",
+      }, { headers: { "Cache-Control": "no-store" } });
+    } catch {
+      // Do not acknowledge unpersisted events; Paddle should retry.
+      return NextResponse.json({ error: "Sandbox event persistence unavailable." },
+        { status: 503 });
+    }
+  }
+
+  // By default, no database writes or subscription updates occur.
   return NextResponse.json({ received: true, verified: true, mode: "SANDBOX_VERIFY_ONLY" });
 }
