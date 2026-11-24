@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { verifyPaddleSignature } from "@/lib/billing/paddle-webhook";
-import { persistPaddleSandboxEvent } from "@/lib/billing/paddle-event-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -70,6 +69,7 @@ export async function POST(request: Request) {
   // inside the transaction before any write. Pro access is NEVER changed here.
   if (process.env.PADDLE_SANDBOX_STORE_EVENTS === "enabled") {
     try {
+      const { persistPaddleSandboxEvent } = await import("@/lib/billing/paddle-event-store");
       const result = await persistPaddleSandboxEvent(raw, event as {
         event_id: string; event_type: string; occurred_at?: unknown;
         data: Record<string, unknown>;
