@@ -19,11 +19,11 @@ export function PaddleQaActivateButton() {
         body: "{}",
       });
       const payload = await response.json() as {
-        activated?: boolean; mode?: string; error?: string;
+        activated?: boolean; mode?: string; error?: string; errorCode?: string;
       };
       if (!response.ok || payload.activated !== true ||
           payload.mode !== "QA_SANDBOX_ACCESS_RECONCILED") {
-        throw new Error(payload.error ?? "Could not reconcile Sandbox Pro access.");
+        throw new Error([payload.error ?? "Could not reconcile Sandbox Pro access.", payload.errorCode].filter(Boolean).join(" — "));
       }
       setMessage("Sandbox access record created. Refresh the dashboard and check the Pro plan status.");
     } catch (error) {
