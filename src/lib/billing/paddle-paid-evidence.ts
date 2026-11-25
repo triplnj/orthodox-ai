@@ -59,7 +59,12 @@ export function verifyPaddleSandboxPaidAccess(
     if (!/^\d+$/.test(paid) || Number(paid) <= 0) continue;
 
     const issuedAt = timestamp(tx.created_at);
-    if (!issuedAt || issuedAt > now) continue;
+    // Evidence must belong to the current paid cycle. An old completed
+    // charge cannot authorize a later unpaid renewal period.
+    // Allow one hour before period start for payment processing.
+    if (!issuedAt || issuedAt > now ||
+        issuedAt.getTime() < startsAt.getTime() - 60 * 60_000 ||
+        issuedAt >= endsAt) continue;
     const signedData = obj(tx.custom_data);
     const signed = verifyPaddleCheckoutBinding(signedData, bindingSecret,
       Math.floor(issuedAt.getTime() / 1000));
