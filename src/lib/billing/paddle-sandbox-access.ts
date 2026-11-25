@@ -22,7 +22,7 @@ export async function saveVerifiedPaddleSandboxAccess(evidence: VerifiedPaddleSa
     if (guard.length !== 1) throw new Error("Wrong Paddle QA database.");
 
     // Serialize access changes for the same customer and subscription.
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`paddle-customer:${evidence.customerId}`}, 0))`;
+    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`paddle-customer:${evidence.customerId}`}, 0))`;
     await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`paddle-sub:${evidence.subscriptionId}`}, 0))`;
 
     const users = await tx.$queryRaw<Array<{ id: string }>>`
