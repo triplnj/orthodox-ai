@@ -21,7 +21,7 @@ export function CustomerPortalButton({ paddleSandbox = false }: { paddleSandbox?
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error ?? "Could not open billing portal.");
+        setError([data.error ?? "Could not open billing portal.", data.errorCode].filter(Boolean).join(" — "));
         return;
       }
 
