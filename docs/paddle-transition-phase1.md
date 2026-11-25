@@ -162,3 +162,7 @@ Test only with registered and email-verified QA users in isolated Neon branch `b
 **Before enabling Pro**: verify real Paddle API subscription/transaction schema and customData after a completed test card checkout, webhook delivery and QA database rows; then test cancellation, failed renewal, partial/full refunds, stale events, and provider API outage. Current access flag is still OFF. The independent paid evidence verifier now follows transaction pagination and fails closed on incomplete pages. Simulator notifications are not substitute for a paid transaction. Never deploy these Sandbox-only modules to live production as payment provider integration.
 
 See https://developer.paddle.com/paddle-js/methods/paddle-checkout-open/ and https://developer.paddle.com/sdks/sandbox/ .
+
+## Preview checkout configuration refresh (25 November 2026)
+
+Refresh commit to load the branch-scoped Vercel Preview setting `PADDLE_SANDBOX_CHECKOUT_ENABLED=enabled`. No checkout or entitlement changes. Confirm Vercel READY before QA. `PADDLE_SANDBOX_GRANT_ACCESS` must remain unset; run first test-card checkout only on `/paddle-sandbox/checkout` with a verified Preview test account.
