@@ -52,3 +52,48 @@ export async function GET() {
     }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 }
+
+/**
+ * Manual backfill for a purchase completed before the grant flag was enabled.
+ * Runs only when invoked by the authenticated QA account, and only after the
+ * Paddle API independently re-verifies the payment and customer ownership.
+ */
+export async function POST(request: Request) {
+  if (process.env.VERCEL_ENV !== "preview" ||
+      process.env.VERCEL_GIT_COMMIT_REF !== "feature/paddle-transition-phase1-20261120") {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+  const origin = request.headers.get("origin");
+  let sameOrigin = false;
+  try {
+    sameOrigin = new URL(origin ?? "").origin === new URL(request.url).origin &&
+      new URL(request.url).protocol === "https:";
+  } catch { /* Reject missing or malformed origin. */ }
+  if (!sameOrigin) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  if (process.env.PADDLE_SANDBOX_GRANT_ACCESS !== "enabled") {
+    return NextResponse.json({ error: "QA grant flag is disabled." }, { status: 503 });
+  }
+  const user = await getSessionUser();
+  if (!user || user.id !== QA_ACCOUNT_ID || user.email !== QA_EMAIL ||
+      !user.emailVerified || user.billingDeletionRequestedAt) {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+
+  try {
+    const { retrieveVerifiedPaddleSandboxAccess } =
+      await import("@/lib/billing/paddle-provider-evidence");
+    const evidence = await retrieveVerifiedPaddleSandboxAccess(QA_SUBSCRIPTION_ID);
+    if (!evidence || evidence.userId !== user.id || evidence.periodEndsAt <= new Date()) {
+      return NextResponse.json({ activated: false, error: "Payment or ownership not verified." },
+        { status: 409, headers: { "Cache-Control": "no-store" } });
+    }
+    const { saveVerifiedPaddleSandboxAccess } =
+      await import("@/lib/billing/paddle-sandbox-access");
+    await saveVerifiedPaddleSandboxAccess(evidence);
+    return NextResponse.json({ activated: true, mode: "QA_SANDBOX_ACCESS_RECONCILED" },
+      { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ activated: false, error: "QA reconciliation unavailable." },
+      { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+}
