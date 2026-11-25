@@ -292,7 +292,7 @@ function DashboardContent() {
             )}
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              {user.adminAccess ? null : isPro ? <CustomerPortalButton /> : <CheckoutButton />}
+              {user.adminAccess ? null : isPro ? <CustomerPortalButton paddleSandbox={user.id === "qa_patristic_20261109"} /> : <CheckoutButton />}
 
               <Link
                 href="/pricing"
