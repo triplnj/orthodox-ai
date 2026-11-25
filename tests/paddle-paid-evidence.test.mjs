@@ -86,3 +86,13 @@ test("wrong secret never verifies ownership", () => {
   const { sub, transaction } = fixture();
   assert.equal(verifyPaddleSandboxPaidAccess(sub, [transaction], "pdl_ntfset_wrong", now), null);
 });
+
+test("a previous paid month cannot authorize an unpaid renewal", () => {
+  const { sub, transaction } = fixture();
+  sub.current_billing_period = {
+    starts_at: "2026-12-24T10:01:00Z",
+    ends_at: "2027-01-24T10:01:00Z",
+  };
+  const later = new Date("2026-12-24T12:00:00Z");
+  assert.equal(verifyPaddleSandboxPaidAccess(sub, [transaction], secret, later), null);
+});
