@@ -79,6 +79,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
+  let phase: "provider" | "database" = "provider";
   try {
     const { retrieveVerifiedPaddleSandboxAccess } =
       await import("@/lib/billing/paddle-provider-evidence");
@@ -89,11 +90,13 @@ export async function POST(request: Request) {
     }
     const { saveVerifiedPaddleSandboxAccess } =
       await import("@/lib/billing/paddle-sandbox-access");
+    phase = "database";
     await saveVerifiedPaddleSandboxAccess(evidence);
     return NextResponse.json({ activated: true, mode: "QA_SANDBOX_ACCESS_RECONCILED" },
       { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ activated: false, error: "QA reconciliation unavailable." },
+    return NextResponse.json({ activated: false, error: "QA reconciliation unavailable.",
+      errorCode: phase === "database" ? "QA_ACCESS_STORE_FAILED" : "QA_PROVIDER_VERIFICATION_FAILED" },
       { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 }
