@@ -39,7 +39,7 @@ export async function retrieveVerifiedPaddleSandboxAccess(
   let after: string | null = null;
   let complete = false;
   for (let page = 0; page < 10; page++) {
-    const qs = `subscription_id=${subscriptionId}&per_page=50` +
+    const qs = `subscription_id=${subscriptionId}&per_page=30` +
       (after ? `&after=${encodeURIComponent(after)}` : "");
     const response = await paddleGet(`/transactions?${qs}`);
     if (!response || typeof response !== "object" || !("data" in response) ||
