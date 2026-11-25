@@ -39,6 +39,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404, headers: noStore });
   }
 
+  let step: "database" | "evidence" | "paddle_api" | "paddle_response" = "database";
+  let paddleStatus: number | undefined;
   try {
     const rows = await prisma.$queryRaw<Array<{ subscriptionId: string; customerId: string }>>`
       SELECT a."subscriptionId", a."customerId"
@@ -54,12 +56,14 @@ export async function POST(request: Request) {
     for (const row of rows) {
       if (!/^sub_[a-z0-9]{26}$/.test(row.subscriptionId) ||
           !/^ctm_[a-z0-9]{26}$/.test(row.customerId)) continue;
+      step = "evidence";
       const evidence = await retrieveVerifiedPaddleSandboxAccess(row.subscriptionId);
       if (!evidence || evidence.userId !== user.id || evidence.customerId !== row.customerId ||
           evidence.periodEndsAt <= new Date()) continue;
 
       const apiKey = process.env.PADDLE_API_KEY;
       if (!apiKey?.startsWith("pdl_sdbx_apikey_")) throw new Error("Missing Paddle credentials.");
+      step = "paddle_api";
       const response = await fetch(
         `https://sandbox-api.paddle.com/customers/${row.customerId}/portal-sessions`, {
           method: "POST",
@@ -73,7 +77,11 @@ export async function POST(request: Request) {
           signal: AbortSignal.timeout(12000),
         },
       );
-      if (!response.ok) throw new Error("Paddle portal session creation failed.");
+      if (!response.ok) {
+        paddleStatus = response.status;
+        throw new Error("Paddle portal session creation failed.");
+      }
+      step = "paddle_response";
       const result: unknown = await response.json();
       const data = result && typeof result === "object" && "data" in result
         ? (result as { data: unknown }).data : null;
@@ -94,7 +102,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Paddle access is no longer verified." },
       { status: 409, headers: noStore });
   } catch {
-    return NextResponse.json({ error: "Paddle Sandbox portal is temporarily unavailable." },
+    const errorCode = step === "paddle_api" && paddleStatus === 403
+      ? "PADDLE_PORTAL_PERMISSION_DENIED"
+      : step === "paddle_api" && paddleStatus === 401
+      ? "PADDLE_PORTAL_KEY_REJECTED"
+      : step === "paddle_api" && paddleStatus === 404
+      ? "PADDLE_PORTAL_CUSTOMER_NOT_FOUND"
+      : step === "paddle_api" ? "PADDLE_PORTAL_API_FAILED"
+      : step === "paddle_response" ? "PADDLE_PORTAL_RESPONSE_INVALID"
+      : step === "evidence" ? "PADDLE_PORTAL_VERIFICATION_FAILED"
+      : "PADDLE_PORTAL_DATABASE_FAILED";
+    return NextResponse.json({ error: "Paddle Sandbox portal is temporarily unavailable.", errorCode },
       { status: 503, headers: noStore });
   }
 }
