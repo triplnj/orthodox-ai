@@ -166,3 +166,7 @@ See https://developer.paddle.com/paddle-js/methods/paddle-checkout-open/ and htt
 ## Preview checkout configuration refresh (25 November 2026)
 
 Refresh commit to load the branch-scoped Vercel Preview setting `PADDLE_SANDBOX_CHECKOUT_ENABLED=enabled`. No checkout or entitlement changes. Confirm Vercel READY before QA. `PADDLE_SANDBOX_GRANT_ACCESS` must remain unset; run first test-card checkout only on `/paddle-sandbox/checkout` with a verified Preview test account.
+
+## Preview auth rate limit secret deployment refresh (25 November 2026)
+
+Non-functional Preview redeploy trigger to load the branch-scoped `AUTH_RATE_LIMIT_SECRET` for QA login. This commit does not change production billing code or secrets. Confirm the variable was saved to the Preview feature branch before testing sign-in.
