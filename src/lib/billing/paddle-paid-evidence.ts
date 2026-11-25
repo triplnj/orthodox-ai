@@ -47,42 +47,58 @@ export function verifyPaddleSandboxPaidAccess(
       price.id !== PADDLE_SANDBOX_CATALOG.monthlyPriceId ||
       price.product_id !== PADDLE_SANDBOX_CATALOG.productId) return null;
 
-  // Do not interpret 'active' from simulator or browser as paid evidence.
-  // The direct Paddle API must supply a completed, nonzero payment transaction.
-  for (const value of txns) {
+  // The checkout's signed owner binding is immutable identity evidence, not
+  // a new authorization token for each renewal. Paddle propagates custom_data
+  // to subsequent subscription transactions. Re-verify that the completed
+  // initial transaction originally carried that binding, then independently
+  // require a completed positive payment in the CURRENT billing period.
+  const subData = obj(sub.custom_data);
+  const bindingFields = [
+    "orthodoxai_binding_version", "orthodoxai_user_id",
+    "orthodoxai_issued_at", "orthodoxai_nonce", "orthodoxai_signature",
+  ] as const;
+  if (!subData) return null;
+
+  const validTransaction = (value: unknown) => {
     const tx = obj(value);
     if (!tx || !paddleId("txn", tx.id) || tx.status !== "completed" ||
         tx.subscription_id !== sub.id || tx.customer_id !== sub.customer_id ||
-        tx.currency_code !== "USD" || tx.collection_mode !== "automatic") continue;
+        tx.currency_code !== "USD" || tx.collection_mode !== "automatic") return null;
     const totals = obj(obj(tx.details)?.totals);
     const paid = str(totals?.total);
-    if (!/^\d+$/.test(paid) || Number(paid) <= 0) continue;
-
+    if (!/^\\d+$/.test(paid) || Number(paid) <= 0) return null;
     const issuedAt = timestamp(tx.created_at);
-    // Evidence must belong to the current paid cycle. An old completed
-    // charge cannot authorize a later unpaid renewal period.
-    // Allow one hour before period start for payment processing.
-    if (!issuedAt || issuedAt > now ||
-        issuedAt.getTime() < startsAt.getTime() - 60 * 60_000 ||
-        issuedAt >= endsAt) continue;
-    const signedData = obj(tx.custom_data);
-    const signed = verifyPaddleCheckoutBinding(signedData, bindingSecret,
-      Math.floor(issuedAt.getTime() / 1000));
-    if (!signedData || !signed) continue;
-    // Verify that subscription and originating completed transaction agree on
-    // immutable ownership metadata. They must not be forged independently.
-    const subData = obj(sub.custom_data);
-    // Paddle may serialize object keys in a different order.
-    const bindingFields = [
-      "orthodoxai_binding_version", "orthodoxai_user_id",
-      "orthodoxai_issued_at", "orthodoxai_nonce", "orthodoxai_signature",
-    ] as const;
-    if (!subData || !bindingFields.every(key => subData[key] === signedData[key])) continue;
+    if (!issuedAt || issuedAt > now) return null;
+    const data = obj(tx.custom_data);
+    if (!data || !bindingFields.every(key => data[key] === subData[key])) return null;
+    return { tx, issuedAt, data };
+  };
+
+  let owner: { userId: string } | null = null;
+  for (const candidate of txns) {
+    const verified = validTransaction(candidate);
+    if (!verified) continue;
+    const signed = verifyPaddleCheckoutBinding(verified.data, bindingSecret,
+      Math.floor(verified.issuedAt.getTime() / 1000));
+    if (signed) {
+      owner = signed;
+      break;
+    }
+  }
+  if (!owner) return null;
+
+  for (const candidate of txns) {
+    const verified = validTransaction(candidate);
+    if (!verified) continue;
+    // A payment from an earlier period cannot authorize an unpaid renewal.
+    // Allow at most one hour of advance processing for the new billing cycle.
+    if (verified.issuedAt.getTime() < startsAt.getTime() - 60 * 60_000 ||
+        verified.issuedAt >= endsAt) continue;
     return {
-      userId: signed.userId,
+      userId: owner.userId,
       subscriptionId: sub.id,
       customerId: sub.customer_id,
-      paidTransactionId: tx.id,
+      paidTransactionId: verified.tx.id as string,
       periodEndsAt: endsAt,
     };
   }
