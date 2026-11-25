@@ -170,3 +170,7 @@ Refresh commit to load the branch-scoped Vercel Preview setting `PADDLE_SANDBOX_
 ## Preview auth rate limit secret deployment refresh (25 November 2026)
 
 Non-functional Preview redeploy trigger to load the branch-scoped `AUTH_RATE_LIMIT_SECRET` for QA login. This commit does not change production billing code or secrets. Confirm the variable was saved to the Preview feature branch before testing sign-in.
+
+## Preview grant-access configuration deployment refresh (25 November 2026)
+
+Documentation-only commit to trigger a Preview deployment after setting branch-scoped `PADDLE_SANDBOX_GRANT_ACCESS=enabled`. No production variables or source code changed in this commit. Run QA-only `/paddle-sandbox/qa-activation` on the new READY Preview deployment; do not make another purchase.
