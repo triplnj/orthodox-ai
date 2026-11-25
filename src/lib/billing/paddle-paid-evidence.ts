@@ -66,7 +66,7 @@ export function verifyPaddleSandboxPaidAccess(
         tx.currency_code !== "USD" || tx.collection_mode !== "automatic") return null;
     const totals = obj(obj(tx.details)?.totals);
     const paid = str(totals?.total);
-    if (!/^\\d+$/.test(paid) || Number(paid) <= 0) return null;
+    if (!/^\d+$/.test(paid) || Number(paid) <= 0) return null;
     const issuedAt = timestamp(tx.created_at);
     if (!issuedAt || issuedAt > now) return null;
     const data = obj(tx.custom_data);
