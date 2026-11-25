@@ -174,3 +174,7 @@ Non-functional Preview redeploy trigger to load the branch-scoped `AUTH_RATE_LIM
 ## Preview grant-access configuration deployment refresh (25 November 2026)
 
 Documentation-only commit to trigger a Preview deployment after setting branch-scoped `PADDLE_SANDBOX_GRANT_ACCESS=enabled`. No production variables or source code changed in this commit. Run QA-only `/paddle-sandbox/qa-activation` on the new READY Preview deployment; do not make another purchase.
+
+## Preview AI quota timezone redeploy (25 November 2026)
+
+Documentation-only deployment trigger after setting Preview branch variable `AI_QUOTA_TIMEZONE=UTC`. This allows the Dashboard quota clock to initialize in Vercel's production-mode Preview runtime; no production settings or billing logic are changed.
