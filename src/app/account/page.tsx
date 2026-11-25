@@ -18,7 +18,6 @@ type AccountData = {
     adminAccess?: boolean;
     subscriptionStatus: string | null;
     subscriptionId: string | null;
-    stripeCustomerId: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -154,7 +153,7 @@ export default function AccountPage() {
               ? "Administrator access is active. You can use all OrthodoxAI tools without a subscription."
               : isPro
               ? `Your Pro access is active. You can use ${FULL_ACCESS_DAILY_CHAT_LIMIT} questions per day, journal tools, prayer plans, Scripture plans, and extended history.`
-              : "You are currently using the Free plan. You can ask 5 AI questions per day and access basic OrthodoxAI tools."}
+              : "You are currently using the Free plan. You can ask 3 free AI questions in total and access basic OrthodoxAI tools."}
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -196,13 +195,6 @@ export default function AccountPage() {
               <span className="text-gray-500">Subscription status</span>
               <span className="font-medium text-gray-950">
                 {user.adminAccess ? "Administrator" : user.subscriptionStatus ?? "none"}
-              </span>
-            </div>
-
-            <div className="flex justify-between gap-4 py-3">
-              <span className="text-gray-500">Legacy Stripe connection</span>
-              <span className="font-medium text-gray-950">
-                {user.stripeCustomerId ? "connected" : "not connected"}
               </span>
             </div>
 
