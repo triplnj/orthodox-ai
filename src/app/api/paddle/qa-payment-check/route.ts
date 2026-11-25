@@ -41,7 +41,7 @@ export async function GET() {
       subscriptionSeen: true,
       paymentEvidenceVerified: Boolean(proof),
       ownershipMatchesQaAccount: proof?.userId === user.id,
-      eligibleForQaPro: proof?.userId === user.id && proof.periodEndsAt > new Date(),
+      eligibleForQaPro: Boolean(proof && proof.userId === user.id && proof.periodEndsAt > new Date()),
       grantAccessEnabled: process.env.PADDLE_SANDBOX_GRANT_ACCESS === "enabled",
       note: "Read-only Paddle API verification; no Pro entitlement was written.",
     }, { headers: { "Cache-Control": "no-store" } });
