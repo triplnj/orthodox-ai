@@ -14,7 +14,7 @@ export function CustomerPortalButton() {
     setError(null);
 
     try {
-      const response = await fetch("/api/lemonsqueezy/customer-portal", {
+      const response = await fetch("/api/billing/customer-portal", {
         method: "POST",
       });
 
