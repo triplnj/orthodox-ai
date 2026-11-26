@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 import { productCopy } from "@/lib/productCopy";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
+import { PaddleCheckoutButton } from "@/components/billing/PaddleCheckoutButton";
 import { CustomerPortalButton } from "@/components/billing/CustomerPortalButton";
 
 const proTools = [
@@ -66,6 +67,7 @@ export default async function ProPage() {
   }
 
   const isPro = isProUser(user);
+  const paddleLive = process.env.NEXT_PUBLIC_PADDLE_LIVE_CHECKOUT_ENABLED === "enabled";
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
@@ -99,7 +101,7 @@ export default async function ProPage() {
                 <CustomerPortalButton />
             </>
                 ) : (
-            <CheckoutButton>Upgrade to Pro</CheckoutButton>
+            paddleLive ? <PaddleCheckoutButton /> : <CheckoutButton>Upgrade to Pro</CheckoutButton>
             )}
             <Link
               href="/pricing"
@@ -111,7 +113,7 @@ export default async function ProPage() {
 
           {!isPro && (
             <p className="mt-5 text-xs leading-5 text-gray-500">
-             You will be redirected to Lemon Squeezy to complete your subscription. Only live payments activate Pro.
+             {paddleLive ? "Paddle securely processes your payment. Pro activates after server-side verification." : "You will be redirected to Lemon Squeezy to complete your subscription. Only live payments activate Pro."}
             </p>
           )}
         </div>
