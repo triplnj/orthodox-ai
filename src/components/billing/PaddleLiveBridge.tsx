@@ -1,15 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import type { PaddleSdk } from "./PaddleSandboxReadiness";
 
-type PaddleCheckout = {
- Initialize(options: { token: string; eventCallback?: (e: { name?: string }) => void }): void;
- Checkout: { open(options: { items: Array<{ priceId: string; quantity: number }>;
-   customData: Record<string, unknown> }): void };
-};
-declare global {
- interface Window { Paddle?: PaddleCheckout }
-}
+type PaddleCheckout = PaddleSdk;
 
 let loading: Promise<PaddleCheckout> | undefined;
 let initialized = false;
