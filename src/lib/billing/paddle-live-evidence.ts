@@ -14,7 +14,7 @@ const validId = (kind: string, v: unknown) =>
 export type VerifiedPaddleLivePayment = {
  userId: string; subscriptionId: string; customerId: string;
  productId: string; priceId: string; paidTransactionId: string;
- periodEndsAt: Date; cancelAtPeriodEnd: boolean; checkoutAttemptId: string;
+ periodEndsAt: Date; cancelAtPeriodEnd: boolean; checkoutAttemptId: string; originalTransactionId: string;
 };
 
 /**
@@ -50,6 +50,7 @@ export function verifyPaddleLivePaidAccess(
  if (!subData) return null;
  let userId: string | null = null;
  let checkoutAttemptId: string | null = null;
+ let originalTransactionId: string | null = null;
  let current: { id: string; time: Date } | null = null;
  for (const value of transactionValues) {
    const tx = obj(value);
@@ -72,11 +73,13 @@ export function verifyPaddleLivePaidAccess(
          (checkoutAttemptId && checkoutAttemptId !== attemptId)) return null;
      userId = signedOwner.userId;
      checkoutAttemptId = attemptId;
+     // The oldest signed transaction is the original purchase, not a renewal.
+     if (!originalTransactionId) originalTransactionId = tx.id as string;
    }
    if (time.getTime() >= start.getTime() - 3600_000 && time < end &&
        (!current || time > current.time)) current = { id: tx.id as string, time };
  }
- if (!userId || !current || !checkoutAttemptId) return null;
+ if (!userId || !current || !checkoutAttemptId || !originalTransactionId) return null;
  const scheduled = obj(sub.scheduled_change);
  return {
    userId,
@@ -85,7 +88,7 @@ export function verifyPaddleLivePaidAccess(
    productId: config.productId,
    priceId: config.priceId,
    paidTransactionId: current.id,
-   checkoutAttemptId,
+   checkoutAttemptId, originalTransactionId,
    periodEndsAt: end,
    cancelAtPeriodEnd: scheduled?.action === "cancel",
  };
