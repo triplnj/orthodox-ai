@@ -8,6 +8,7 @@ import { webhook } from "@/lib/billing/service";
 export const runtime = "nodejs";
 type PaddleEvent = { event_id?: string; event_type?: string; occurred_at?: string;
   data?: { id?: string; customer_id?: string; transaction_id?: string | null;
+    subscription_id?: string | null; action?: string; status?: string;
     custom_data?: { userId?: string; billingAttemptId?: string; binding?: string } | null } };
 type Transaction = { id?: string; subscription_id?: string | null; customer_id?: string | null;
   status?: string; custom_data?: { userId?: string; billingAttemptId?: string; binding?: string } | null;
@@ -37,12 +38,15 @@ export async function POST(req: Request) {
   try { event = JSON.parse(raw); } catch { return forbidden(); }
   if (!event?.event_id || !/^evt_[a-z0-9]{26}$/.test(event.event_id) ||
       !event.event_type || !event.data?.id) return forbidden();
-  if (!allowed.has(event.event_type)) return NextResponse.json({ received: true, ignored: true });
-  if (!/^sub_[a-z0-9]{26}$/.test(event.data.id)) return forbidden();
+  const adjustment = ["adjustment.created", "adjustment.updated"].includes(event.event_type);
+  if (!allowed.has(event.event_type) && !adjustment) return NextResponse.json({ received: true, ignored: true });
+  if (adjustment && !/^adj_[a-z0-9]{26}$/.test(event.data.id)) return forbidden();
+  if (!adjustment && !/^sub_[a-z0-9]{26}$/.test(event.data.id)) return forbidden();
 
   try {
     const eventId = event.event_id;
-    const subscriptionId = event.data.id;
+    const subscriptionId = adjustment ? event.data.subscription_id : event.data.id;
+    if (!subscriptionId || !/^sub_[a-z0-9]{26}$/.test(subscriptionId)) return NextResponse.json({ received: true, ignored: "unrelated_adjustment" });
     const row = await prisma.billingSubscription.findUnique({
       where: { provider_providerSubscriptionId: { provider: "PADDLE", providerSubscriptionId: subscriptionId } },
     });
@@ -53,6 +57,7 @@ export async function POST(req: Request) {
     let userId = row?.userId ?? undefined;
     let attemptId: string | undefined;
     if (!userId) {
+      if (adjustment) return NextResponse.json({ received: true, ignored: "unknown_adjustment" });
       // Only a completed Paddle transaction created for a specific locally
       // reserved checkout can associate a brand-new subscription with a user.
       if (event.event_type !== "subscription.created") return unavailable();
