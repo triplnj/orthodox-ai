@@ -7,6 +7,7 @@ export type AppUser = {
   billingAccessUntil?: Date | string | null;
   reviewAccess?: boolean;
   adminAccess?: boolean;
+  billingProvider?: "PADDLE" | "LEMONSQUEEZY" | "STRIPE";
 };
 
 export function isProUser(user: AppUser) {
