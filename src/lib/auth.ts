@@ -35,6 +35,24 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     }
   }
 
+
+  if (process.env.VERCEL_ENV === "production" &&
+      process.env.PADDLE_LIVE_GRANT_ACCESS === "enabled" &&
+      process.env.PADDLE_LIVE_RECONCILIATION_READY === "enabled" &&
+      process.env.PADDLE_LIVE_WEBHOOK_ENABLED === "enabled" &&
+      user.emailVerified && !user.billingDeletionRequestedAt) {
+    const { getPaddleLiveAccess } =
+      await import("@/lib/billing/paddle-live-entitlement");
+    const until = await getPaddleLiveAccess(user.id);
+    if (until) return {
+      id: user.id, email: user.email, name: user.name,
+      plan: "PRO" as const, subscriptionStatus: "active",
+      billingAccessUntil: until,
+      billingProvider: "PADDLE" as const,
+      reviewAccess: user.reviewAccess === true,
+    };
+  }
+
   return {
     id: user.id,
     email: user.email,
