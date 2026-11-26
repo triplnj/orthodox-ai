@@ -56,6 +56,40 @@ export async function retrieveVerifiedPaddleLivePayment(
    cursor = last.id;
  }
  if (!complete) return null;
- return verifyPaddleLivePaidAccess(root.data, transactions,
+ const proof = verifyPaddleLivePaidAccess(root.data, transactions,
    { productId, priceId, bindingSecret });
+ if (!proof) return null;
+
+ // A completed charge remains completed after a refund. Cross-check provider
+ // adjustments on the exact paid transaction before granting access.
+ // Requires adjustment.read; failures deliberately deny new Live access.
+ let adjustmentCursor: string | null = null, adjustmentsComplete = false;
+ for (let page = 0; page < 10; page++) {
+   const query = `/adjustments?transaction_id=${proof.paidTransactionId}&per_page=50` +
+     (adjustmentCursor ? `&after=${encodeURIComponent(adjustmentCursor)}` : "");
+   const response = await paddleLiveGet(query);
+   const envelope = response && typeof response === "object" ?
+     response as Record<string, unknown> : null;
+   if (!envelope || !Array.isArray(envelope.data)) return null;
+   for (const value of envelope.data) {
+     const adjustment = value && typeof value === "object" ?
+       value as Record<string, unknown> : null;
+     if (!adjustment || adjustment.transaction_id !== proof.paidTransactionId) return null;
+     if (["refund", "chargeback", "chargeback_warning"].includes(String(adjustment.action)) &&
+         ["approved", "pending_approval"].includes(String(adjustment.status))) return null;
+   }
+   const pagination = envelope.meta && typeof envelope.meta === "object" &&
+     "pagination" in envelope.meta ? (envelope.meta as { pagination: unknown }).pagination : null;
+   if (!pagination || typeof pagination !== "object" ||
+       typeof (pagination as { has_more?: unknown }).has_more !== "boolean") return null;
+   if (!(pagination as { has_more: boolean }).has_more) {
+     adjustmentsComplete = true;
+     break;
+   }
+   const last = envelope.data.at(-1) as { id?: unknown } | undefined;
+   if (typeof last?.id !== "string" || !/^adj_[a-z0-9]{26}$/.test(last.id) ||
+       last.id === adjustmentCursor) return null;
+   adjustmentCursor = last.id;
+ }
+ return adjustmentsComplete ? proof : null;
 }
