@@ -82,3 +82,22 @@ tests before any real payment.
    approval and perform a user-approved controlled Live payment.
 7. Activate notification destination and payment UI only with explicit approval
    after reconciliation and verified positive tests.
+
+## Live checkout retry design (26 Nov 2026)
+- Live checkout authorization creates one durable OPEN attempt and creates one
+  Paddle transaction server-side with that attempt's signed owner data. The
+  browser receives only the transaction ID and opens the SAME transaction
+  using Paddle.js. An unexpired retry reopens that transaction rather than
+  risking a second payment. Unknown provider outcomes stay fenced for manual
+  reconciliation.
+- The provider API key now additionally requires **transaction.write**, since
+  Paddle transactions are created on the server. Provider reconciliation
+  requires **adjustment.read** for refund/chargeback status. Read-only merchant
+  preflight requires **verification.read**, **checkout_domain.read**, and
+  **checkout_settings.read**. Grant no unrelated write permissions.
+- A verified successful payment must match both the signed checkout attempt
+  and the exact original Paddle transaction reserved in Neon; a checkout
+  popup's success event alone never grants Pro.
+- Keep all five Live feature flags disabled until merchant onboarding is
+  completed, product and domain checks are green, webhook is enabled, and
+  the first controlled real transaction has been tested.
