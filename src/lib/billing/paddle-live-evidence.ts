@@ -14,7 +14,7 @@ const validId = (kind: string, v: unknown) =>
 export type VerifiedPaddleLivePayment = {
  userId: string; subscriptionId: string; customerId: string;
  productId: string; priceId: string; paidTransactionId: string;
- periodEndsAt: Date; cancelAtPeriodEnd: boolean;
+ periodEndsAt: Date; cancelAtPeriodEnd: boolean; checkoutAttemptId: string;
 };
 
 /**
@@ -49,6 +49,7 @@ export function verifyPaddleLivePaidAccess(
  ] as const;
  if (!subData) return null;
  let userId: string | null = null;
+ let checkoutAttemptId: string | null = null;
  let current: { id: string; time: Date } | null = null;
  for (const value of transactionValues) {
    const tx = obj(value);
@@ -64,13 +65,18 @@ export function verifyPaddleLivePaidAccess(
    const signedOwner = verifyPaddleLiveBinding(txData, config.bindingSecret,
      Math.floor(time.getTime() / 1000));
    if (signedOwner) {
-     if (userId && signedOwner.userId !== userId) return null;
+     const attemptId = txData.orthodoxai_checkout_attempt_id;
+     if (typeof attemptId !== "string" ||
+         !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(attemptId)) return null;
+     if ((userId && signedOwner.userId !== userId) ||
+         (checkoutAttemptId && checkoutAttemptId !== attemptId)) return null;
      userId = signedOwner.userId;
+     checkoutAttemptId = attemptId;
    }
    if (time.getTime() >= start.getTime() - 3600_000 && time < end &&
        (!current || time > current.time)) current = { id: tx.id as string, time };
  }
- if (!userId || !current) return null;
+ if (!userId || !current || !checkoutAttemptId) return null;
  const scheduled = obj(sub.scheduled_change);
  return {
    userId,
@@ -79,6 +85,7 @@ export function verifyPaddleLivePaidAccess(
    productId: config.productId,
    priceId: config.priceId,
    paidTransactionId: current.id,
+   checkoutAttemptId,
    periodEndsAt: end,
    cancelAtPeriodEnd: scheduled?.action === "cancel",
  };
