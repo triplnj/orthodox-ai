@@ -36,8 +36,9 @@ export async function POST(req: Request) {
   let event: PaddleEvent;
   try { event = JSON.parse(raw); } catch { return forbidden(); }
   if (!event?.event_id || !/^evt_[a-z0-9]{26}$/.test(event.event_id) ||
-      !event.event_type || !event.data?.id || !/^sub_[a-z0-9]{26}$/.test(event.data.id)) return forbidden();
+      !event.event_type || !event.data?.id) return forbidden();
   if (!allowed.has(event.event_type)) return NextResponse.json({ received: true, ignored: true });
+  if (!/^sub_[a-z0-9]{26}$/.test(event.data.id)) return forbidden();
 
   try {
     const eventId = event.event_id;
