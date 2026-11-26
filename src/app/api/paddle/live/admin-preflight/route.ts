@@ -62,7 +62,7 @@ export async function GET(request: Request) {
  if (domains.status !== 200 || !Array.isArray(domains.data) ||
      !domains.data.some(x => {
        const d = obj(x);
-       return d?.name === "www.orthodoxai.app" && d?.status === "approved";
+       return d?.domain === "www.orthodoxai.app" && d?.status === "approved";
      })) issues.push("Production checkout domain approval not verified (checkout_domain.read needed).");
  const defaultUrl = obj(checkout.data)?.default_url;
  if (checkout.status !== 200 || defaultUrl !== "https://www.orthodoxai.app/pricing")
