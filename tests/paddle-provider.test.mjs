@@ -9,7 +9,7 @@ const id = {
   product: "pro_" + "d".repeat(26),
   transaction: "txn_" + "e".repeat(26),
 };
-function loadProvider({ paid = true, status = "active", product = id.product, wrongOwner = false } = {}) {
+function loadProvider({ paid = true, status = "active", product = id.product, wrongOwner = false, refunded = false } = {}) {
   const calls = [];
   const subscription = { id: id.subscription, customer_id: id.customer,
     status, updated_at: "2026-11-26T14:00:00Z",
@@ -30,6 +30,10 @@ function loadProvider({ paid = true, status = "active", product = id.product, wr
   const previous = globalThis.fetch;
   globalThis.fetch = async url => {
     calls.push(String(url));
+    if (String(url).includes("/adjustments?")) return new Response(JSON.stringify({
+      data: refunded ? [{ transaction_id: id.transaction, subscription_id: id.subscription, action: "refund", type: "full", status: "approved" }] : [],
+      meta: { pagination: { has_more: false, next: null } },
+    }), { status: 200 });
     if (String(url).includes("/transactions?")) return new Response(JSON.stringify({
       data: [transaction], meta: { pagination: { has_more: false, next: null } },
     }), { status: 200 });
@@ -60,5 +64,11 @@ test("Paddle product mismatch fails closed", async () => {
 test("Paddle transaction from another customer fails closed", async () => {
   const h = loadProvider({ wrongOwner: true });
   try { await assert.rejects(h.load().paddleRetrieve(id.subscription), /ownership mismatch/); }
+  finally { h.restore(); }
+});
+
+test("approved full Paddle refund revokes verified payment evidence", async () => {
+  const h = loadProvider({ refunded: true });
+  try { assert.equal((await h.load().paddleRetrieve(id.subscription)).paidVerified, false); }
   finally { h.restore(); }
 });
