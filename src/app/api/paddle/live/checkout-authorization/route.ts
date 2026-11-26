@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +17,8 @@ export async function POST(request: Request) {
  if (process.env.VERCEL_ENV !== "production" ||
      process.env.PADDLE_LIVE_CHECKOUT_ENABLED !== "enabled" ||
      process.env.PADDLE_LIVE_GRANT_ACCESS !== "enabled" ||
-     process.env.PADDLE_LIVE_RECONCILIATION_READY !== "enabled") {
+     process.env.PADDLE_LIVE_RECONCILIATION_READY !== "enabled" ||
+     process.env.PADDLE_LIVE_WEBHOOK_ENABLED !== "enabled") {
    return NextResponse.json({ error: "Not found." }, { status: 404, headers });
  }
  let sameOrigin = false;
@@ -41,24 +43,49 @@ export async function POST(request: Request) {
    return NextResponse.json({ error: "Live checkout not configured." }, { status: 503, headers });
 
  try {
-   // Block conflicting legacy checkout states and paid subscriptions.
-   const rows = await prisma.billingSubscription.findMany({
-     where: { userId: user.id }, select: { status: true, currentPeriodEndsAt: true },
-   });
-   const uncertain = await prisma.billingCheckoutAttempt.findFirst({
-     where: { userId: user.id, status: { in: ["CREATING", "OPEN", "UNKNOWN", "PAID_OPEN"] } },
-     select: { id: true },
-   });
-   if (uncertain || rows.some(r => !["canceled", "cancelled", "expired", "incomplete_expired"].includes(r.status)))
-     return NextResponse.json({ error: "An existing subscription or checkout must be reconciled." },
+   // This transaction fences overlapping attempts, with an explicit expiry
+   // requiring reconciliation before the same customer can try again.
+   const attempt = await prisma.$transaction(async tx => {
+     await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`paddle-live-checkout:${user.id}`},0))`;
+     const older = await tx.$queryRaw<Array<{ id: string }>>`
+       SELECT "id" FROM "PaddleLiveCheckoutAttempt" WHERE "userId" = ${user.id}
+       AND "status" IN ('OPEN','UNKNOWN') LIMIT 1`;
+     if (older.length) return null;
+     const legacy = await tx.billingSubscription.findMany({
+       where: { userId: user.id },
+       select: { status: true, currentPeriodEndsAt: true },
+     });
+     const pending = await tx.billingCheckoutAttempt.findFirst({
+       where: { userId: user.id,
+         status: { in: ["CREATING","OPEN","UNKNOWN","PAID_OPEN"] } },
+       select: { id: true },
+     });
+     if (pending || legacy.some(row =>
+       !["canceled", "cancelled", "expired", "incomplete_expired"].includes(row.status) ||
+       (row.currentPeriodEndsAt && row.currentPeriodEndsAt > new Date()))) return null;
+     const live = await tx.$queryRaw<Array<{ subscriptionId: string }>>`
+       SELECT "subscriptionId" FROM "PaddleLiveSubscription"
+       WHERE "userId" = ${user.id} AND
+       ("periodEndsAt" > CURRENT_TIMESTAMP OR "status" NOT IN ('canceled','expired'))
+       LIMIT 1`;
+     if (live.length) return null;
+     const id = randomUUID();
+     const expiresAt = new Date(Date.now()+30*60_000);
+     await tx.$executeRaw`
+       INSERT INTO "PaddleLiveCheckoutAttempt" ("id","userId","status","expiresAt")
+       VALUES (${id},${user.id},'OPEN',${expiresAt})`;
+     return { id, expiresAt };
+   }, { isolationLevel: "ReadCommitted", timeout: 15000, maxWait: 10000 });
+   if (!attempt)
+     return NextResponse.json({ error: "An active or unresolved billing attempt requires reconciliation before another purchase." },
        { status: 409, headers });
-   // No public UI or payment request is created here. Checkout creation will
-   // be connected only after the durable Paddle attempt ledger is implemented.
    return NextResponse.json({
-     mode: "LIVE_CHECKOUT_AUTHORIZED_NOT_LAUNCHED",
+     mode: "LIVE_CHECKOUT_READY",
      priceId,
-     customData: makePaddleLiveBinding(user.id, secret),
-     paymentEnabled: false,
+     customData: { ...makePaddleLiveBinding(user.id, secret),
+       orthodoxai_checkout_attempt_id: attempt.id },
+     paymentEnabled: true,
+     expiresAt: attempt.expiresAt.toISOString(),
    }, { headers });
  } catch {
    return NextResponse.json({ error: "Billing status unavailable." }, { status: 503, headers });
