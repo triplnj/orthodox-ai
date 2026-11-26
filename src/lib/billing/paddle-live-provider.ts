@@ -93,3 +93,24 @@ export async function retrieveVerifiedPaddleLivePayment(
  }
  return adjustmentsComplete ? proof : null;
 }
+
+/**
+ * Only provider-confirmed termination states may change the Live ledger.
+ * Webhook payloads are hints, not trusted subscription status.
+ */
+export async function retrievePaddleLiveSubscriptionState(subscriptionId: string):
+  Promise<{ subscriptionId: string; customerId: string; status: string } | null> {
+ if (process.env.VERCEL_ENV !== "production" ||
+     process.env.PADDLE_LIVE_WEBHOOK_ENABLED !== "enabled" ||
+     !/^sub_[a-z0-9]{26}$/.test(subscriptionId)) return null;
+ const data = await paddleLiveGet(`/subscriptions/${subscriptionId}`);
+ const sub = data && typeof data === "object" && "data" in data
+   ? (data as { data: unknown }).data : null;
+ if (!sub || typeof sub !== "object") return null;
+ const v = sub as Record<string, unknown>;
+ if (v.id !== subscriptionId ||
+     typeof v.customer_id !== "string" ||
+     !/^ctm_[a-z0-9]{26}$/.test(v.customer_id) ||
+     typeof v.status !== "string") return null;
+ return { subscriptionId, customerId: v.customer_id, status: v.status };
+}
