@@ -6,7 +6,7 @@ import Script from "next/script";
 export type PaddleSdk = {
   Environment: { set: (environment: "sandbox") => void };
   Initialize: (options: { token: string; eventCallback?: (e: { name?: string }) => void }) => void;
-  Checkout: { open(options: { items: Array<{ priceId: string; quantity: number }>; customData: Record<string, unknown> }): void };
+  Checkout: { open(options: { items?: Array<{ priceId: string; quantity: number }>; customData?: Record<string, unknown>; transactionId?: string }): void };
 };
 
 declare global {
