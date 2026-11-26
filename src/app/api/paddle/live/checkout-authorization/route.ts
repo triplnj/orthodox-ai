@@ -57,10 +57,15 @@ export async function POST(request: Request) {
      });
      if (!actualUser?.emailVerified || actualUser.billingDeletionRequestedAt)
        return null;
-     const older = await tx.$queryRaw<Array<{ id: string }>>`
-       SELECT "id" FROM "PaddleLiveCheckoutAttempt" WHERE "userId" = ${user.id}
+     const older = await tx.$queryRaw<Array<{ id: string; providerTransactionId: string | null; expiresAt: Date; status: string }>>`
+       SELECT "id","providerTransactionId","expiresAt","status" FROM "PaddleLiveCheckoutAttempt" WHERE "userId" = ${user.id}
        AND "status" IN ('OPEN','UNKNOWN') LIMIT 1`;
-     if (older.length) return null;
+     if (older.length) {
+       const prior = older[0];
+       if (prior.status === "OPEN" && prior.providerTransactionId && prior.expiresAt > new Date())
+         return { id: prior.id, expiresAt: prior.expiresAt, transactionId: prior.providerTransactionId };
+       return null;
+     }
      // Legacy pointers are unambiguous blockers even before inventory recovery.
      if (actualUser.subscriptionId || actualUser.lemonSqueezySubscriptionId)
        return null;
@@ -87,18 +92,72 @@ export async function POST(request: Request) {
      await tx.$executeRaw`
        INSERT INTO "PaddleLiveCheckoutAttempt" ("id","userId","status","expiresAt")
        VALUES (${id},${user.id},'OPEN',${expiresAt})`;
-     return { id, expiresAt };
+     return { id, expiresAt, transactionId: null as string | null };
    }, { isolationLevel: "ReadCommitted", timeout: 15000, maxWait: 10000 });
    if (!attempt)
      return NextResponse.json({ error: "An active or unresolved billing attempt requires reconciliation before another purchase." },
        { status: 409, headers });
+   const apiKey = process.env.PADDLE_LIVE_API_KEY;
+   if (!apiKey?.startsWith("pdl_live_apikey_"))
+     return NextResponse.json({ error: "Live Paddle API unavailable." }, { status: 503, headers });
+
+   let transactionId = attempt.transactionId;
+   if (transactionId) {
+     // Reopen the exact existing transaction, never create another payment.
+     const previous = await fetch(`https://api.paddle.com/transactions/${transactionId}`, {
+       headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+       cache: "no-store", signal: AbortSignal.timeout(12000),
+     });
+     if (!previous.ok) throw Error("Cannot safely recover Paddle transaction.");
+     const value: unknown = await previous.json();
+     const transaction = value && typeof value === "object" && "data" in value ?
+       (value as { data: Record<string, unknown> }).data : null;
+     if (!transaction || transaction.id !== transactionId ||
+         !["draft", "ready"].includes(String(transaction.status)) ||
+         transaction.collection_mode !== "automatic")
+       return NextResponse.json({ error: "Checkout already completed or requires billing reconciliation." },
+         { status: 409, headers });
+   } else {
+     // Reserve the attempt before creating the external transaction. An unknown
+     // response fails closed; operator reconciliation prevents duplicate charges.
+     const customData = makePaddleLiveBinding(user.id, secret,
+       Math.floor(Date.now() / 1000), attempt.id);
+     const created = await fetch("https://api.paddle.com/transactions", {
+       method: "POST",
+       headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json",
+         "Content-Type": "application/json" },
+       body: JSON.stringify({
+         collection_mode: "automatic",
+         items: [{ price_id: priceId, quantity: 1 }],
+         custom_data: customData,
+       }),
+       cache: "no-store", signal: AbortSignal.timeout(12000),
+     });
+     if (!created.ok) {
+       await prisma.$executeRaw`
+         UPDATE "PaddleLiveCheckoutAttempt" SET "status" = 'UNKNOWN'
+         WHERE "id" = ${attempt.id} AND "userId" = ${user.id} AND "status" = 'OPEN'`;
+       throw Error("Paddle transaction creation uncertain.");
+     }
+     const value: unknown = await created.json();
+     const transaction = value && typeof value === "object" && "data" in value ?
+       (value as { data: Record<string, unknown> }).data : null;
+     if (!transaction || typeof transaction.id !== "string" ||
+         !/^txn_[a-z0-9]{26}$/.test(transaction.id) ||
+         !["draft","ready"].includes(String(transaction.status)) ||
+         transaction.collection_mode !== "automatic")
+       throw Error("Paddle transaction could not be verified.");
+     transactionId = transaction.id;
+     const updated = await prisma.$queryRaw<Array<{ id: string }>>`
+       UPDATE "PaddleLiveCheckoutAttempt" SET "providerTransactionId" = ${transactionId}
+       WHERE "id" = ${attempt.id} AND "userId" = ${user.id}
+         AND "status" = 'OPEN' AND "providerTransactionId" IS NULL
+       RETURNING "id"`;
+     if (updated.length !== 1) throw Error("Paddle checkout state uncertain.");
+   }
    return NextResponse.json({
-     mode: "LIVE_CHECKOUT_READY",
-     priceId,
-     customData: makePaddleLiveBinding(user.id, secret,
-       Math.floor(Date.now() / 1000), attempt.id),
-     paymentEnabled: true,
-     expiresAt: attempt.expiresAt.toISOString(),
+     mode: "LIVE_CHECKOUT_READY", paymentEnabled: true,
+     transactionId, expiresAt: attempt.expiresAt.toISOString(),
    }, { headers });
  } catch {
    return NextResponse.json({ error: "Billing status unavailable." }, { status: 503, headers });
