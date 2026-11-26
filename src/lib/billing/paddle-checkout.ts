@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { randomBytes, createHmac } from "node:crypto";
+import { createHmac } from "node:crypto";
+import type { Prisma } from "@/generated/prisma/client";
 
 const PENDING = ["CREATING", "OPEN", "UNKNOWN", "PAID_OPEN"];
 const TRANSACTION = /^txn_[a-z0-9]{26}$/;
@@ -58,7 +59,7 @@ async function assertPrice(priceId: string, productId: string) {
 }
 
 async function withUserLock<T>(userId: string,
-  fn: (tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => Promise<T>): Promise<T> {
+  fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
   // Serializable checkout reservation is scoped to the same advisory lock used by legacy billing.
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`billing:${userId}`}, 0))`;
