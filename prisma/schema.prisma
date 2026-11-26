@@ -325,6 +325,7 @@ model PaddleLiveCheckoutAttempt {
   createdAt         DateTime @default(now())
   expiresAt         DateTime
   paidTransactionId String?
+  providerTransactionId String? @unique
   subscriptionId    String?
 }
 
