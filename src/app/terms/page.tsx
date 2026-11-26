@@ -14,7 +14,7 @@ export default function TermsPage() {
         </h1>
 
         <p className="mt-4 text-sm leading-6 text-gray-600">
-          Last updated: June 18, 2026
+          Last updated: November 26, 2026
         </p>
 
         <div className="mt-8 space-y-8 text-sm leading-7 text-gray-700">
@@ -86,20 +86,40 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-950">
-              5. Subscriptions and Billing
+              5. Subscriptions, Payments and Cancellation
             </h2>
-
             <p className="mt-3">
-              OrthodoxAI may offer paid subscription features through
-              third-party payment providers such as Stripe. Subscription pricing,
-              billing intervals, and available features may be shown on the
-              pricing page.
+              OrthodoxAI is an independent digital educational software service operated
+              from Serbia. The name OrthodoxAI identifies the product and does not
+              represent an incorporated company or a Church institution.
             </p>
-
             <p className="mt-3">
-              Subscription management, cancellation, and payment method updates
-              may be handled through the billing portal provided by the payment
-              processor.
+              The currently advertised OrthodoxAI Pro plan costs USD $7.99 per
+              month. The subscription renews automatically for successive monthly
+              periods until canceled. Before completing checkout, review the
+              final price, tax treatment, billing frequency and payment terms
+              shown by the payment processor.
+            </p>
+            <p className="mt-3">
+              For new purchases processed by Paddle, Paddle is the merchant
+              of record and authorized reseller, handling checkout, payments,
+              transaction receipts and refunds. Existing subscriptions may
+              continue to be handled by the payment provider named on the
+              original receipt.
+            </p>
+            <p className="mt-3">
+              You can cancel future subscription renewals through the billing
+              controls in your <Link href="/account" className="underline">account</Link>
+              or your payment provider&apos;s customer portal or receipt link.
+              Cancellation ordinarily takes effect at the end of the paid
+              period, subject to applicable law and refund rights. Cancellation
+              does not by itself refund an earlier payment.
+            </p>
+            <p className="mt-3">
+              Read our <Link href="/refund-policy" className="underline">Refund Policy</Link>
+              for refund requests, statutory withdrawal rights, technical
+              issues and buyer support. Nothing in these Terms removes
+              mandatory consumer protections.
             </p>
           </section>
 
@@ -151,8 +171,10 @@ export default function TermsPage() {
             </h2>
 
             <p className="mt-3">
-              For questions about these Terms, contact the operator of
-              OrthodoxAI.
+              For billing questions regarding purchases processed by Paddle, visit
+              <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="underline">Paddle Buyer Support</a>.
+              For product or account questions, contact the OrthodoxAI operator through
+              the support channel provided in your account or product communications.
             </p>
           </section>
         </div>

@@ -13,7 +13,7 @@ export default function PrivacyPage() {
         </h1>
 
         <p className="mt-4 text-sm leading-6 text-gray-600">
-          Last updated: June 18, 2026
+          Last updated: November 26, 2026
         </p>
 
         <div className="mt-8 space-y-8 text-sm leading-7 text-gray-700">
@@ -50,17 +50,23 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-gray-950">
               3. Payment Information
             </h2>
-
             <p className="mt-3">
-              Payments and subscriptions may be processed by Stripe or another
-              third-party payment provider. OrthodoxAI does not store full credit
-              card numbers on its own servers.
+              Where you buy a subscription through Paddle, Paddle acts as the
+              merchant of record and processes your purchase, payment method,
+              receipts, applicable taxes and refund requests. You can read
+              Paddle&apos;s <a href="https://www.paddle.com/legal/privacy"
+                target="_blank" rel="noopener noreferrer" className="underline">Privacy Notice</a>.
+              Previously created subscriptions may be processed by another
+              payment provider identified on the original receipt.
             </p>
-
             <p className="mt-3">
-              We may store payment-related identifiers such as a Stripe customer
-              ID, subscription ID, plan, and subscription status in order to
-              manage access to paid features.
+              OrthodoxAI does not store your full payment card number.
+              To confirm payments and grant the correct subscription access,
+              we may store provider customer and subscription identifiers,
+              checkout and transaction references, payment verification records,
+              billing status, renewal periods and related security audit events.
+              The payment provider may share billing status and purchase
+              identifiers with OrthodoxAI for these purposes.
             </p>
           </section>
 
@@ -143,9 +149,11 @@ export default function PrivacyPage() {
             </h2>
 
             <p className="mt-3">
-              Future versions of OrthodoxAI may include account deletion and
-              export tools. Until then, users may contact the operator of the
-              service to request account-related assistance.
+              You may request account deletion through available account controls.
+              Some billing records may need to be retained where legally required,
+              to resolve disputes, protect against duplicate charges or preserve
+              fraud and accounting records. If an active subscription or unresolved
+              payment prevents automatic deletion, contact support for assistance.
             </p>
           </section>
 

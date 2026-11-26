@@ -56,7 +56,7 @@ export function PricingCards() {
           </p>
 
           <p className="mt-2 text-sm text-gray-300">
-            Or {productCopy.proPlan.yearlyPrice}
+            Billed monthly. Automatically renews until canceled.
           </p>
 
           <p className="mt-3 text-sm leading-6 text-gray-300">

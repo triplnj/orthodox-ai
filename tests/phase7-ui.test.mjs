@@ -173,9 +173,9 @@ test("read recovery distinguishes expired sessions from offline errors and only 
   tree = ReadError({ message: "Expired", authenticationRequired: true, retry() { calls++; } }); assert.equal(nodes(tree, node => node.type === "button").length, 0); assert.equal(nodes(tree, node => node.props?.href === "/login").length, 1);
 });
 
-test("Pro presentation derives its allowance from the configured value and leaves prices intact", t => {
+test("Pro presentation derives its allowance and advertises only the available monthly price", t => {
   const h = harness(t); const { productCopy } = h.load("src/lib/productCopy.ts"); const { FULL_ACCESS_DAILY_CHAT_LIMIT } = h.load("src/lib/features.ts");
-  assert.ok(productCopy.proPlan.features.includes(`${FULL_ACCESS_DAILY_CHAT_LIMIT} AI questions per day`)); assert.equal(productCopy.proPlan.price, "$7.99/month"); assert.equal(productCopy.proPlan.yearlyPrice, "$69/year"); assert.doesNotMatch(JSON.stringify(productCopy), /unlimited/i);
+  assert.ok(productCopy.proPlan.features.includes(`${FULL_ACCESS_DAILY_CHAT_LIMIT} AI questions per day`)); assert.equal(productCopy.proPlan.price, "$7.99/month"); assert.equal(productCopy.proPlan.yearlyPrice, undefined); assert.doesNotMatch(JSON.stringify(productCopy), /unlimited/i);
 });
 
 test("shared CSS supplies visible focus, reduced motion and overflow wrapping without hiding content", () => {
