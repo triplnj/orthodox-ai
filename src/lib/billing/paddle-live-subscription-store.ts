@@ -19,6 +19,13 @@ export async function saveVerifiedPaddleLivePayment(payment: VerifiedPaddleLiveP
        AND "emailVerified" IS NOT NULL
        AND "billingDeletionRequestedAt" IS NULL LIMIT 1`;
    if (users.length !== 1) throw Error("Live account owner unavailable.");
+   const attempts = await tx.$queryRaw<Array<{ status: string; subscriptionId: string | null }>>`
+     SELECT "status","subscriptionId" FROM "PaddleLiveCheckoutAttempt"
+     WHERE "id" = ${payment.checkoutAttemptId} AND "userId" = ${payment.userId}
+     FOR UPDATE`;
+   if (attempts.length !== 1 || !["OPEN","PAID"].includes(attempts[0].status) ||
+       (attempts[0].subscriptionId && attempts[0].subscriptionId !== payment.subscriptionId))
+     throw Error("Paddle Live checkout attempt ownership conflict.");
    const customerOwners = await tx.$queryRaw<Array<{ userId: string | null }>>`
      SELECT "userId" FROM "PaddleLiveSubscription"
        WHERE "customerId" = ${payment.customerId}
@@ -48,5 +55,11 @@ export async function saveVerifiedPaddleLivePayment(payment: VerifiedPaddleLiveP
        AND "PaddleLiveSubscription"."customerId" = EXCLUDED."customerId"
      RETURNING "subscriptionId"`;
    if (updated.length !== 1) throw Error("Live subscription write conflict.");
+   await tx.$executeRaw`
+     UPDATE "PaddleLiveCheckoutAttempt" SET "status" = 'PAID',
+       "paidTransactionId" = ${payment.paidTransactionId},
+       "subscriptionId" = ${payment.subscriptionId}
+     WHERE "id" = ${payment.checkoutAttemptId} AND "userId" = ${payment.userId}`;
+
  }, { isolationLevel: "ReadCommitted", timeout: 15000, maxWait: 10000 });
 }
