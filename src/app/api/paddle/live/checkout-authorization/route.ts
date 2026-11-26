@@ -30,6 +30,9 @@ export async function POST(request: Request) {
    return NextResponse.json({ error: "Forbidden." }, { status: 403, headers });
  const user = await getSessionUser();
  if (!user) return NextResponse.json({ error: "Sign-in required." }, { status: 401, headers });
+ const adminIds = (process.env.BLOG_ADMIN_USER_IDS ?? "").split(",").map(id => id.trim());
+ if (adminIds.includes(user.id))
+   return NextResponse.json({ error: "Administrator account cannot be charged." }, { status: 403, headers });
  if (!user.emailVerified || user.billingDeletionRequestedAt ||
      ["fr-josiah-review@orthodoxai.app", "clergy-review@orthodoxai.app"].includes(user.email.toLowerCase())) {
    return NextResponse.json({ error: "Account not eligible." }, { status: 403, headers });
