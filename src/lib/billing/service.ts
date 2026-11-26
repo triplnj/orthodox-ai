@@ -254,6 +254,9 @@ export async function deleteAccount(userId: string) {
       throw new BillingError("Pending checkout must be reconciled before account deletion.");
     }
     const subscriptions = await inventory(tx, user);
+    if (subscriptions.some(s => s.provider === "PADDLE")) {
+      throw new BillingError("Paddle-linked account deletion requires final billing reconciliation by support; no subscriptions were changed.");
+    }
     for (const s of subscriptions) await providers.cancel(s);
     // Fetch the complete inventory again: do not trust cancellation responses.
     const after = await inventory(tx, user);
