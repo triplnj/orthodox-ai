@@ -33,3 +33,52 @@ The preflight in `src/lib/billing/paddle-live-config.ts` is **pure/read-only**. 
 - Verify production and staging database separation, webhook signing secret isolation, billing access expiry semantics, backups and observability.
 - Ensure user-visible account/subscription status is derived from verified current provider state.
 - **Do not enable Paddle in production or disable Lemon Squeezy yet.**
+
+## Implementation staged on PR #77 (26 Nov 2026)
+
+The following components are **source-only on the feature branch**, not in the
+production application or the production Neon database:
+
+- `prisma/migrations/20261126000000_paddle_live_staging/migration.sql`:
+  a separate `PaddleLiveEvent` audit ledger and `PaddleLiveSubscription`
+  verified-payment ledger. **Not applied** to production Neon.
+- `/api/paddle/webhook`: production requests are delegated to the new Live
+  handler only after this PR is deliberately merged. If
+  `PADDLE_LIVE_WEBHOOK_ENABLED` is absent/disabled, it responds **404**.
+  Sandbox Preview verification remains independent.
+- `/api/paddle/live/checkout-authorization`: internal, same-origin,
+  authenticated Live checkout proof route. It **never initiates a purchase**
+  and returns `paymentEnabled: false`. It requires ALL of:
+  `PADDLE_LIVE_CHECKOUT_ENABLED=enabled`,
+  `PADDLE_LIVE_GRANT_ACCESS=enabled`,
+  `PADDLE_LIVE_RECONCILIATION_READY=enabled`, and
+  `PADDLE_LIVE_BINDING_SECRET` (at least 32 chars). **Keep unset/disabled.**
+- `paddle-live-provider.ts` and `paddle-live-evidence.ts`:
+  direct Live Paddle API subscription+transaction verification, signed original
+  checkout ownership and fresh, completed positive payment for each cycle.
+- `paddle-live-subscription-store.ts`: idempotent, ownership-locked ledger
+  write for authenticated verified payment evidence; deliberately does **not**
+  change `users.plan` or enable paid functionality.
+
+**Do not activate the existing Paddle Live notification destination yet.**
+A received webhook is not, by itself, a paid entitlement. The production
+checkout UI, attempt ledger, verified access projection, refund/chargeback
+handling, failure/grace policy and migrations/rollback still need review and
+tests before any real payment.
+
+### Next steps before enabling any Live flag
+1. Apply migration ONLY after database backup, plan review, rollback preparation,
+   and operator authorization; verify no conflict with Stripe/Lemon tables.
+2. Add a dedicated `PADDLE_LIVE_BINDING_SECRET` (secure random 32+ chars) as
+   Production Sensitive; **do not send the value into chat**.
+3. Implement an idempotent live checkout attempt record before creating a payment,
+   prohibit overlapping legacy subscriptions, and connect the approved checkout
+   page with Paddle.js.
+4. Add refund/chargeback evidence checks and support for recoverable failures,
+   ensure customer portal and account deletion semantics work across providers.
+5. Add a read-through entitlement reconciliation that does not overwrite or
+   downgrade existing Lemon Squeezy subscribers.
+6. Test the deployment against an isolated Neon branch. Confirm Live merchant
+   approval and perform a user-approved controlled Live payment.
+7. Activate notification destination and payment UI only with explicit approval
+   after reconciliation and verified positive tests.
