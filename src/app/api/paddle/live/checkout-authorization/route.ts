@@ -171,7 +171,10 @@ export async function POST(request: Request) {
      mode: "LIVE_CHECKOUT_READY", paymentEnabled: true,
      transactionId, expiresAt: attempt.expiresAt.toISOString(),
    }, { headers });
- } catch {
-   return NextResponse.json({ error: "Billing status unavailable." }, { status: 503, headers });
+ } catch (error) {
+   const testDetail = process.env.NODE_ENV === "test" && error instanceof Error
+     ? { testDetail: error.message } : {};
+   return NextResponse.json({ error: "Billing status unavailable.", ...testDetail },
+     { status: 503, headers });
  }
 }
