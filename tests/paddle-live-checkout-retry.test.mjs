@@ -69,7 +69,7 @@ test("server checkout creates one Paddle transaction and safely reopens the same
      "next/server": { NextResponse: { json: (body, opts = {}) =>
        ({ body, status: opts.status ?? 200 }) } },
      "@/lib/session": { getSessionUser: async () => account },
-     "@/lib/prisma": { prisma: { $transaction: async fn => fn(tx) } },
+     "@/lib/prisma": { prisma: { $transaction: async fn => fn(tx), $queryRaw: tx.$queryRaw, $executeRaw: tx.$executeRaw } },
    }, {
      NODE_ENV: "test", VERCEL_ENV: "production", BLOG_ADMIN_USER_IDS: "unrelated_admin",
      PADDLE_LIVE_CHECKOUT_ENABLED: "enabled",
