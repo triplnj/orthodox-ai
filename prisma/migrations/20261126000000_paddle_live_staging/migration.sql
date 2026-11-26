@@ -46,6 +46,7 @@ CREATE TABLE "PaddleLiveCheckoutAttempt" (
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "expiresAt" TIMESTAMP(3) NOT NULL,
   "paidTransactionId" TEXT,
+  "providerTransactionId" TEXT UNIQUE,
   "subscriptionId" TEXT
 );
 CREATE UNIQUE INDEX "PaddleLiveCheckoutAttempt_one_pending_per_user"
