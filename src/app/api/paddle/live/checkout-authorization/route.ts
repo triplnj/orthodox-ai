@@ -47,10 +47,20 @@ export async function POST(request: Request) {
    // requiring reconciliation before the same customer can try again.
    const attempt = await prisma.$transaction(async tx => {
      await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`paddle-live-checkout:${user.id}`},0))`;
+     const actualUser = await tx.user.findUnique({
+       where: { id: user.id },
+       select: { emailVerified: true, billingDeletionRequestedAt: true,
+         subscriptionId: true, lemonSqueezySubscriptionId: true },
+     });
+     if (!actualUser?.emailVerified || actualUser.billingDeletionRequestedAt)
+       return null;
      const older = await tx.$queryRaw<Array<{ id: string }>>`
        SELECT "id" FROM "PaddleLiveCheckoutAttempt" WHERE "userId" = ${user.id}
        AND "status" IN ('OPEN','UNKNOWN') LIMIT 1`;
      if (older.length) return null;
+     // Legacy pointers are unambiguous blockers even before inventory recovery.
+     if (actualUser.subscriptionId || actualUser.lemonSqueezySubscriptionId)
+       return null;
      const legacy = await tx.billingSubscription.findMany({
        where: { userId: user.id },
        select: { status: true, currentPeriodEndsAt: true },
