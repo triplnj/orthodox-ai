@@ -6,8 +6,8 @@ const { makePaddleLiveBinding } = load("src/lib/billing/paddle-live-binding.ts")
 const { verifyPaddleLivePaidAccess: verify } = load("src/lib/billing/paddle-live-evidence.ts");
 const secret = "a".repeat(48);
 const first = "2026-11-25T17:04:46Z", renew = "2026-12-25T17:04:46Z";
-const binding = { ...makePaddleLiveBinding("qa_live_user", secret, Date.parse(first) / 1000),
-  orthodoxai_checkout_attempt_id: "11111111-2222-4333-8444-555555555555" };
+const binding = makePaddleLiveBinding("qa_live_user", secret, Date.parse(first) / 1000,
+  "11111111-2222-4333-8444-555555555555");
 const productId = "pro_" + "a".repeat(26), priceId = "pri_" + "b".repeat(26);
 const subscriptionId = "sub_" + "c".repeat(26), customerId = "ctm_" + "d".repeat(26);
 const tx = (id, created_at, changes = {}) => ({
