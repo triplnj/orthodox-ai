@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPaddleSignature } from "@/lib/billing/paddle-webhook";
+import { POST as receivePaddleLiveEvent } from "../live/webhook/route";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,6 +17,11 @@ const EXPECTED_BRANCH = "feature/paddle-transition-phase1-20261120";
  * Never point live Paddle notifications at this endpoint.
  */
 export async function POST(request: Request) {
+  // Production and Sandbox remain fully separated; Live is OFF by default.
+  // Legacy Lemon Squeezy and Stripe webhook paths remain unchanged.
+  if (process.env.VERCEL_ENV === "production") {
+    return receivePaddleLiveEvent(request);
+  }
   if (process.env.VERCEL_ENV !== "preview" ||
       process.env.VERCEL_GIT_COMMIT_REF !== EXPECTED_BRANCH) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
