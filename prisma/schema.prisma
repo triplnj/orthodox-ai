@@ -319,8 +319,8 @@ model BillingSubscription {
 
 model PaddleLiveCheckoutAttempt {
   id                String @id
-  userId            String
-  user              User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId            String?
+  user              User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   status            String @default("OPEN")
   createdAt         DateTime @default(now())
   expiresAt         DateTime
