@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { ensurePaddleLive } from "./PaddleLiveBridge";
 
 type CheckoutButtonProps = {
   children?: React.ReactNode;
@@ -24,6 +25,29 @@ export function CheckoutButton({
     setEmailVerificationRequired(false);
 
     try {
+      if (process.env.NEXT_PUBLIC_PADDLE_LIVE_CHECKOUT_ENABLED === "enabled") {
+        const paddle = await ensurePaddleLive();
+        const response = await fetch("/api/paddle/live/checkout-authorization", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setError(data.error ?? "Could not authorize Paddle checkout.");
+          return;
+        }
+        if (!data.paymentEnabled || data.mode !== "LIVE_CHECKOUT_READY" ||
+            typeof data.priceId !== "string" ||
+            !data.customData || typeof data.customData !== "object") {
+          setError("Paddle Live checkout is not enabled.");
+          return;
+        }
+        paddle.Checkout.open({
+          items: [{ priceId: data.priceId, quantity: 1 }],
+          customData: data.customData,
+        });
+        return;
+      }
       const response = await fetch("/api/lemonsqueezy/create-checkout", {
         method: "POST",
       });
