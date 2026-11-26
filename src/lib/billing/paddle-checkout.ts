@@ -117,6 +117,7 @@ export async function createPaddleLiveCheckout(userId: string) {
     const response = await paddleApi("transactions", { method: "POST", body: {
       items: [{ price_id: priceId, quantity: 1 }],
       collection_mode: "automatic",
+      enable_checkout: true,
       custom_data: { userId, billingAttemptId: reservation.attemptId, binding },
     } });
     const data = response.data as { id?: string; items?: Array<{ price?: { id?: string } }> } | undefined;
