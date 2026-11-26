@@ -34,7 +34,5 @@ CREATE INDEX "PaddleLiveSubscription_userId_idx"
  ON "PaddleLiveSubscription" ("userId", "periodEndsAt");
 CREATE INDEX "PaddleLiveSubscription_customerId_idx"
  ON "PaddleLiveSubscription" ("customerId");
--- Enforce one-to-one customer ownership when ownership is known.
-CREATE UNIQUE INDEX "PaddleLiveSubscription_customer_owner_unique"
- ON "PaddleLiveSubscription" ("customerId", "userId")
- WHERE "userId" IS NOT NULL;
+-- Customer-to-user collisions must be checked under a transaction lock;
+-- a customer may have multiple legitimate subscription records.
