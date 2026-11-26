@@ -71,6 +71,21 @@ export async function POST(request: Request) {
        }
      }
    }
+   if (process.env.PADDLE_LIVE_RECONCILIATION_READY === "enabled" &&
+       ["subscription.updated", "subscription.canceled",
+        "subscription.paused", "subscription.past_due"].includes(e.event_type)) {
+     const data = e.data as Record<string, unknown>;
+     if (typeof data.id === "string" && /^sub_[a-z0-9]{26}$/.test(data.id)) {
+       const { retrievePaddleLiveSubscriptionState } =
+         await import("@/lib/billing/paddle-live-provider");
+       const state = await retrievePaddleLiveSubscriptionState(data.id);
+       if (state) {
+         const { reconcilePaddleLiveTermination } =
+           await import("@/lib/billing/paddle-live-subscription-store");
+         await reconcilePaddleLiveTermination(state);
+       }
+     }
+   }
    return NextResponse.json({ received: true, mode: "LIVE_AUDIT_ONLY", duplicate: result === "duplicate" },
      { headers: noStore });
  } catch {
