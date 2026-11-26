@@ -100,8 +100,10 @@ export default async function ProPage() {
 
                 <CustomerPortalButton />
             </>
-                ) : (
-            paddleLive ? <PaddleCheckoutButton /> : <CheckoutButton>Upgrade to Pro</CheckoutButton>
+                ) : paddleLive ? (
+              <PaddleCheckoutButton />
+            ) : (
+              <CheckoutButton>Upgrade to Pro</CheckoutButton>
             )}
             <Link
               href="/pricing"
