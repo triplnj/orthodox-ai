@@ -62,7 +62,7 @@ export async function POST(request: Request) {
        AND "status" IN ('OPEN','UNKNOWN') LIMIT 1`;
      if (older.length) {
        const prior = older[0];
-       if (prior.status === "OPEN" && prior.providerTransactionId && prior.expiresAt > new Date())
+       if (prior.status === "OPEN" && prior.providerTransactionId)
          return { id: prior.id, expiresAt: prior.expiresAt, transactionId: prior.providerTransactionId };
        return null;
      }
