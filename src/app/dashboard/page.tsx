@@ -21,6 +21,7 @@ type DashboardData = {
     plan: "FREE" | "PRO";
     subscriptionStatus?: string | null;
     adminAccess?: boolean;
+    billingProvider?: "PADDLE" | "LEMONSQUEEZY" | "STRIPE";
   };
   isPro: boolean;
   stats: {
@@ -292,7 +293,7 @@ function DashboardContent() {
             )}
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              {user.adminAccess ? null : isPro ? <CustomerPortalButton paddleSandbox={user.id === "qa_patristic_20261109"} /> : <CheckoutButton />}
+              {user.adminAccess ? null : isPro ? <CustomerPortalButton paddleSandbox={user.id === "qa_patristic_20261109"} paddleLive={user.billingProvider === "PADDLE"} /> : <CheckoutButton />}
 
               <Link
                 href="/pricing"
