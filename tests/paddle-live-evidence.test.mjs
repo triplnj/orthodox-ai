@@ -30,6 +30,8 @@ test("Live renewal accepts verified initial owner and paid new billing cycle", (
   const proof = verify(sub, [original, renewal], config, today);
   assert.equal(proof?.userId, "qa_live_user");
   assert.equal(proof?.paidTransactionId, renewal.id);
+  assert.equal(proof?.originalTransactionId, original.id);
+  assert.equal(proof?.checkoutAttemptId, "11111111-2222-4333-8444-555555555555");
   assert.equal(proof?.periodEndsAt.toISOString(), "2027-01-25T17:04:46.000Z");
   assert.equal(proof?.cancelAtPeriodEnd, true);
 });
