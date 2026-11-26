@@ -49,7 +49,7 @@ test("Paddle Live webhook cannot run in Preview even if manually enabled", async
 test("Live webhook rejects unsigned or malformed authenticated content", async () => {
   const route = loadLive({ PADDLE_LIVE_WEBHOOK_ENABLED: "enabled" });
   assert.equal((await route.POST(request(body, false))).status, 401);
-  assert.equal((await route.POST(request("{", true))).status, 401);
+  assert.equal((await route.POST(request("{", true))).status, 400);
 });
 
 test("Live checkout authorization requires independent future reconciliation gate", async () => {
