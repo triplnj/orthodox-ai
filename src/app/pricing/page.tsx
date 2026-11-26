@@ -1,5 +1,6 @@
 import { FULL_ACCESS_DAILY_CHAT_LIMIT } from "@/lib/features";
 import { PricingCards } from "@/components/pricing/PricingCards";
+import { PaddleLivePaymentLinkBootstrap } from "@/components/billing/PaddleLiveBridge";
 import { productCopy } from "@/lib/productCopy";
 
 const faqs = [
@@ -28,6 +29,7 @@ const faqs = [
 export default function PricingPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
+      <PaddleLivePaymentLinkBootstrap />
       <section className="mx-auto max-w-3xl text-center">
         <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
           Pricing
