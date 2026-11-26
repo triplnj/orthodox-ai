@@ -97,10 +97,15 @@ async function refreshInventory(tx: Tx, user: User, rows: BillingSubscription[])
       }
       for (const customer of customers) {
         if (provider !== "PADDLE" && user[customerField] && user[customerField] !== customer) throw new BillingError("Customer ownership conflict.");
-        const owners = provider === "PADDLE"
-          ? await tx.billingSubscription.findMany({ where: { provider: "PADDLE", providerCustomerId: customer }, select: { userId: true }, take: 100 })
-          : await tx.user.findMany({ where: { [customerField]: customer }, select: { id: true }, take: 2 });
-        if (owners.some(owner => provider === "PADDLE" ? owner.userId !== user.id : owner.id !== user.id)) throw new BillingError("Ambiguous customer ownership.");
+        if (provider === "PADDLE") {
+          const owners = await tx.billingSubscription.findMany({
+            where: { provider: "PADDLE", providerCustomerId: customer }, select: { userId: true }, take: 100,
+          });
+          if (owners.some(owner => owner.userId !== user.id)) throw new BillingError("Ambiguous Paddle customer ownership.");
+        } else {
+          const owners = await tx.user.findMany({ where: { [customerField]: customer }, select: { id: true }, take: 2 });
+          if (owners.some(owner => owner.id !== user.id)) throw new BillingError("Ambiguous billing customer ownership.");
+        }
         for (const s of await providers.inventory(provider, customer)) {
           if (s.provider !== provider || s.providerCustomerId !== customer) throw new BillingError("Provider inventory ownership mismatch.");
           snapshots.set(s.providerSubscriptionId, s);
