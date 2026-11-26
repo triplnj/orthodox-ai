@@ -82,8 +82,8 @@ export async function POST(request: Request) {
    return NextResponse.json({
      mode: "LIVE_CHECKOUT_READY",
      priceId,
-     customData: { ...makePaddleLiveBinding(user.id, secret),
-       orthodoxai_checkout_attempt_id: attempt.id },
+     customData: makePaddleLiveBinding(user.id, secret,
+       Math.floor(Date.now() / 1000), attempt.id),
      paymentEnabled: true,
      expiresAt: attempt.expiresAt.toISOString(),
    }, { headers });
