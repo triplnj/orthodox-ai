@@ -51,6 +51,7 @@ export function verifyPaddleLivePaidAccess(
  let userId: string | null = null;
  let checkoutAttemptId: string | null = null;
  let originalTransactionId: string | null = null;
+ let originalAt: Date | null = null;
  let current: { id: string; time: Date } | null = null;
  for (const value of transactionValues) {
    const tx = obj(value);
@@ -74,7 +75,10 @@ export function verifyPaddleLivePaidAccess(
      userId = signedOwner.userId;
      checkoutAttemptId = attemptId;
      // The oldest signed transaction is the original purchase, not a renewal.
-     if (!originalTransactionId) originalTransactionId = tx.id as string;
+     if (!originalAt || time < originalAt) {
+       originalTransactionId = tx.id as string;
+       originalAt = time;
+     }
    }
    if (time.getTime() >= start.getTime() - 3600_000 && time < end &&
        (!current || time > current.time)) current = { id: tx.id as string, time };
