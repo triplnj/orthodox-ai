@@ -68,13 +68,13 @@ export async function refreshAccess(user: User): Promise<BillingUser> {
  * continue using the strict complete inventory, never this partial result. */
 async function refreshInventory(tx: Tx, user: User, rows: BillingSubscription[]) {
   const unavailable = new Set<string>(), conflicted = new Set<string>();
-  for (const provider of ["STRIPE", "LEMONSQUEEZY"] as const) {
+  for (const provider of ["STRIPE", "LEMONSQUEEZY", "PADDLE"] as const) {
     const customerField = provider === "STRIPE" ? "stripeCustomerId" : "lemonSqueezyCustomerId";
-    const pointer = provider === "STRIPE" ? user.subscriptionId : user.lemonSqueezySubscriptionId;
+    const pointer = provider === "STRIPE" ? user.subscriptionId : provider === "LEMONSQUEEZY" ? user.lemonSqueezySubscriptionId : null;
     const ownRows = rows.filter(row => row.provider === provider);
     const ids = new Set([...ownRows.map(row => row.providerSubscriptionId), ...(pointer ? [pointer] : [])]);
     const customers = new Set(ownRows.map(row => row.providerCustomerId).filter((id): id is string => Boolean(id)));
-    if (user[customerField]) customers.add(user[customerField]!);
+    if (provider !== "PADDLE" && user[customerField]) customers.add(user[customerField]!);
     if (!ids.size && !customers.size) continue;
     const snapshots = new Map<string, Subscription>();
     try {
@@ -86,8 +86,8 @@ async function refreshInventory(tx: Tx, user: User, rows: BillingSubscription[])
         if (local && local.userId !== user.id) throw new BillingError("Subscription ownership conflict.");
       }
       for (const customer of customers) {
-        if (user[customerField] && user[customerField] !== customer) throw new BillingError("Customer ownership conflict.");
-        const owners = await tx.user.findMany({ where: { [customerField]: customer }, take: 2 });
+        if (provider !== "PADDLE" && user[customerField] && user[customerField] !== customer) throw new BillingError("Customer ownership conflict.");
+        const owners = provider === "PADDLE" ? [] : await tx.user.findMany({ where: { [customerField]: customer }, take: 2 });
         if (owners.some(owner => owner.id !== user.id)) throw new BillingError("Ambiguous customer ownership.");
       }
       for (const id of ids) {
@@ -141,6 +141,7 @@ async function save(tx: Tx, user: User, s: Subscription) {
   // Never overwrite the current provider pointer with a historical subscription.
   const latest = await tx.user.findUnique({ where: { id: user.id } });
   if (!latest) throw new BillingError("User not found.", 404);
+  if (s.provider === "PADDLE") return;
   const current = s.provider === "STRIPE" ? latest.subscriptionId : latest.lemonSqueezySubscriptionId;
   if (!current || current === s.providerSubscriptionId) {
     await tx.user.update({ where: { id: user.id }, data: s.provider === "STRIPE"
@@ -162,14 +163,14 @@ async function inventory(tx: Tx, user: User): Promise<Subscription[]> {
   const subscriptions = new Map<string, Subscription>();
   for (const ref of references) {
     const s = await providers.retrieve(ref.provider, ref.id);
-    const expected = s.provider === "STRIPE" ? user.stripeCustomerId : user.lemonSqueezyCustomerId;
+    const expected = s.provider === "STRIPE" ? user.stripeCustomerId : s.provider === "LEMONSQUEEZY" ? user.lemonSqueezyCustomerId : null;
     if (expected && expected !== s.providerCustomerId) throw new BillingError("Customer ownership conflict.");
     subscriptions.set(`${s.provider}:${s.providerSubscriptionId}`, s);
     customers.set(`${s.provider}:${s.providerCustomerId}`, { provider: s.provider, id: s.providerCustomerId });
   }
   for (const customer of customers.values()) {
     const field = customer.provider === "STRIPE" ? "stripeCustomerId" : "lemonSqueezyCustomerId";
-    const owners = await tx.user.findMany({ where: { [field]: customer.id }, take: 2 });
+    const owners = customer.provider === "PADDLE" ? [] : await tx.user.findMany({ where: { [field]: customer.id }, take: 2 });
     if (owners.some(owner => owner.id !== user.id)) throw new BillingError("Ambiguous customer ownership.");
     for (const s of await providers.inventory(customer.provider, customer.id)) {
       if (s.providerCustomerId !== customer.id) throw new BillingError("Provider inventory ownership mismatch.");
@@ -180,6 +181,7 @@ async function inventory(tx: Tx, user: User): Promise<Subscription[]> {
   return [...subscriptions.values()];
 }
 export async function checkout(userId: string, provider: Provider) {
+  if (provider === "PADDLE") throw new BillingError("Use the dedicated Paddle checkout route.", 400);
   if (provider === "LEMONSQUEEZY") await providers.assertLiveLemonConfiguration();
   const reservation = await locked(userId, async (tx, user) => {
     if (!user.emailVerified) throw new BillingError("Please verify your email address before upgrading to OrthodoxAI Pro.", 403);
@@ -260,6 +262,10 @@ export async function deleteAccount(userId: string) {
     for (const s of after) customers.set(`${s.provider}:${s.providerCustomerId}`, s);
     if (user.stripeCustomerId) await providers.assertNoDebt("STRIPE", user.stripeCustomerId);
     if (user.lemonSqueezyCustomerId) await providers.assertNoDebt("LEMONSQUEEZY", user.lemonSqueezyCustomerId);
+    for (const row of await tx.billingSubscription.findMany({ where: { userId, provider: "PADDLE" } })) {
+      if (!row.providerCustomerId) throw new BillingError("Paddle customer identity requires billing review.");
+      await providers.assertNoDebt("PADDLE", row.providerCustomerId);
+    }
     for (const s of customers.values()) await providers.assertNoDebt(s.provider, s.providerCustomerId);
     const retainedUntil = new Date(Date.now() + RETENTION_MS);
     await tx.billingSubscription.updateMany({ where: { userId }, data: { retainedUntil } });
@@ -275,7 +281,7 @@ export async function webhook(notice: Notice) {
   // Tombstones deliberately cannot reattach deleted accounts via stale metadata.
   if (row && !row.userId) return;
   const customerField = notice.provider === "STRIPE" ? "stripeCustomerId" : "lemonSqueezyCustomerId";
-  const matches = notice.customerId ? await prisma.user.findMany({ where: { [customerField]: notice.customerId }, take: 2 }) : [];
+  const matches = notice.provider !== "PADDLE" && notice.customerId ? await prisma.user.findMany({ where: { [customerField]: notice.customerId }, take: 2 }) : [];
   if (matches.length > 1) throw new BillingError("Ambiguous billing customer mapping.");
   const userId = row?.userId ?? matches[0]?.id ?? notice.userId;
   if (!userId) throw new BillingError("Subscription owner could not be verified.");
@@ -287,10 +293,11 @@ export async function webhook(notice: Notice) {
     if (receipt?.status === "PROCESSED") return;
     const s = await providers.retrieve(notice.provider, notice.subscriptionId);
     if (notice.customerId && notice.customerId !== s.providerCustomerId) throw new BillingError("Webhook customer mismatch.");
-    const expected = notice.provider === "STRIPE" ? user.stripeCustomerId : user.lemonSqueezyCustomerId;
+    const expected = notice.provider === "PADDLE" ? null : notice.provider === "STRIPE" ? user.stripeCustomerId : user.lemonSqueezyCustomerId;
     const attempt = notice.attemptId ? await tx.billingCheckoutAttempt.findUnique({ where: { id: notice.attemptId } }) : null;
     if (expected ? expected !== s.providerCustomerId : !(row?.userId === user.id ||
-        (attempt?.userId === user.id && attempt.provider === notice.provider))) {
+        (attempt?.userId === user.id && attempt.provider === notice.provider &&
+         (notice.provider !== "PADDLE" || (attempt.providerCheckoutId && attempt.status === "OPEN"))))) {
       throw new BillingError("Unverified subscription/customer association.");
     }
     if (notice.userId && notice.userId !== user.id) throw new BillingError("Webhook owner mismatch.");
@@ -302,7 +309,7 @@ export async function webhook(notice: Notice) {
       await tx.billingCheckoutAttempt.update({ where: { id: attempt.id }, data: {
         // Lemon hosted links may remain reusable after payment. Keep them fenced
         // until a fresh provider read proves closure; Stripe sessions are consumed.
-        status: notice.provider === "STRIPE" ? "COMPLETED" : "PAID_OPEN", checkoutUrl: null } });
+        status: ["STRIPE", "PADDLE"].includes(notice.provider) ? "COMPLETED" : "PAID_OPEN", checkoutUrl: null } });
     }
     await tx.billingWebhookEvent.upsert({ where: { provider_eventId: receiptKey }, create: {
       ...receiptKey, eventType: notice.eventType, providerSubscriptionId: notice.subscriptionId,
