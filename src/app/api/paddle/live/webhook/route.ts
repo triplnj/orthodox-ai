@@ -50,6 +50,27 @@ export async function POST(request: Request) {
      event_id: string; event_type: string; occurred_at?: unknown;
      data: Record<string, unknown>;
    });
+   // Explicitly separate receipt from payment verification. This branch stays
+   // unreachable while Live flags are disabled in Vercel.
+   if (process.env.PADDLE_LIVE_GRANT_ACCESS === "enabled" &&
+       process.env.PADDLE_LIVE_RECONCILIATION_READY === "enabled" &&
+       ["transaction.completed", "subscription.activated",
+        "subscription.updated", "subscription.resumed"].includes(e.event_type)) {
+     const data = e.data as Record<string, unknown>;
+     const subscriptionId = e.event_type.startsWith("subscription.") ?
+       data.id : data.subscription_id;
+     if (typeof subscriptionId === "string" &&
+         /^sub_[a-z0-9]{26}$/.test(subscriptionId)) {
+       const { retrieveVerifiedPaddleLivePayment } =
+         await import("@/lib/billing/paddle-live-provider");
+       const paid = await retrieveVerifiedPaddleLivePayment(subscriptionId);
+       if (paid) {
+         const { saveVerifiedPaddleLivePayment } =
+           await import("@/lib/billing/paddle-live-subscription-store");
+         await saveVerifiedPaddleLivePayment(paid);
+       }
+     }
+   }
    return NextResponse.json({ received: true, mode: "LIVE_AUDIT_ONLY", duplicate: result === "duplicate" },
      { headers: noStore });
  } catch {
