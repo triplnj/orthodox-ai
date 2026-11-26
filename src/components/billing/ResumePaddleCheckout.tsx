@@ -3,14 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-declare global {
-  interface Window {
-    Paddle?: {
-      Initialize: (options: { token: string; checkout?: { settings: { displayMode: "overlay" } } }) => void;
-      Checkout: { open: (options: { transactionId: string }) => void };
-    };
-  }
-}
 export function ResumePaddleCheckout({ transactionId, token, enabled }: {
   transactionId: string | null; token: string | null; enabled: boolean;
 }) {
