@@ -37,15 +37,11 @@ export function CheckoutButton({
           return;
         }
         if (!data.paymentEnabled || data.mode !== "LIVE_CHECKOUT_READY" ||
-            typeof data.priceId !== "string" ||
-            !data.customData || typeof data.customData !== "object") {
+            typeof data.transactionId !== "string" || !/^txn_[a-z0-9]{26}$/.test(data.transactionId)) {
           setError("Paddle Live checkout is not enabled.");
           return;
         }
-        paddle.Checkout.open({
-          items: [{ priceId: data.priceId, quantity: 1 }],
-          customData: data.customData,
-        });
+        paddle.Checkout.open({ transactionId: data.transactionId });
         return;
       }
       const response = await fetch("/api/lemonsqueezy/create-checkout", {
