@@ -36,3 +36,21 @@ CREATE INDEX "PaddleLiveSubscription_customerId_idx"
  ON "PaddleLiveSubscription" ("customerId");
 -- Customer-to-user collisions must be checked under a transaction lock;
 -- a customer may have multiple legitimate subscription records.
+
+-- Attempts are fenced across all concurrent Live checkouts for an account.
+CREATE TABLE "PaddleLiveCheckoutAttempt" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE RESTRICT,
+  "status" TEXT NOT NULL DEFAULT 'OPEN'
+    CHECK ("status" IN ('OPEN','PAID','RECONCILED','EXPIRED','UNKNOWN')),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  "paidTransactionId" TEXT,
+  "subscriptionId" TEXT
+);
+CREATE UNIQUE INDEX "PaddleLiveCheckoutAttempt_one_pending_per_user"
+  ON "PaddleLiveCheckoutAttempt" ("userId")
+  WHERE "status" IN ('OPEN','UNKNOWN');
+CREATE UNIQUE INDEX "PaddleLiveCheckoutAttempt_paid_transaction_unique"
+  ON "PaddleLiveCheckoutAttempt" ("paidTransactionId")
+  WHERE "paidTransactionId" IS NOT NULL;
