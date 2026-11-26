@@ -31,6 +31,10 @@ export function Footer() {
             Privacy
           </Link>
 
+          <Link href="/refund-policy" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
+            Refund Policy
+          </Link>
+
           <Link href="/disclaimer" className="inline-flex min-h-11 items-center py-2 hover:text-gray-950">
             Disclaimer
           </Link>
