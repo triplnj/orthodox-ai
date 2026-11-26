@@ -4,7 +4,6 @@ import { ProStatusCard } from "@/components/pro/ProStatusCard";
 import { getCurrentUser } from "@/lib/auth";
 import { isProUser } from "@/lib/subscription";
 import { productCopy } from "@/lib/productCopy";
-import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { PaddleCheckoutButton } from "@/components/billing/PaddleCheckoutButton";
 import { CustomerPortalButton } from "@/components/billing/CustomerPortalButton";
 
@@ -103,7 +102,7 @@ export default async function ProPage() {
                 ) : paddleLive ? (
               <PaddleCheckoutButton />
             ) : (
-              <CheckoutButton>Upgrade to Pro</CheckoutButton>
+              <span className="rounded-lg border border-gray-300 bg-gray-100 px-6 py-3 text-sm font-medium text-gray-600">Pro subscriptions are temporarily unavailable.</span>
             )}
             <Link
               href="/pricing"
@@ -115,7 +114,7 @@ export default async function ProPage() {
 
           {!isPro && (
             <p className="mt-5 text-xs leading-5 text-gray-500">
-             {paddleLive ? "Paddle securely processes your payment. Pro activates after server-side verification." : "You will be redirected to Lemon Squeezy to complete your subscription. Only live payments activate Pro."}
+             {paddleLive ? "Paddle securely processes your payment. Pro activates after server-side verification." : "Subscriptions will reopen after secure payment verification is complete."}
             </p>
           )}
         </div>
