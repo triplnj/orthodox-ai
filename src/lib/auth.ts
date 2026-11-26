@@ -16,6 +16,43 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   }
   const user = await refreshAccess(sessionUser);
 
+  // Preview-only Paddle Sandbox overlay. The independent provider evidence
+  // check runs on access reads; no simulated event or stored cache alone
+  // can authorize Pro, and production remains on existing providers.
+  if (process.env.VERCEL_ENV === "preview" &&
+      process.env.VERCEL_GIT_COMMIT_REF === "feature/paddle-transition-phase1-20261120" &&
+      process.env.PADDLE_SANDBOX_GRANT_ACCESS === "enabled" &&
+      user.emailVerified && !user.billingDeletionRequestedAt) {
+    const { getPaddleSandboxPreviewAccess } =
+      await import("@/lib/billing/paddle-preview-entitlement");
+    const until = await getPaddleSandboxPreviewAccess(user.id);
+    if (until) {
+      return {
+        id: user.id, email: user.email, name: user.name, plan: "PRO" as const,
+        subscriptionStatus: "active", billingAccessUntil: until,
+        reviewAccess: user.reviewAccess === true,
+      };
+    }
+  }
+
+
+  if (process.env.VERCEL_ENV === "production" &&
+      process.env.PADDLE_LIVE_GRANT_ACCESS === "enabled" &&
+      process.env.PADDLE_LIVE_RECONCILIATION_READY === "enabled" &&
+      process.env.PADDLE_LIVE_WEBHOOK_ENABLED === "enabled" &&
+      user.emailVerified && !user.billingDeletionRequestedAt) {
+    const { getPaddleLiveAccess } =
+      await import("@/lib/billing/paddle-live-entitlement");
+    const until = await getPaddleLiveAccess(user.id);
+    if (until) return {
+      id: user.id, email: user.email, name: user.name,
+      plan: "PRO" as const, subscriptionStatus: "active",
+      billingAccessUntil: until,
+      billingProvider: "PADDLE" as const,
+      reviewAccess: user.reviewAccess === true,
+    };
+  }
+
   return {
     id: user.id,
     email: user.email,

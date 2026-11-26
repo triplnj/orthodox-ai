@@ -1,0 +1,180 @@
+# Paddle transition: Phase 1 — safe preparation (20 Nov 2026)
+
+**Status: NOT LIVE. No Paddle checkout route is exposed, no subscriptions are provisioned, and no existing billing records are changed.** Preserve the existing Lemon Squeezy and Stripe legacy integrations until verified Paddle onboarding and sandbox end-to-end testing.
+
+## Sandbox catalog created by account owner
+- Product: `OrthodoxAI Pro`; ID `pro_01m84hpaffkkag5zftcz3nk9qz`
+- Monthly price: `pri_01m84j47gzd7tw449trss5wsh4` (user-configured USD 7.99/month; still confirm directly via the sandbox API before relying on it)
+- These IDs are **Sandbox only** and are recorded in `src/lib/billing/paddle-sandbox-catalog.ts`.
+- Do not put them in live environment variables, enable checkout or grant subscriptions based solely on supplied IDs.
+
+## Next Paddle Sandbox settings
+1. In **My account → Settings → Authentication → Client-side tokens**, create a token for OrthodoxAI QA, beginning `test_` (safe for front-end but place in a preview-specific environment variable).
+2. In **Authentication → API keys**, create a Sandbox API key with the minimum permissions needed, for example catalog read and later sandbox checkout/transaction operations. **Do not share the API key in GitHub or a chat.**
+3. Set the Sandbox API base URL `https://sandbox-api.paddle.com`; never send sandbox credentials to `https://api.paddle.com`.
+4. In Checkout configuration set and approve a testing payment link/domain as required by Paddle, using a safe preview test host; do not point live users to this integration.
+5. Add secrets only to a dedicated preview/staging environment after verifying that it cannot reuse the live app's database for payment state changes.
+
+## External account gate
+1. Create a Paddle seller account at https://login.paddle.com/ and a **separate** sandbox at https://sandbox-login.paddle.com/.
+2. Confirm that Paddle can onboard the *actual* Serbian legal entity / sole proprietor, and verify payout currency, payout method, minimum payout and banking documents. Availability by country is not approval.
+3. Submit `orthodoxai.app` and `www.orthodoxai.app` for website approval, and confirm privacy, terms, refund policy, price and product descriptions are linked.
+4. In sandbox, create a recurring **USD 7.99/month** OrthodoxAI Pro product and price. Do not copy test price IDs to production.
+5. Create a separate sandbox webhook notification destination and signing secret, with events `transaction.completed`, `subscription.created`, `subscription.activated`, `subscription.updated`, `subscription.canceled`, `subscription.past_due` (review Paddle's current event names when enabling).
+6. Keep API keys and webhook signing secrets only in Vercel environment variables, never in Git.
+
+## Proposed environment variable contract (not created yet)
+- `PADDLE_ENVIRONMENT=sandbox|production` (default disabled)
+- `PADDLE_API_KEY` (server-only, environment-specific)
+- `PADDLE_WEBHOOK_SECRET` (server-only, environment-specific)
+- `PADDLE_PRO_PRICE_ID` (server-only)
+- `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` (client-side token, not API key)
+- `PADDLE_CHECKOUT_ENABLED=false` (must remain false until explicit go-live review)
+
+## Billing data architecture and safety gates
+- Retain existing `BillingSubscription`, `BillingCheckoutAttempt`, `BillingWebhookEvent` data; **do not** relabel old Lemon Squeezy attempts or erase records.
+- A new Paddle provider requires a **separately reviewed schema migration**: both `BillingSubscription` and `BillingCheckoutAttempt`/database CHECK constraints must accept `PADDLE` and any sandbox-specific test provider; user-to-Paddle customer/subscription mapping must be designed.
+- Build a sandbox checkout that carries immutable internal `userId` and an unguessable checkout attempt identifier as Paddle custom data, with verified server-side ownership before fulfillment.
+- Paddle.js/browser success redirects are **not proof of payment**. Accept only authenticated, idempotent Paddle webhooks, corroborated by Paddle API subscription/invoice/transaction state, before granting Pro.
+- Verify raw-body `Paddle-Signature` timestamp/HMAC with `src/lib/billing/paddle-webhook.ts`; the module is currently isolated and unused.
+- Handle event ordering, duplicate deliveries, cancellations, refunds, past-due/grace periods, and provider outages. Never silently downgrade legitimate existing paid users.
+- Keep sandbox and live data segregated. Never let a sandbox event modify a live `users.plan` or entitlement.
+- No changes to current checkout/navigation/layout in phase 1.
+
+## Safe implementation sequence
+1. **This PR:** documentation, pure webhook signature verifier and tests. No production behavioral change.
+2. After Paddle sandbox credentials: implement sandbox-only API client, signed webhook ingestion and idempotency tests, with feature flag off.
+3. Review and apply reversible migration; add Paddle as a first-class billing provider (entitlement, history, recover, customer portal, cancellation, account deletion, test isolation).
+4. Perform full sandbox lifecycle: free -> checkout -> payment -> webhook -> Pro -> renewal -> failed charge -> cancel/refund, including spoofed and duplicate webhooks.
+5. Verify merchant approval, payout eligibility and live product; use a controlled live checkout with explicit owner approval.
+6. Only then move customer CTA to Paddle. Retain records and reconcile any live Lemon subscriptions individually before shutdown.
+
+## First run
+`node --test tests/paddle-webhook.test.mjs`
+
+## Official references
+- https://www.paddle.com/help/start/account-verification/which-countries-are-supported-by-paddle
+- https://www.paddle.com/help/start/account-verification/what-is-domain-verification
+- https://developer.paddle.com/get-started/quickstart/
+- https://developer.paddle.com/webhooks/about/signature-verification/
+- https://developer.paddle.com/build/go-live-checklist/
+
+## Preview catalog verification without a login
+
+The dedicated `GET /api/admin/paddle/catalog-check` is an **intentionally public but read-only diagnostic** on the exact Vercel Preview branch `feature/paddle-transition-phase1-20261120`. It needs no OrthodoxAI login, session cookie, AUTH_RATE_LIMIT_SECRET or database, and performs only two fixed, server-side Paddle Sandbox catalog GETs using a secret server-side token. The response exposes public product and price metadata only, never the API key, raw upstream responses, customers, or subscription data. It returns 404 everywhere except the named Vercel Preview branch. Set `PADDLE_API_KEY` on that branch, redeploy, then open `https://<preview-host>/api/admin/paddle/catalog-check` directly. A 200 response with `verified: true` and `amountMinorUnits: "799"` confirms the USD 7.99 monthly catalog. A 503 means API key, permissions or network need checking; a 409 means the catalog's settings do not match. Do not enable live checkout based on this read-only check.
+
+The verification endpoint is **not an administrator dashboard or an access-controlled management API**. Remove or disable it after checking, or protect the entire Preview deployment with Vercel Deployment Protection. Do not extend this unauthenticated endpoint with any account, checkout, subscription, write or privileged operations.
+
+## Catalog verification outcome — 23 Nov 2026
+
+The account owner opened the branch-only read-only diagnostic endpoint and reported `verified: true`: product `pro_01m84hpaffkkag5zftcz3nk9qz` active, price `pri_01m84j47gzd7tw449trss5wsh4` active, USD 799 minor units, month interval with frequency 1, Sandbox mode. This confirms *catalog reads only*, not checkout, payment, webhook delivery or plan provisioning.
+
+The one-time public catalog diagnostic route was subsequently deleted from this PR. A future deployment of this PR will not expose it. Existing preview deployment URLs may temporarily retain its compiled route and should not be treated as permanent diagnostics.
+
+Next prerequisites: a separate `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` for Sandbox client integration, a Paddle Sandbox webhook signing secret, and a proven isolated test database + authenticated QA user before implementing payment-state writes. Do not use production Neon to simulate webhook deliveries.
+
+## Phase 1 webhook receiver — 23 Nov 2026
+
+`POST /api/paddle/webhook` is now present in the **Paddle feature branch only**, under all of these restrictions:
+- Requires Vercel `preview` and exact `feature/paddle-transition-phase1-20261120` branch; production requests return 404.
+- Requires separate Paddle Sandbox destination secret stored as `PADDLE_WEBHOOK_SECRET`, configured **only** for this Preview branch. It is distinct from the API key, and must never be committed to Git or shared in chat.
+- Rejects invalid HMAC signatures, stale timestamps (30 seconds), large bodies and malformed event envelopes.
+- Returns `{ received: true, verified: true, mode: "SANDBOX_VERIFY_ONLY" }` only after verification. **Does not save webhooks, subscriptions, transactions, or entitlement data and DOES NOT deliver Pro.** Never treat the response as transaction fulfillment.
+- An acknowledged notification is discarded; use this receiver only for initial connection/signature testing, not for checkout or full payment lifecycle testing. Implement idempotent persistent sandbox event processing using a separate DB before creating any test checkout.
+
+Paddle Sandbox Notifications → New destination: Webhook, URL `https://<actual-preview-host>/api/paddle/webhook`, usage type Platform (or Both if testing Paddle simulations), API version 1, Description `OrthodoxAI Sandbox – Subscription and Payment Events`. Select `transaction.completed`, `transaction.payment_failed`, `transaction.past_due`, `transaction.canceled`, `subscription.created`, `subscription.activated`, `subscription.updated`, `subscription.canceled`, `subscription.past_due`, `subscription.paused`, `subscription.resumed`. **Do not save destination until the Preview URL and signing secret setup are ready.** Paddle needs to reach the Preview without a Vercel login wall. A webhook endpoint secret is generated **after** creating a destination, so temporary setup may require creating the destination first with events disabled or a placeholder, then setting the secret and enabling delivery; validate exact workflow in UI before doing so.
+
+The Vercel account's old-email security challenge currently prevents the owner from changing project settings. This blocks setting `PADDLE_WEBHOOK_SECRET` on the correct Preview project. Do not bypass account verification or use shared Production env vars to work around this.
+
+## Deployment refresh after webhook secret setup
+
+After configuring `PADDLE_WEBHOOK_SECRET` only in the Paddle Preview branch, a new branch commit triggers a fresh Preview deployment and loads the updated environment. This is intentionally not a production redeployment. The initial webhook receiver verifies signatures and acknowledges test events but does not process subscription state or write to Neon. Never send actual payments or production notifications to it.
+
+## Sandbox signing secret 503 troubleshooting
+
+A 503 response with `Sandbox webhook verification is not configured.` comes from `src/app/api/paddle/webhook/route.ts` and means that `PADDLE_WEBHOOK_SECRET` is absent in this deployment or does not start with the official Paddle notification destination signing secret prefix `pdl_ntfset_`. The Paddle API secret key and client-side token must **not** be used here. Verify the Preview target, exact branch restriction, and that the notification destination signing secret is used. Create a new Preview deployment after changing the variable, and update the Paddle destination URL to that new deployment's hostname while retaining the bypass query parameter if needed. Do not paste secret values into chat or commits.
+
+## Preview rebuild after notification Signing Secret configuration (23 November 2026)
+
+This documentation-only commit triggers a fresh Vercel Preview deployment on the Paddle feature branch after the owner entered the destination Signing Secret as `PADDLE_WEBHOOK_SECRET`. Production and `main` remain untouched. Check that the new deployment is READY, use its exact URL for webhook simulations, and keep the Vercel bypass token private and rotated if exposed.
+
+## Separate Paddle QA database branch (23 Nov 2026)
+
+Created Neon branch `orthodoxai-paddle-sandbox-2026-11-23` (`br-red-waterfall-asdlxovu`) in project `winter-mountain-30736951`, cloned from existing non-production branch `br-empty-breeze-asd2dqrq`, **not** the production branch. Creation returned `init`, so confirm it becomes ready. This is a dedicated branch intended for Paddle sandbox integration tests, and is **not yet connected to the Vercel Preview deployment**. Do not run billing mutations before verifying the correct `DATABASE_URL`/direct URL/Prisma settings are selected in the actual Vercel project `orthodox-ai` and branch-restricted to `feature/paddle-transition-phase1-20261120`. The Vercel connector is only authorized for a differently named project and cannot establish these settings. Never paste connection strings into chat or commits.
+
+Next work in the feature PR: add server-side Paddle Sandbox checkout with authenticated user binding, explicit sandbox-only controls, no entitlements on redirect, and event persistence/reconciliation with idempotent handling and strict ownership checks. Do not switch the production Upgrade button or enable live events until full billing lifecycle is tested.
+
+## Preview DATABASE_URL set for Paddle QA (23 Nov 2026)
+
+Owner reports adding `DATABASE_URL` scoped to `feature/paddle-transition-phase1-20261120` Preview and pointing it at dedicated Neon branch `br-red-waterfall-asdlxovu`. Prisma runtime `src/lib/prisma.ts` uses `DATABASE_URL`. Migration tooling `prisma.config.ts` prefers `DIRECT_URL` when set: **before any Prisma migrate, confirm `DIRECT_URL` is absent or points to the same QA branch**. Adding a Preview env variable requires a fresh Preview deployment. Connection has not been independently verified on the running deployment, and no migration or subscription write has been executed. Production checkout remains Lemon Squeezy, no Paddle checkout activated.
+
+## Stage 1 — user-bound Sandbox checkout intent (24 November 2026)
+
+Added `POST /api/paddle/checkout-binding` (Preview feature branch only, same-origin POST required, session and verified email required), and `src/lib/billing/paddle-checkout-binding.ts`. The endpoint returns the fixed Sandbox price plus short-lived, HMAC-signed `customData` bound to the authenticated user, valid for 30 minutes. Tests cover tampering, expiry, invalid secrets and incorrect user IDs. The server-generated `customData` is intended to accompany the future Paddle Checkout.open call and be checked again in a signed webhook *before* reconciling subscription ownership. Paddle documents that checkout custom data is propagated to transaction and subscription events: https://developer.paddle.com/build/transactions/custom-data/ .
+
+**Stage 1 is preparation only:** `paymentEnabled:false`, `mode:SANDBOX_BINDING_ONLY`; no Paddle Checkout.open call, payment, database writes or entitlement grants. Do not accept a browser-reported checkout success as verified ownership. Stage 2 needs persistent idempotency/ownership event storage and a verified QA database connection before payments can be enabled. Rotate any exposed Vercel protection bypass token.
+
+## Stage 2 — QA-only idempotent event receipt (24 November 2026)
+
+The dedicated Neon QA branch `br-red-waterfall-asdlxovu` contains the `PaddleSandboxBranchGuard` table with matching branch ID. This table and marker were created **only** in QA, not in production. The existing `BillingWebhookEvent` schema is reused, avoiding a global migration at this stage.
+
+`src/lib/billing/paddle-event-store.ts` persists signed webhook event **metadata only** (Paddle event ID/type, SHA-256 body digest, optional subscription ID and occurrence time). The uniqueness key `(provider, eventId)` makes replay idempotent. A conflicting duplicate ID with different content fails closed. All writes are inside a transaction that first checks the QA-only database guard. No customer/payment JSON or credentials are stored.
+
+The endpoint `POST /api/paddle/webhook` remains **verify-only by default**. Persistence requires explicit, branch-scoped Preview variable `PADDLE_SANDBOX_STORE_EVENTS=enabled`. Do **not** set it until the running Preview's `DATABASE_URL` is confirmed to point at `br-red-waterfall-asdlxovu`. If DB guard is missing or database is unavailable, the endpoint returns HTTP 503 and doesn't acknowledge unpersisted events. If enabled with correct QA DB, response is `mode:SANDBOX_EVENT_STORED` and `duplicate:true|false`.
+
+Events remain in `RECEIVED` state, with **no entitlement, user-plan, subscription-state, or checkout mutation**. Automatic Pro grants still require independent verified transaction/customer ownership, paid amount and recurring period checks and an idempotent reconciler, which are future steps.
+
+New isolated tests cover initial insertion, same-event deduplication, altered-body collision, and missing QA guard. Do not run Sandbox checkout as if it grants Pro.
+
+## Preview refresh after setting PADDLE_SANDBOX_STORE_EVENTS (24 November 2026)
+
+A Preview-only documentation commit was made to load newly saved branch-restricted environment variables. If webhook simulation continues returning `SANDBOX_VERIFY_ONLY`, ensure `PADDLE_SANDBOX_STORE_EVENTS` is set **exactly** to `enabled` in the correct Vercel project and Git branch; the running preview will not report `SANDBOX_EVENT_STORED` otherwise. Update the Paddle destination to the newest deployment hostname (retain a valid, confidential Vercel bypass parameter when required). Do not enable production billing or change customer entitlements.
+
+## Fix for `Sandbox event persistence unavailable` (24 November 2026)
+
+Root cause confirmed in isolated Neon QA schema: the existing `BillingWebhookEvent_provider_check` constraint permits only `STRIPE` and `LEMONSQUEEZY`. Inserting `PADDLE` into that legacy table therefore fails, even when webhook signatures and QA connection are valid. The legacy table and its constraint are intentionally **unchanged**.
+
+Created a new `PaddleSandboxWebhookEvent` table in QA branch `br-red-waterfall-asdlxovu` only. The event store now checks `PaddleSandboxBranchGuard` and writes to this dedicated table through parameterized SQL using `INSERT ... ON CONFLICT DO NOTHING RETURNING`. Replays compare event type and SHA-256 digest. Regression tests were updated; a fresh Preview deployment was triggered. The feature flag remains Preview-only. No Pro entitlements or existing billing tables were touched. Verify the new deployment with a new Paddle simulation and then read the new Neon QA table to confirm persistence.
+
+## Stage 3 — guarded Paddle Sandbox paid-access integration (24 November 2026)
+
+**Code prepared, not activated or end-to-end tested.** New modules:
+- `paddle-paid-evidence.ts`: strictly validates live-fetched active monthly Pro subscription and completed nonzero USD transaction, immutable catalog and customer ID, current paid period, and signed checkout-user binding. Simulator payloads are never themselves payment proof.
+- `paddle-provider-evidence.ts`: fetches subscription and transactions directly from Paddle **Sandbox** API with server-side credentials only; refuses production and unrecognized IDs.
+- `paddle-sandbox-access.ts`: stores verified entitlement in dedicated Neon QA table, guarded by the Neon QA-only marker and ownership checks; never alters old Stripe/Lemon records or persistent User.plan.
+- `paddle-preview-entitlement.ts`: read-through Paddle verification of QA access before returning Pro; provider failures fail closed.
+- Preview-only `getCurrentUser` overlay and webhook reconciliation are gated by **`PADDLE_SANDBOX_GRANT_ACCESS=enabled`** (not set by this change).
+
+Dedicated `PaddleSandboxAccess` table was created only in Neon QA branch `br-red-waterfall-asdlxovu`. No production migrations were run. Newly added tests `tests/paddle-paid-evidence.test.mjs` cover positive evidence and failed ownership/price/period/payment checks. Tests and live paid checkout **still require execution and validation** before enabling the flag. In particular, webhook simulator IDs beginning `ntfsimevt_` never invoke granting logic.
+
+**Do not set the grant flag yet.** Remaining blockers: checkout is intentionally not open (`paymentEnabled:false`); test with a real Paddle Sandbox checkout/transaction and verify Paddle API response shapes, completeness of transaction pagination, and cancellation/refund paths before granting Pro, plus the existing billing service's Stripe/Lemon checkout safety checks must remain intact.
+
+Docs: https://developer.paddle.com/build/subscriptions/provision-access-webhooks/ and https://developer.paddle.com/api-reference/subscriptions/get-subscription/ .
+
+## Stage 4 — isolated Sandbox checkout (24 November 2026)
+
+New Preview-only test page: `/paddle-sandbox/checkout`, with `src/components/billing/PaddleSandboxCheckout.tsx`. Uses official Paddle.js from `https://cdn.paddle.com/paddle/v2/paddle.js`, sets environment `sandbox`, initializes with `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, and calls `Paddle.Checkout.open({ items:[{priceId,quantity:1}],customData })`. Server-generated customData contains the authenticated account binding; no user IDs, amounts or price IDs are accepted from client input. API: `POST /api/paddle/checkout-binding`.
+
+Checkout requires **explicit branch-restricted Vercel Preview Config** `PADDLE_SANDBOX_CHECKOUT_ENABLED=enabled` plus existing `PADDLE_SANDBOX_STORE_EVENTS=enabled`. Do NOT set `PADDLE_SANDBOX_GRANT_ACCESS` yet. Newly added route tests verify anonymous, unverified, bad-origin, production and wrong-branch requests are rejected. Existing Lemon Squeezy / Pro production buttons stay unchanged.
+
+Test only with registered and email-verified QA users in isolated Neon branch `br-red-waterfall-asdlxovu`. The checkout is for a Sandbox recurring monthly $7.99 plan. After Vercel build passes, use Paddle sandbox test card `4242 4242 4242 4242`, any future expiry and any CVC, per official Sandbox docs. No real card/payment. Paddle may require a Sandbox default payment link configured and accessible from the same domain.
+
+**Before enabling Pro**: verify real Paddle API subscription/transaction schema and customData after a completed test card checkout, webhook delivery and QA database rows; then test cancellation, failed renewal, partial/full refunds, stale events, and provider API outage. Current access flag is still OFF. The independent paid evidence verifier now follows transaction pagination and fails closed on incomplete pages. Simulator notifications are not substitute for a paid transaction. Never deploy these Sandbox-only modules to live production as payment provider integration.
+
+See https://developer.paddle.com/paddle-js/methods/paddle-checkout-open/ and https://developer.paddle.com/sdks/sandbox/ .
+
+## Preview checkout configuration refresh (25 November 2026)
+
+Refresh commit to load the branch-scoped Vercel Preview setting `PADDLE_SANDBOX_CHECKOUT_ENABLED=enabled`. No checkout or entitlement changes. Confirm Vercel READY before QA. `PADDLE_SANDBOX_GRANT_ACCESS` must remain unset; run first test-card checkout only on `/paddle-sandbox/checkout` with a verified Preview test account.
+
+## Preview auth rate limit secret deployment refresh (25 November 2026)
+
+Non-functional Preview redeploy trigger to load the branch-scoped `AUTH_RATE_LIMIT_SECRET` for QA login. This commit does not change production billing code or secrets. Confirm the variable was saved to the Preview feature branch before testing sign-in.
+
+## Preview grant-access configuration deployment refresh (25 November 2026)
+
+Documentation-only commit to trigger a Preview deployment after setting branch-scoped `PADDLE_SANDBOX_GRANT_ACCESS=enabled`. No production variables or source code changed in this commit. Run QA-only `/paddle-sandbox/qa-activation` on the new READY Preview deployment; do not make another purchase.
+
+## Preview AI quota timezone redeploy (25 November 2026)
+
+Documentation-only deployment trigger after setting Preview branch variable `AI_QUOTA_TIMEZONE=UTC`. This allows the Dashboard quota clock to initialize in Vercel's production-mode Preview runtime; no production settings or billing logic are changed.

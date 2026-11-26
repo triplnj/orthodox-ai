@@ -96,7 +96,7 @@ export default async function ProPage() {
                 Go to Today
             </Link>
 
-                <CustomerPortalButton />
+                <CustomerPortalButton paddleLive={user.billingProvider === "PADDLE"} />
             </>
                 ) : (
             <CheckoutButton>Upgrade to Pro</CheckoutButton>
@@ -111,7 +111,7 @@ export default async function ProPage() {
 
           {!isPro && (
             <p className="mt-5 text-xs leading-5 text-gray-500">
-             You will be redirected to Lemon Squeezy to complete your subscription. Only live payments activate Pro.
+             Your payment provider will securely process your subscription. Only a verified payment activates Pro.
             </p>
           )}
         </div>

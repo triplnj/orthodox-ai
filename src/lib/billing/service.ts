@@ -245,6 +245,21 @@ export async function deleteAccount(userId: string) {
   // Commit the fence BEFORE any network request; cancellation failures must retain it.
   await locked(userId, async (tx, user) => {
     if (protectedReview(user.email)) throw new BillingError("This review account cannot be deleted.", 403);
+    if (process.env.VERCEL_ENV === "production" &&
+        process.env.PADDLE_LIVE_GRANT_ACCESS === "enabled") {
+      const unsettled = await tx.$queryRaw<Array<{ subscriptionId: string }>>`
+        SELECT "subscriptionId" FROM "PaddleLiveSubscription"
+        WHERE "userId" = ${userId}
+          AND ("status" NOT IN ('canceled','expired')
+            OR "periodEndsAt" IS NULL OR "periodEndsAt" > CURRENT_TIMESTAMP)
+        LIMIT 1`;
+      const attempts = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "PaddleLiveCheckoutAttempt"
+        WHERE "userId" = ${userId} AND "status" IN ('OPEN','UNKNOWN')
+        LIMIT 1`;
+      if (unsettled.length || attempts.length)
+        throw new BillingError("Paddle subscription must be canceled, expire, and have its billing attempts reconciled before account deletion.");
+    }
     await tx.user.update({ where: { id: userId }, data: { billingDeletionRequestedAt: user.billingDeletionRequestedAt ?? new Date() } });
   });
   await locked(userId, async (tx, user) => {

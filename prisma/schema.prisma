@@ -33,6 +33,8 @@ model User {
   billingAccessUntil         DateTime?
   billingGraceUntil          DateTime?
   legacyReconciliationDeadlineAt DateTime? @db.Timestamp(3)
+  paddleLiveSubscriptions    PaddleLiveSubscription[]
+  paddleLiveCheckoutAttempts PaddleLiveCheckoutAttempt[]
   billingSubscriptions       BillingSubscription[]
   billingCheckoutAttempts    BillingCheckoutAttempt[]
   messages                   ChatMessage[]
@@ -313,6 +315,50 @@ model BillingSubscription {
   updatedAt DateTime @updatedAt
   @@unique([provider, providerSubscriptionId], map: "BillingSubscription_provider_subscription_key")
   @@index([userId])
+}
+
+model PaddleLiveCheckoutAttempt {
+  id                String @id
+  userId            String?
+  user              User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status            String @default("OPEN")
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime
+  paidTransactionId String?
+  providerTransactionId String? @unique
+  subscriptionId    String?
+}
+
+model PaddleLiveEvent {
+  eventId         String @id
+  eventType       String
+  subscriptionId  String?
+  payloadDigest   String @db.Char(64)
+  occurredAt      DateTime?
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime?
+  status          String @default("RECEIVED")
+
+  @@index([subscriptionId, receivedAt])
+}
+
+model PaddleLiveSubscription {
+  subscriptionId    String @id
+  customerId        String
+  userId            String?
+  user              User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  productId         String
+  priceId           String
+  status            String @default("unverified")
+  periodEndsAt      DateTime?
+  paidTransactionId String?
+  verifiedAt        DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId, periodEndsAt])
+  @@index([customerId])
 }
 
 model BillingWebhookEvent {
