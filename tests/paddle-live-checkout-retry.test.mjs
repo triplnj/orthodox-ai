@@ -71,7 +71,7 @@ test("server checkout creates one Paddle transaction and safely reopens the same
      "@/lib/session": { getSessionUser: async () => account },
      "@/lib/prisma": { prisma: { $transaction: async fn => fn(tx) } },
    }, {
-     VERCEL_ENV: "production", BLOG_ADMIN_USER_IDS: "unrelated_admin",
+     NODE_ENV: "test", VERCEL_ENV: "production", BLOG_ADMIN_USER_IDS: "unrelated_admin",
      PADDLE_LIVE_CHECKOUT_ENABLED: "enabled",
      PADDLE_LIVE_GRANT_ACCESS: "enabled",
      PADDLE_LIVE_RECONCILIATION_READY: "enabled",
@@ -84,7 +84,7 @@ test("server checkout creates one Paddle transaction and safely reopens the same
    });
    const route = load("src/app/api/paddle/live/checkout-authorization/route.ts");
    const first = await route.POST(request);
-   assert.equal(first.status, 200);
+   assert.equal(first.status, 200, JSON.stringify(first.body));
    assert.equal(first.body.transactionId, transactionId);
    assert.equal(first.body.paymentEnabled, true);
    const repeat = await route.POST(request);
