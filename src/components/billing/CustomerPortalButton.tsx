@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-export function CustomerPortalButton({ paddleSandbox = false }: { paddleSandbox?: boolean }) {
+export function CustomerPortalButton({ paddleSandbox = false, paddleLive = false }: { paddleSandbox?: boolean; paddleLive?: boolean }) {
   const pending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function CustomerPortalButton({ paddleSandbox = false }: { paddleSandbox?
     setError(null);
 
     try {
-      const response = await fetch(paddleSandbox ? "/api/paddle/qa-customer-portal" : "/api/lemonsqueezy/customer-portal", {
+      const response = await fetch(paddleLive ? "/api/paddle/live/customer-portal" : paddleSandbox ? "/api/paddle/qa-customer-portal" : "/api/lemonsqueezy/customer-portal", {
         method: "POST",
       });
 
