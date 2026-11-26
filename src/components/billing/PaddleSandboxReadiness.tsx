@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Script from "next/script";
 
-type PaddleSdk = {
+export type PaddleSdk = {
   Environment: { set: (environment: "sandbox") => void };
-  Initialize: (options: { token: string }) => void;
+  Initialize: (options: { token: string; eventCallback?: (e: { name?: string }) => void }) => void;
+  Checkout: { open(options: { items: Array<{ priceId: string; quantity: number }>; customData: Record<string, unknown> }): void };
 };
 
 declare global {
