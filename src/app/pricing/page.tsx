@@ -49,13 +49,21 @@ export default function PricingPage() {
       </p>
 
       <p className="mt-2 text-sm text-gray-500">
-        Early access pricing. Cancel anytime.
+        USD $7.99 per month, recurring until canceled. Manage or cancel your subscription through the billing portal.
       </p>
       </section>
 
       <section className="mt-12">
         <PricingCards />
       </section>
+
+      <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-6 text-gray-600">
+        Payments for new subscriptions will be processed by Paddle once the
+        checkout is approved and enabled. See our{" "}
+        <a className="underline" href="/refund-policy">Refund Policy</a>
+        {" "}and{" "}
+        <a className="underline" href="/terms">Terms of Service</a>.
+      </p>
 
       <section className="mt-14 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-semibold text-gray-950">
