@@ -34,6 +34,7 @@ model User {
   billingGraceUntil          DateTime?
   legacyReconciliationDeadlineAt DateTime? @db.Timestamp(3)
   paddleLiveSubscriptions    PaddleLiveSubscription[]
+  paddleLiveCheckoutAttempts PaddleLiveCheckoutAttempt[]
   billingSubscriptions       BillingSubscription[]
   billingCheckoutAttempts    BillingCheckoutAttempt[]
   messages                   ChatMessage[]
@@ -314,6 +315,17 @@ model BillingSubscription {
   updatedAt DateTime @updatedAt
   @@unique([provider, providerSubscriptionId], map: "BillingSubscription_provider_subscription_key")
   @@index([userId])
+}
+
+model PaddleLiveCheckoutAttempt {
+  id                String @id
+  userId            String
+  user              User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status            String @default("OPEN")
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime
+  paidTransactionId String?
+  subscriptionId    String?
 }
 
 model PaddleLiveEvent {
