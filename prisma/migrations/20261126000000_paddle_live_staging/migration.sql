@@ -40,7 +40,7 @@ CREATE INDEX "PaddleLiveSubscription_customerId_idx"
 -- Attempts are fenced across all concurrent Live checkouts for an account.
 CREATE TABLE "PaddleLiveCheckoutAttempt" (
   "id" TEXT PRIMARY KEY,
-  "userId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE RESTRICT,
+  "userId" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
   "status" TEXT NOT NULL DEFAULT 'OPEN'
     CHECK ("status" IN ('OPEN','PAID','RECONCILED','EXPIRED','UNKNOWN')),
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -50,7 +50,7 @@ CREATE TABLE "PaddleLiveCheckoutAttempt" (
 );
 CREATE UNIQUE INDEX "PaddleLiveCheckoutAttempt_one_pending_per_user"
   ON "PaddleLiveCheckoutAttempt" ("userId")
-  WHERE "status" IN ('OPEN','UNKNOWN');
+  WHERE "userId" IS NOT NULL AND "status" IN ('OPEN','UNKNOWN');
 CREATE UNIQUE INDEX "PaddleLiveCheckoutAttempt_paid_transaction_unique"
   ON "PaddleLiveCheckoutAttempt" ("paidTransactionId")
   WHERE "paidTransactionId" IS NOT NULL;
