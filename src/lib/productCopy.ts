@@ -27,7 +27,6 @@ export const productCopy = {
   proPlan: {
     name: "Pro",
     price: "$7.99/month",
-    yearlyPrice: "$69/year",
     description:
       `For believers who want daily structure, deeper explanations, and up to ${FULL_ACCESS_DAILY_CHAT_LIMIT} chat questions per day.`,
     features: [
