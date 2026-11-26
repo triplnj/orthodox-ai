@@ -63,7 +63,7 @@ export async function paddleRetrieve(id: string): Promise<Subscription> {
     // a completed, positive charge for the exact Pro price and customer.
     let cursor: string | null = null;
     for (let page = 0; page < 10; page++) {
-      const q = new URLSearchParams({ subscription_id: id, per_page: "100" });
+      const q = new URLSearchParams({ subscription_id: id, per_page: "30" });
       if (cursor) q.set("after", cursor);
       const result = await paddleApi<Page<PaddleTransaction>>(`transactions?${q.toString()}`);
       if (!Array.isArray(result.data) || !result.meta?.pagination) throw new BillingError("Paddle paid inventory unavailable.", 503);
@@ -76,8 +76,11 @@ export async function paddleRetrieve(id: string): Promise<Subscription> {
       }
       if (!result.meta.pagination.has_more) break;
       const next = result.meta.pagination.next;
-      if (!next || !/^[a-z0-9_]+$/i.test(next)) throw new BillingError("Paddle inventory pagination invalid.", 503);
-      cursor = next;
+      if (!next) throw new BillingError("Paddle inventory pagination invalid.", 503);
+      const nextUrl = new URL(next);
+      if (nextUrl.origin !== "https://api.paddle.com" || nextUrl.pathname !== "/transactions") throw new BillingError("Paddle inventory next page is invalid.", 503);
+      cursor = nextUrl.searchParams.get("after");
+      if (!cursor || !/^txn_[a-z0-9]{26}$/.test(cursor)) throw new BillingError("Paddle inventory cursor invalid.", 503);
       if (page === 9) throw new BillingError("Paddle transaction inventory exceeds verification bounds.", 503);
     }
   }
@@ -105,8 +108,11 @@ export async function paddleInventory(customerId: string): Promise<Subscription[
     }
     if (!result.meta.pagination.has_more) return subscriptions;
     const next = result.meta.pagination.next;
-    if (!next || !/^[a-z0-9_]+$/i.test(next)) throw new BillingError("Paddle inventory cursor invalid.", 503);
-    cursor = next;
+    if (!next) throw new BillingError("Paddle inventory cursor invalid.", 503);
+    const nextUrl = new URL(next);
+    if (nextUrl.origin !== "https://api.paddle.com" || nextUrl.pathname !== "/subscriptions") throw new BillingError("Paddle pagination endpoint mismatch.", 503);
+    cursor = nextUrl.searchParams.get("after");
+    if (!cursor || !/^sub_[a-z0-9]{26}$/.test(cursor)) throw new BillingError("Paddle inventory cursor invalid.", 503);
   }
   throw new BillingError("Paddle inventory exceeds verification bounds.", 503);
 }
