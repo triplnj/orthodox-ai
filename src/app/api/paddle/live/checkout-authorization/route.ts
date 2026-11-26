@@ -134,10 +134,14 @@ export async function POST(request: Request) {
        cache: "no-store", signal: AbortSignal.timeout(12000),
      });
      if (!created.ok) {
+       // Definitive 4xx validation/authentication rejections cannot charge a
+       // customer; a network timeout or 5xx remains uncertain and fenced.
+       const definitelyRejected = [400, 401, 403, 404, 422].includes(created.status);
        await prisma.$executeRaw`
-         UPDATE "PaddleLiveCheckoutAttempt" SET "status" = 'UNKNOWN'
+         UPDATE "PaddleLiveCheckoutAttempt"
+         SET "status" = ${definitelyRejected ? "EXPIRED" : "UNKNOWN"}
          WHERE "id" = ${attempt.id} AND "userId" = ${user.id} AND "status" = 'OPEN'`;
-       throw Error("Paddle transaction creation uncertain.");
+       throw Error("Paddle transaction creation did not complete.");
      }
      const value: unknown = await created.json();
      const transaction = value && typeof value === "object" && "data" in value ?
