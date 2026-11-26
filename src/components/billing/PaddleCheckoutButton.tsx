@@ -13,7 +13,7 @@ let paddleScript: Promise<PaddleApi> | undefined;
 function loadPaddle(): Promise<PaddleApi> {
   if (window.Paddle) return Promise.resolve(window.Paddle);
   if (!paddleScript) {
-    paddleScript = new Promise((resolve, reject) => {
+    paddleScript = new Promise<PaddleApi>((resolve, reject) => {
       const script = document.createElement("script");
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.async = true;
@@ -22,7 +22,7 @@ function loadPaddle(): Promise<PaddleApi> {
       document.head.appendChild(script);
     }).catch(error => { paddleScript = undefined; throw error; });
   }
-  return paddleScript;
+  return paddleScript!;
 }
 
 export function PaddleCheckoutButton() {
