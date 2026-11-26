@@ -63,3 +63,18 @@ export async function saveVerifiedPaddleLivePayment(payment: VerifiedPaddleLiveP
 
  }, { isolationLevel: "ReadCommitted", timeout: 15000, maxWait: 10000 });
 }
+
+/** Current Paddle state controls termination; never trust stale webhook ordering. */
+export async function reconcilePaddleLiveTermination(state: {
+ subscriptionId: string; customerId: string; status: string;
+}) {
+ if (process.env.VERCEL_ENV !== "production" ||
+     process.env.PADDLE_LIVE_WEBHOOK_ENABLED !== "enabled" ||
+     process.env.PADDLE_LIVE_RECONCILIATION_READY !== "enabled") return;
+ if (!["canceled", "paused", "past_due"].includes(state.status)) return;
+ await prisma.$executeRaw`
+   UPDATE "PaddleLiveSubscription" SET "status" = ${state.status},
+     "updatedAt" = CURRENT_TIMESTAMP
+   WHERE "subscriptionId" = ${state.subscriptionId}
+     AND "customerId" = ${state.customerId}`;
+}
