@@ -112,6 +112,14 @@ export async function POST(request: Request) {
      const value: unknown = await previous.json();
      const transaction = value && typeof value === "object" && "data" in value ?
        (value as { data: Record<string, unknown> }).data : null;
+     if (transaction?.id === transactionId && transaction.status === "canceled") {
+       await prisma.$executeRaw`
+         UPDATE "PaddleLiveCheckoutAttempt" SET "status" = 'EXPIRED'
+         WHERE "id" = ${attempt.id} AND "userId" = ${user.id}
+           AND "status" = 'OPEN' AND "providerTransactionId" = ${transactionId}`;
+       return NextResponse.json({ error: "Previous checkout was canceled. Try again to start a new checkout." },
+         { status: 409, headers });
+     }
      if (!transaction || transaction.id !== transactionId ||
          !["draft", "ready"].includes(String(transaction.status)) ||
          transaction.collection_mode !== "automatic")
