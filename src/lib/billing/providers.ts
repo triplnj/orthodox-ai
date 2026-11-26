@@ -1,7 +1,8 @@
 import "server-only";
 import { getStripe } from "@/lib/stripe";
+import { paddleRetrieve, paddleInventory, paddlePortal, paddleCancel, paddleHasUnresolvedDebt } from "./paddle-provider";
 
-export type Provider = "STRIPE" | "LEMONSQUEEZY";
+export type Provider = "STRIPE" | "LEMONSQUEEZY" | "PADDLE";
 export class BillingError extends Error {
   constructor(message: string, readonly status = 409) { super(message); }
 }
@@ -72,6 +73,7 @@ export async function assertLiveLemonConfiguration(): Promise<void> {
 }
 
 export async function retrieve(provider: Provider, id: string): Promise<Subscription> {
+  if (provider === "PADDLE") return paddleRetrieve(id);
   if (provider === "LEMONSQUEEZY") {
     const subscription = fromLemon((await lemon(`subscriptions/${encodeURIComponent(id)}`)).data);
     subscription.paidVerified = false;
@@ -99,6 +101,7 @@ export async function retrieve(provider: Provider, id: string): Promise<Subscrip
     providerUpdatedAt: null, paidVerified: Boolean(invoice?.status === "paid" && invoice.amount_paid > 0) };
 }
 export async function inventory(provider: Provider, customerId: string): Promise<Subscription[]> {
+  if (provider === "PADDLE") return paddleInventory(customerId);
   const ids: string[] = [];
   if (provider === "STRIPE") {
     let cursor: string | undefined;
@@ -125,14 +128,17 @@ export async function inventory(provider: Provider, customerId: string): Promise
 }
 export function terminal(s: Subscription): boolean {
   return s.provider === "STRIPE" ? ["canceled", "incomplete_expired"].includes(s.status)
+    : s.provider === "PADDLE" ? ["canceled", "cancelled"].includes(s.status)
     : ["cancelled", "expired"].includes(s.status);
 }
 export async function cancel(s: Subscription) {
   if (terminal(s)) return;
+  if (s.provider === "PADDLE") return paddleCancel(s);
   if (s.provider === "STRIPE") await getStripe().subscriptions.cancel(s.providerSubscriptionId, {}, { timeout: 10000, maxNetworkRetries: 0 });
   else await lemon(`subscriptions/${encodeURIComponent(s.providerSubscriptionId)}`, "DELETE");
 }
 export async function assertNoDebt(provider: Provider, customerId: string) {
+  if (provider === "PADDLE") return paddleHasUnresolvedDebt(customerId);
   if (provider === "STRIPE") {
     for (const status of ["open", "draft"] as const) {
       const invoices = await getStripe().invoices.list({ customer: customerId, status, limit: 1 }, { timeout: 10000, maxNetworkRetries: 0 });
@@ -156,7 +162,7 @@ export async function assertNoDebt(provider: Provider, customerId: string) {
     }
   }
 }
-export async function createCheckout(provider: Provider, user: { id: string; email: string; name: string | null; stripeCustomerId: string | null }, attemptId: string) {
+export async function createCheckout(provider: Exclude<Provider, "PADDLE">, user: { id: string; email: string; name: string | null; stripeCustomerId: string | null }, attemptId: string) {
   const appUrl = required("NEXT_PUBLIC_APP_URL");
   if (provider === "STRIPE") {
     const price = required("STRIPE_PRO_PRICE_ID");
@@ -210,6 +216,7 @@ export async function lemonOrdersSince(email: string, since: Date): Promise<bool
 }
 
 export async function checkoutClosed(provider: Provider, id: string): Promise<boolean> {
+  if (provider === "PADDLE") throw new BillingError("Paddle checkout closure needs verified reconciliation.", 409);
   if (provider === "STRIPE") {
     const session = await getStripe().checkout.sessions.retrieve(id, {}, { timeout: 10000, maxNetworkRetries: 0 });
     return session.status === "expired" || session.status === "complete";
@@ -220,6 +227,10 @@ export async function checkoutClosed(provider: Provider, id: string): Promise<bo
   return Boolean(expires && expires.getTime() <= Date.now());
 }
 export async function portal(provider: Provider, customerId: string, subscriptionId?: string): Promise<string> {
+  if (provider === "PADDLE") {
+    if (!subscriptionId) throw new BillingError("Paddle subscription reference missing.", 409);
+    return paddlePortal(customerId, subscriptionId);
+  }
   if (provider === "STRIPE") return (await getStripe().billingPortal.sessions.create({ customer: customerId,
     return_url: `${required("NEXT_PUBLIC_APP_URL")}/pro` }, { timeout: 10000, maxNetworkRetries: 0 })).url;
   if (!subscriptionId) throw new BillingError("Subscription reference missing.");
