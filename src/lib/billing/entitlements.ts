@@ -10,7 +10,8 @@ export function reviewAccess(user: BillingUser) {
     !user.billingDeletionRequestedAt && !user.subscriptionId && !user.lemonSqueezySubscriptionId && !user.stripeCustomerId && !user.lemonSqueezyCustomerId &&
     !user.billingAccessUntil && !user.billingGraceUntil;
 }
-export function accessUntil(s: Pick<BillingSubscription, "status" | "paidVerified" | "currentPeriodEndsAt" | "trialEndsAt" | "lastVerifiedAt" | "cancelAtPeriodEnd">): Date | null {
+export function accessUntil(s: Pick<BillingSubscription, "provider" | "status" | "paidVerified" | "currentPeriodEndsAt" | "trialEndsAt" | "lastVerifiedAt" | "cancelAtPeriodEnd">): Date | null {
+  if (s.provider === "PADDLE" && !s.paidVerified) return null;
   if (!s.lastVerifiedAt) return null;
   if (["trialing", "on_trial"].includes(s.status)) return s.trialEndsAt;
   if (["active", "cancelled"].includes(s.status)) return s.currentPeriodEndsAt;
@@ -23,8 +24,8 @@ export function entitlement(user: BillingUser, rows: BillingSubscription[], stat
   // can support access. One conflicted provider cannot authorize another grant.
   const conflicts = new Set(state.conflicted);
   for (const row of rows) {
-    const expected = row.provider === "STRIPE" ? user.stripeCustomerId : user.lemonSqueezyCustomerId;
-    if (row.userId !== user.id || !["STRIPE", "LEMONSQUEEZY"].includes(row.provider) ||
+    const expected = row.provider === "STRIPE" ? user.stripeCustomerId : row.provider === "LEMONSQUEEZY" ? user.lemonSqueezyCustomerId : null;
+    if (row.userId !== user.id || !["STRIPE", "LEMONSQUEEZY", "PADDLE"].includes(row.provider) ||
         (expected && expected !== row.providerCustomerId)) conflicts.add(row.provider);
   }
   const owned = rows.filter(row => !conflicts.has(row.provider));
