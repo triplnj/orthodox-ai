@@ -16,6 +16,7 @@ type AccountData = {
     name: string | null;
     plan: "FREE" | "PRO";
     adminAccess?: boolean;
+    billingProvider?: "PADDLE" | "LEMONSQUEEZY" | "STRIPE";
     subscriptionStatus: string | null;
     subscriptionId: string | null;
     createdAt: string;
@@ -157,7 +158,7 @@ export default function AccountPage() {
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            {user.adminAccess ? null : isPro ? <CustomerPortalButton paddleSandbox={user.id === "qa_patristic_20261109"} /> : <CheckoutButton />}
+            {user.adminAccess ? null : isPro ? <CustomerPortalButton paddleSandbox={user.id === "qa_patristic_20261109"} paddleLive={user.billingProvider === "PADDLE"} /> : <CheckoutButton />}
 
             <Link
               href="/pricing"
