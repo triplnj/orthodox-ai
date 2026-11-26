@@ -38,6 +38,7 @@ type PaddleTransaction = { id: string; subscription_id?: string | null; customer
   details?: { totals?: { grand_total?: string; currency_code?: string } };
 };
 type Page<T> = { data?: T[]; meta?: { pagination?: { has_more?: boolean; next?: string | null } } };
+type PaddleAdjustment = { transaction_id: string; subscription_id?: string; action: string; type: string; status: string };
 function validateSubscription(s: PaddleSubscription): void {
   if (!idPattern.sub.test(s.id) || !idPattern.ctm.test(s.customer_id) ||
       !s.items?.some(i => i.price?.id === required("PADDLE_LIVE_PRO_PRICE_ID") &&
@@ -59,6 +60,27 @@ export async function paddleRetrieve(id: string): Promise<Subscription> {
   if (!update || (s.status === "active" && !period)) throw new BillingError("Paddle period evidence is incomplete.", 503);
   let paidVerified = false;
   if (s.status === "active") {
+    const reversed = new Set<string>();
+    let adjustmentCursor: string | null = null;
+    for (let page = 0; page < 10; page++) {
+      const q = new URLSearchParams({ subscription_id: id, per_page: "50" });
+      if (adjustmentCursor) q.set("after", adjustmentCursor);
+      const adjustments = await paddleApi<Page<PaddleAdjustment>>(`adjustments?${q.toString()}`);
+      if (!Array.isArray(adjustments.data) || !adjustments.meta?.pagination) throw new BillingError("Paddle refund inventory is unavailable.", 503);
+      for (const adjustment of adjustments.data) {
+        if (adjustment.subscription_id && adjustment.subscription_id !== id) throw new BillingError("Paddle refund association mismatch.");
+        if (adjustment.status === "approved" && adjustment.type === "full" &&
+            ["refund", "chargeback"].includes(adjustment.action)) reversed.add(adjustment.transaction_id);
+      }
+      if (!adjustments.meta.pagination.has_more) break;
+      const next = adjustments.meta.pagination.next;
+      if (!next) throw new BillingError("Paddle refund pagination unavailable.", 503);
+      const url = new URL(next);
+      if (url.origin !== "https://api.paddle.com" || url.pathname !== "/adjustments") throw new BillingError("Paddle refund pagination endpoint invalid.", 503);
+      adjustmentCursor = url.searchParams.get("after");
+      if (!adjustmentCursor || !/^adj_[a-z0-9]{26}$/.test(adjustmentCursor)) throw new BillingError("Paddle refund pagination cursor invalid.", 503);
+      if (page === 9) throw new BillingError("Paddle refund inventory exceeds safe bounds.", 503);
+    }
     // Read a bounded, provider-authenticated transaction inventory and require
     // a completed, positive charge for the exact Pro price and customer.
     let cursor: string | null = null;
@@ -69,7 +91,7 @@ export async function paddleRetrieve(id: string): Promise<Subscription> {
       if (!Array.isArray(result.data) || !result.meta?.pagination) throw new BillingError("Paddle paid inventory unavailable.", 503);
       for (const t of result.data) {
         if (t.subscription_id !== id || t.customer_id !== s.customer_id) throw new BillingError("Paddle transaction ownership mismatch.");
-        if (t.status === "completed" &&
+        if (!reversed.has(t.id) && t.status === "completed" &&
             t.items?.some(i => i.price?.id === required("PADDLE_LIVE_PRO_PRICE_ID") && i.quantity === 1) &&
             Number(t.details?.totals?.grand_total ?? 0) > 0 &&
             t.details?.totals?.currency_code === "USD") paidVerified = true;
