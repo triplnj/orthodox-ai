@@ -1,15 +1,15 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/session";
 import { apiJson } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Temporary admin-only, read-only Lemon Squeezy Live configuration check.
+ * Temporary authenticated, verified-account-only, read-only Lemon Squeezy Live configuration check.
  * Never return or log API keys, API responses, URLs or customer data.
  */
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user?.adminAccess) {
+  const user = await getSessionUser();
+  if (!user?.emailVerified) {
     return apiJson({ error: "Not found." }, { status: 404 });
   }
 
