@@ -10,7 +10,7 @@ type UpgradeBoxProps = {
 export function UpgradeBox({
   title,
   message,
-  ctaLabel = "Upgrade to Pro",
+  ctaLabel = "Full Access",
   ctaHref = "/pricing",
 }: UpgradeBoxProps) {
   return (
@@ -29,7 +29,7 @@ export function UpgradeBox({
 
       <Link
         href={ctaHref}
-        className="mt-6 inline-block rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+        className="mt-6 inline-flex max-w-full items-center justify-center rounded-lg bg-gray-950 px-5 py-3 text-center text-sm font-semibold leading-5 text-white hover:bg-gray-800"
       >
         {ctaLabel}
       </Link>

@@ -89,7 +89,7 @@ export default async function PrayersPage() {
     title="Personal Prayer Plan"
     message="Upgrade to OrthodoxAI Pro to create a personalized prayer rhythm based on your experience level, available time, and current spiritual focus."
     ctaHref="/pricing"
-    ctaLabel="Upgrade to Pro"
+    ctaLabel="Full Access"
   />
 )}
 </section>

@@ -77,9 +77,9 @@ export function PricingCards() {
 
        <Link
         href="/pro"
-            className="mt-8 block rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold text-gray-950 hover:bg-gray-100"
+            className="mt-8 block w-full rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold leading-5 text-gray-950 hover:bg-gray-100"
             >
-            Upgrade to Pro
+            Full Access
             </Link>
       </div>
     </section>

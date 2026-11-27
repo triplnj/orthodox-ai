@@ -9,7 +9,7 @@ type CheckoutButtonProps = {
 };
 
 export function CheckoutButton({
-  children = "Upgrade to Pro",
+  children = "Full Access",
 }: CheckoutButtonProps) {
   const pending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +80,7 @@ export function CheckoutButton({
         type="button"
         onClick={handleCheckout}
         disabled={isLoading}
-        className="rounded-lg bg-gray-950 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-11 max-w-full items-center justify-center rounded-lg bg-gray-950 px-6 py-3 text-center text-sm font-semibold leading-5 text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isLoading ? "Opening Checkout..." : children}
       </button>
