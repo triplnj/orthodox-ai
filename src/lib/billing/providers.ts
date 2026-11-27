@@ -72,7 +72,44 @@ export async function assertLiveLemonConfiguration(): Promise<void> {
   // Fail before creating any local checkout attempt. Test credentials must not
   // reach the live purchase endpoint, even if a checkout could be created.
   const variantId = required("LEMONSQUEEZY_PRO_VARIANT_ID");
-  const variant = (await lemon(`variants/${encodeURIComponent(variantId)}`)).data;
+  let variant: LemonData;
+  try {
+    variant = (await lemon(`variants/${encodeURIComponent(variantId)}`)).data;
+  } catch (error) {
+    // Read-only diagnosis on checkout preflight failure. This runs BEFORE a
+    // checkout attempt is reserved, and never changes billing state.
+    // count 1 = product lookup; count 2 = product variant list; count 3 = store.
+    // Log ONLY upstream status and probe number, not customer data, URL,
+    // API key, response body, identifiers or provider credentials.
+    const probes = [
+      `products/1190585`,
+      "variants?filter[product_id]=1190585&page[size]=1",
+      `stores/${encodeURIComponent(required("LEMONSQUEEZY_STORE_ID"))}`,
+    ];
+    for (let i = 0; i < probes.length; i++) {
+      try {
+        const response = await fetch(`https://api.lemonsqueezy.com/v1/${probes[i]}`, {
+          cache: "no-store",
+          redirect: "error",
+          signal: AbortSignal.timeout(5000),
+          headers: {
+            Accept: "application/vnd.api+json",
+            Authorization: `Bearer ${required("LEMONSQUEEZY_API_KEY")}`,
+          },
+        });
+        diagnostic("billing_provider_unavailable", {
+          operation: "billing", outcome: "unavailable", status: response.status,
+          count: i + 1,
+        });
+      } catch {
+        diagnostic("billing_provider_unavailable", {
+          operation: "billing", outcome: "unavailable", status: 504,
+          count: i + 1,
+        });
+      }
+    }
+    throw error;
+  }
   if (variant.type !== "variants" || String(variant.id) !== variantId ||
       variant.attributes.test_mode !== false) {
     throw new BillingError("Live checkout is not configured with a verified live Lemon Squeezy variant.", 503);
