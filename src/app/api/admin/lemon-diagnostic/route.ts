@@ -107,12 +107,70 @@ export async function GET() {
     }
   }));
 
+
+  // Read-only Lemon order inventory for this signed-in user's checkout email.
+  // A zero count is supporting evidence only, never permission to erase a pending
+  // payment or proof that a payment under another email is impossible.
+  let orderEvidence: {
+    httpStatus: number;
+    complete: boolean;
+    matchedOrders: number | null;
+  } = { httpStatus: 0, complete: false, matchedOrders: null };
+  try {
+    let total = 0;
+    for (let page = 1; page <= 20; page++) {
+      const params = new URLSearchParams({
+        "filter[user_email]": user.email,
+        "filter[store_id]": storeId,
+        "page[size]": "100",
+        "page[number]": String(page),
+      });
+      const response = await fetch(apiRoot + "orders?" + params.toString(), {
+        headers: {
+          Accept: "application/vnd.api+json",
+          Authorization: "Bearer " + key,
+        },
+        cache: "no-store",
+        redirect: "error",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) {
+        orderEvidence = { httpStatus: response.status, complete: false, matchedOrders: null };
+        break;
+      }
+      const payload: unknown = await response.json();
+      const body = payload as {
+        data?: Array<{ attributes?: { user_email?: unknown; store_id?: unknown } }>;
+        meta?: { page?: { currentPage?: number; lastPage?: number } };
+      };
+      const current = body.meta?.page?.currentPage;
+      const last = body.meta?.page?.lastPage;
+      if (!Array.isArray(body.data) ||
+          !Number.isInteger(current) || current !== page ||
+          !Number.isInteger(last) || !last || last < page ||
+          body.data.some(order =>
+            String(order.attributes?.user_email).toLowerCase() !== user.email.toLowerCase() ||
+            String(order.attributes?.store_id) !== storeId)) {
+        orderEvidence = { httpStatus: 200, complete: false, matchedOrders: null };
+        break;
+      }
+      total += body.data.length;
+      if (page >= last) {
+        orderEvidence = { httpStatus: 200, complete: true, matchedOrders: total };
+        break;
+      }
+    }
+  } catch {
+    orderEvidence = { httpStatus: 0, complete: false, matchedOrders: null };
+  }
+
   return apiJson({
     diagnostic: "lemon-live-readonly-v1",
     expectedProduct: productId,
     expectedVariant: variantId,
     expectedStore: storeId,
     pendingCheckout,
+    orderEvidence,
     directVariant: { httpStatus: probes[0].status, ...shape(direct) },
     product: { httpStatus: probes[1].status, ...shape(product) },
     productVariantList: {
