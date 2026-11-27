@@ -138,7 +138,7 @@ export default async function FastingPage() {
     title="Personal Fasting Guidance"
     message="Upgrade to OrthodoxAI Pro to create careful fasting guidance based on your experience level, current season, available discipline, and pastoral boundaries."
     ctaHref="/pricing"
-    ctaLabel="Upgrade to Pro"
+    ctaLabel="Full Access"
   />
 )}
 </section>
