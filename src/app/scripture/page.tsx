@@ -138,7 +138,7 @@ export default async function ScripturePage() {
     title="Personal Scripture Reading Plan"
     message="Upgrade to OrthodoxAI Pro to create a personalized Scripture reading rhythm based on your experience level, available time, and spiritual goal."
     ctaHref="/pricing"
-    ctaLabel="Upgrade to Pro"
+    ctaLabel="Full Access"
   />
 )}
 </section>
