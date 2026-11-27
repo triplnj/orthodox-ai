@@ -1,5 +1,6 @@
 import { getSessionUser } from "@/lib/session";
 import { apiJson } from "@/lib/api/response";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -68,14 +69,50 @@ export async function GET() {
   const shape = (r: Resource | null | undefined) => r ? ({
     correctId: String(r.id) === (r.type === "products" ? productId : variantId),
     live: r.attributes?.test_mode === false,
-    storeMatches: String(r.attributes?.store_id) === storeId,
+    storeMatches: r.attributes?.store_id == null ? null : String(r.attributes.store_id) === storeId,
   }) : null;
+
+
+  // Read-only check of only this authenticated account's pending billing attempts.
+  // Never return checkout IDs, provider payloads, customer information or API credentials.
+  const pending = await prisma.billingCheckoutAttempt.findMany({
+    where: {
+      userId: user.id,
+      provider: "LEMONSQUEEZY",
+      status: { in: ["CREATING", "OPEN", "UNKNOWN", "PAID_OPEN"] },
+    },
+    select: { status: true, expiresAt: true, providerCheckoutId: true },
+    take: 10,
+  });
+  const pendingCheckout = await Promise.all(pending.map(async attempt => {
+    const expired = !!attempt.expiresAt && attempt.expiresAt < new Date();
+    if (attempt.status !== "OPEN" || !attempt.providerCheckoutId) {
+      return { status: attempt.status, expired, upstreamHttpStatus: null };
+    }
+    try {
+      const response = await fetch(
+        apiRoot + "checkouts/" + encodeURIComponent(attempt.providerCheckoutId), {
+          headers: {
+            Accept: "application/vnd.api+json",
+            Authorization: "Bearer " + key,
+          },
+          cache: "no-store",
+          redirect: "error",
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+      return { status: attempt.status, expired, upstreamHttpStatus: response.status };
+    } catch {
+      return { status: attempt.status, expired, upstreamHttpStatus: 0 };
+    }
+  }));
 
   return apiJson({
     diagnostic: "lemon-live-readonly-v1",
     expectedProduct: productId,
     expectedVariant: variantId,
     expectedStore: storeId,
+    pendingCheckout,
     directVariant: { httpStatus: probes[0].status, ...shape(direct) },
     product: { httpStatus: probes[1].status, ...shape(product) },
     productVariantList: {
