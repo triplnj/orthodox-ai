@@ -27,9 +27,9 @@ export function ProFeatureGate({
 
       <Link
         href="/pricing"
-        className="mt-6 inline-block rounded-lg bg-gray-950 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+        className="mt-6 inline-flex max-w-full items-center justify-center rounded-lg bg-gray-950 px-5 py-3 text-center text-sm font-semibold leading-5 text-white hover:bg-gray-800"
       >
-        Upgrade to Pro
+        Full Access
       </Link>
     </div>
   );
