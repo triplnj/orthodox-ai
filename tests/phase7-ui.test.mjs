@@ -151,7 +151,7 @@ test("interrupted turn recovery is explicit and does not generate a replacement 
 
 test("checkout double clicks invoke once and an uncertain outcome never auto-retries", async t => {
   let calls = 0; const h = harness(t, async () => { calls++; throw new Error("lost"); }); const Checkout = h.load("src/components/billing/CheckoutButton.tsx").CheckoutButton;
-  let tree = h.render(Checkout); const click = button(tree, "Upgrade to Pro").props.onClick; const first = click(); await click(); await first; tree = h.render(Checkout);
+  let tree = h.render(Checkout); const click = button(tree, "Full Access").props.onClick; const first = click(); await click(); await first; tree = h.render(Checkout);
   assert.equal(calls, 1); assert.match(text(tree), /before trying again/); assert.equal(nodes(tree, node => node.props?.role === "alert").length, 1); await tick(); assert.equal(calls, 1);
 });
 
