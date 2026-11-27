@@ -85,7 +85,7 @@ export default async function ProPage() {
             steady spiritual discipline.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col flex-wrap gap-3 sm:flex-row sm:items-start">
             
             {isPro ? (
                 <>
@@ -99,7 +99,7 @@ export default async function ProPage() {
                 <CustomerPortalButton paddleLive={user.billingProvider === "PADDLE"} />
             </>
                 ) : (
-            <CheckoutButton>Upgrade to Pro</CheckoutButton>
+            <CheckoutButton>Full Access</CheckoutButton>
             )}
             <Link
               href="/pricing"
